@@ -196,28 +196,49 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--t1);
 .w-acts{display:flex;gap:12px;justify-content:center;margin-top:20px}
 
 /* ── Game ── */
-.g-top{display:flex;justify-content:space-between;align-items:center;padding:10px 16px;background:var(--bg3);border:1px solid var(--brd);border-radius:var(--r);margin-bottom:4px}
-.g-qc{font-family:'JetBrains Mono',monospace;font-size:14px;color:var(--t2)}
-.g-timer{font-family:'JetBrains Mono',monospace;font-size:22px;font-weight:700;display:flex;align-items:center;gap:6px}
-.g-timer.urg{color:var(--acc);animation:tp .6s ease infinite alternate}
 @keyframes tp{to{opacity:.4}}
-.t-track{width:100%;height:3px;background:var(--bg5);border-radius:2px;margin-bottom:12px;overflow:hidden}
+.t-track{height:3px;background:var(--bg5);border-radius:2px;overflow:hidden}
 .t-fill{height:100%;border-radius:2px;transition:width 1s linear}
 
-.g-body{display:grid;grid-template-columns:1fr 260px;gap:12px}
+/* Game viewport */
+.gv-wrap{display:grid;grid-template-columns:1fr 260px;gap:0;height:calc(100vh - var(--th));max-height:calc(100vh - var(--th))}
+.gv-main{display:flex;flex-direction:column;padding:16px;gap:10px;overflow:hidden}
+.gv-sidebar{background:var(--bg3);border-left:1px solid var(--brd);padding:16px;overflow-y:auto}
 
-.g-media{background:var(--bg3);border:1px solid var(--brd);border-radius:var(--rl);min-height:320px;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;overflow:hidden}
-.g-media::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 40% 40%,rgba(232,64,94,.06) 0%,transparent 60%),radial-gradient(circle at 70% 70%,rgba(68,138,255,.05) 0%,transparent 60%)}
-.g-media-in{position:relative;z-index:1;text-align:center;padding:32px}
-.g-big-ic{font-size:56px;margin-bottom:12px;animation:fl 3s ease infinite}
-@keyframes fl{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
-.g-mlabel{font-size:15px;color:var(--t3);margin-bottom:16px}
-.g-song-info{font-size:13px;color:var(--t3);margin-bottom:10px;font-family:'JetBrains Mono',monospace;letter-spacing:.5px}
-.g-prompt{font-size:24px;font-weight:800;margin-bottom:20px;color:var(--t1);line-height:1.3}
-.g-hint{font-size:20px;font-weight:800;margin-bottom:24px}
-.g-ans-row{display:flex;gap:8px;width:100%;max-width:380px}
+/* Top bar */
+.gv-topbar{display:flex;align-items:center;gap:10px}
+.gv-songcount{font-size:13px;font-weight:700;color:var(--t2);white-space:nowrap;font-family:'JetBrains Mono',monospace}
+
+/* Main info card */
+.gv-card{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--bg3);border:1px solid var(--brd);border-radius:var(--rl);padding:32px 24px;text-align:center;position:relative;overflow:hidden;gap:0}
+.gv-instruction{font-size:20px;font-weight:700;color:var(--t1);margin-bottom:10px;line-height:1.4}
+.gv-timer{font-size:28px;font-weight:800;font-family:'JetBrains Mono',monospace;color:var(--t2);margin-bottom:20px;letter-spacing:2px}
+.gv-timer.urg{color:var(--acc);animation:tp .6s ease infinite alternate}
+
+/* Sub-question answerer list */
+.gv-subq-list{display:flex;flex-direction:column;gap:6px;width:100%;max-width:420px;margin-bottom:16px}
+.gv-subq-row{display:flex;align-items:baseline;gap:8px;font-size:15px}
+.gv-subq-label{color:var(--ylw);font-weight:700;white-space:nowrap}
+.gv-subq-label.done{color:var(--grn)}
+.gv-subq-answerers{color:var(--t2);font-size:13px;flex:1;text-align:left}
+.gv-subq-answerers .name{color:var(--blu);font-weight:600}
+.gv-subq-hint{font-size:13px;color:var(--t3);margin-left:4px;font-style:italic}
+
+.gv-hint{font-size:14px;color:var(--t3);margin-bottom:12px;font-style:italic}
+.gv-input-area{width:100%;max-width:440px;margin-bottom:8px}
+.gv-skip-hint{font-size:12px;color:var(--t3);margin-top:8px}
+
+.g-ans-row{display:flex;gap:8px;width:100%}
 .g-ans-inp{flex:1;padding:12px 16px;background:var(--bg5);border:2px solid var(--brd);border-radius:8px;color:var(--t1);font-family:'Noto Sans KR',sans-serif;font-size:15px;font-weight:600;outline:none;transition:border-color .2s}
 .g-ans-inp:focus{border-color:var(--acc)}
+
+/* Chat */
+.gv-chat{background:var(--bg3);border:1px solid var(--brd);border-radius:var(--rl);padding:10px 14px;max-height:130px;display:flex;flex-direction:column;flex-shrink:0}
+
+.fb-toast{position:absolute;top:14px;right:14px;padding:6px 14px;border-radius:var(--rs);font-weight:700;font-size:13px;animation:tin .25s ease;z-index:10}
+@keyframes tin{from{transform:translateX(12px);opacity:0}}
+.fb-ok{background:var(--grn-s);color:var(--grn);border:1px solid rgba(0,200,83,.3)}
+.fb-no{background:var(--acc-s);color:var(--acc);border:1px solid rgba(232,64,94,.3)}
 
 .fb-toast{position:absolute;top:14px;right:14px;padding:6px 14px;border-radius:var(--rs);font-weight:700;font-size:13px;animation:tin .25s ease}
 @keyframes tin{from{transform:translateX(12px);opacity:0}}
@@ -292,12 +313,14 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--t1);
   .page{padding:16px 14px}
 
   /* Game */
-  .g-body{grid-template-columns:1fr}
-  .g-top{flex-wrap:wrap;gap:6px}
+  .gv-wrap{grid-template-columns:1fr;height:auto;max-height:none}
+  .gv-sidebar{border-left:none;border-top:1px solid var(--brd);padding:12px 16px}
+  .gv-main{padding:12px}
+  .gv-card{padding:20px 16px}
+  .gv-instruction{font-size:17px}
+  .gv-timer{font-size:22px}
   .g-ans-row{flex-wrap:wrap}
   .g-ans-inp{min-width:0}
-  .sc-panel{margin-top:8px}
-  .g-chat{max-height:120px}
 
   /* Waiting */
   .w-grid{grid-template-columns:repeat(2,1fr)}
@@ -462,40 +485,57 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--t1);
     </div>
 
     <!-- ════ GAME ════ -->
-    <div class="page hide" id="page-game">
-      <div class="g-top">
-        <div class="g-qc" id="gameQC">문제 1 / 10</div>
-        <div style="flex:1"></div>
-        <div class="g-timer" id="gameTimer">⏱ 30s</div>
-        <div style="flex:1"></div>
-        <button class="btn btn-g btn-sm" onclick="leaveGameConfirm()" style="color:var(--acc);border-color:var(--acc)">🚪 나가기</button>
+    <div class="page hide" id="page-game" style="padding:0">
+      <!-- YouTube 오디오 숨김 -->
+      <div id="youtubeArea" style="display:none;width:1px;height:1px;overflow:hidden;position:absolute;opacity:0">
+        <iframe id="youtubeFrame" style="width:1px;height:1px;border:none" allow="autoplay; encrypted-media"></iframe>
       </div>
-      <div class="t-track"><div class="t-fill" id="timerFill" style="width:100%;background:var(--grn)"></div></div>
-      <div class="g-body">
-        <div>
-          <div class="g-media">
+
+      <div class="gv-wrap">
+        <!-- 왼쪽: 메인 게임 영역 -->
+        <div class="gv-main">
+          <!-- 상단 바 -->
+          <div class="gv-topbar">
+            <span class="gv-songcount" id="gameQC">남은 곡 ( 1 / 1 )</span>
+            <div class="t-track" style="flex:1;margin:0 16px"><div class="t-fill" id="timerFill" style="width:100%;background:var(--grn)"></div></div>
+            <button class="btn btn-g btn-sm" onclick="leaveGameConfirm()" style="color:var(--acc);border-color:var(--acc);flex-shrink:0">🚪 나가기</button>
+          </div>
+
+          <!-- 중앙 정보 카드 -->
+          <div class="gv-card">
             <div id="gameFeedback"></div>
-            <!-- YouTube는 게임 중 숨김, 오디오만 재생 -->
-            <div id="youtubeArea" style="display:none;width:1px;height:1px;overflow:hidden;position:absolute;opacity:0">
-              <iframe id="youtubeFrame" style="width:1px;height:1px;border:none"
-                allow="autoplay; encrypted-media"></iframe>
-            </div>
-            <div class="g-media-in">
-              <div class="g-big-ic" id="gameIcon">🎵</div>
-              <div class="g-song-info" id="gameSongInfo">🎵 곡 1/1 &nbsp;·&nbsp; 문제 1/1</div>
-              <div class="g-prompt" id="gamePrompt">정답을 입력하세요</div>
-              <div class="g-hint" id="gameHint" style="display:none"></div>
-              <div id="chosungHintArea" style="display:none;margin-bottom:12px;font-size:22px;font-weight:800;letter-spacing:6px;color:var(--ylw);font-family:'JetBrains Mono',monospace"></div>
-              <div class="g-ans-row">
-                <input class="g-ans-inp" id="answerInput" placeholder="정답을 입력하세요..." autocomplete="off">
+            <div class="gv-instruction" id="gamePrompt">음악을 듣고 답을 입력하세요</div>
+            <div class="gv-timer" id="gameTimer">- 30초 -</div>
+
+            <!-- 서브퀴즈별 정답자 목록 -->
+            <div class="gv-subq-list" id="subqList"></div>
+
+            <!-- 힌트 (있을 때만 표시) -->
+            <div class="gv-hint" id="gameHint" style="display:none"></div>
+
+            <!-- 입력 영역 -->
+            <div class="gv-input-area">
+              <div class="g-ans-row" style="justify-content:center">
+                <input class="g-ans-inp" id="answerInput" placeholder="정답을 입력하세요..." autocomplete="off" style="max-width:320px">
+                <div id="chosungHintArea" style="display:none;font-size:18px;font-weight:800;letter-spacing:6px;color:var(--ylw);font-family:'JetBrains Mono',monospace;display:flex;align-items:center;padding:0 4px"></div>
                 <button class="btn btn-a" id="answerBtn" onclick="submitAnswer()">제출</button>
-                <button class="btn btn-g btn-sm" id="skipBtn" onclick="voteSkip()" title="스킵 투표">⏭ 스킵 <span id="skipCount" style="font-family:'JetBrains Mono',monospace;font-size:11px">0/0</span></button>
+              </div>
+              <div style="text-align:center;margin-top:8px">
+                <button class="btn btn-g btn-sm" id="skipBtn" onclick="voteSkip()" title="스킵 투표">
+                  ⏭ 스킵 <span id="skipCount" style="font-family:'JetBrains Mono',monospace;font-size:11px">0/0</span>
+                </button>
               </div>
             </div>
+
+            <div class="gv-skip-hint">( "Enter"키로 제출, 모두 맞추면 다음 곡으로 넘어갑니다. )</div>
           </div>
-          <div class="g-chat"><div class="chat-log" id="chatLog"></div></div>
+
+          <!-- 채팅 -->
+          <div class="gv-chat"><div class="chat-log" id="chatLog"></div></div>
         </div>
-        <div class="sc-panel">
+
+        <!-- 오른쪽: 순위판 -->
+        <div class="gv-sidebar">
           <div class="sc-title">🏆 순위</div>
           <div id="scoreBoard"></div>
         </div>
@@ -709,11 +749,23 @@ socket.on("question", ({ index, total, type, prompt, hint, timeLimit, mediaUrl, 
   const qIdx = subQIndex !== undefined ? subQIndex : 0;
   const qTot = totalSubQ !== undefined ? totalSubQ : 1;
 
-  document.getElementById("gameQC").textContent = `곡 ${sIdx + 1} / ${sTot}`;
-  document.getElementById("gameSongInfo").textContent = `🎵 곡 ${sIdx + 1}/${sTot}  ·  문제 ${qIdx + 1}/${qTot}`;
-  document.getElementById("gameIcon").textContent = type === "audio" ? "🎵" : type === "scene" ? "🎬" : "💬";
-  document.getElementById("gamePrompt").textContent = prompt || hint || "정답을 입력하세요";
-  document.getElementById("gameTimer").textContent = `⏱ ${timeLimit}s`;
+  gameState.subQIndex = qIdx;
+  gameState.totalSubQ = qTot;
+  gameState.songIndex = sIdx;
+  gameState.totalSongs = sTot;
+
+  // 새 곡 시작이면 서브퀴즈 정답자 초기화
+  if (qIdx === 0) {
+    gameState.subQAnswerers = {};
+    gameState.subQPrompts = {};
+  }
+  // 현재 서브퀴즈 라벨 저장
+  gameState.subQPrompts[qIdx] = prompt || hint || `문제 ${qIdx + 1}`;
+  if (!gameState.subQAnswerers[qIdx]) gameState.subQAnswerers[qIdx] = [];
+
+  document.getElementById("gameQC").textContent = `남은 곡 ( ${sTot - sIdx} / ${sTot} )`;
+  document.getElementById("gamePrompt").textContent = prompt || hint || "음악을 듣고 답을 입력하세요";
+  document.getElementById("gameTimer").textContent = `- ${timeLimit}초 -`;
   document.getElementById("gameTimer").classList.remove("urg");
   document.getElementById("timerFill").style.width = "100%";
   document.getElementById("timerFill").style.background = "var(--grn)";
@@ -723,6 +775,16 @@ socket.on("question", ({ index, total, type, prompt, hint, timeLimit, mediaUrl, 
   document.getElementById("gameFeedback").innerHTML = "";
   document.getElementById("answerInput").focus();
 
+  // 힌트 (텍스트 힌트)
+  const hintEl = document.getElementById("gameHint");
+  if (hint && hint !== prompt) {
+    hintEl.textContent = `힌트: ${hint}`;
+    hintEl.style.display = "block";
+  } else {
+    hintEl.style.display = "none";
+    hintEl.textContent = "";
+  }
+
   // 초성 힌트 영역 리셋
   const chArea = document.getElementById("chosungHintArea");
   chArea.style.display = "none";
@@ -731,6 +793,8 @@ socket.on("question", ({ index, total, type, prompt, hint, timeLimit, mediaUrl, 
   // 스킵 버튼 초기화
   document.getElementById("skipBtn").disabled = false;
   document.getElementById("skipCount").textContent = `0/${gameState.playerCount || 1}`;
+
+  renderSubQList();
 
   // YouTube 오디오 재생 — 서브퀴즈 0번일 때만 새로 로드 (같은 곡 계속 재생)
   if (mediaUrl !== null && mediaUrl !== undefined) {
@@ -750,25 +814,32 @@ socket.on("question", ({ index, total, type, prompt, hint, timeLimit, mediaUrl, 
 socket.on("timeUpdate", t => {
   gameState.timeLeft = t;
   const el = document.getElementById("gameTimer");
-  el.textContent = `⏱ ${t}s`;
+  el.textContent = `- ${t}초 -`;
   if (t <= 5) el.classList.add("urg"); else el.classList.remove("urg");
 
-  // Update bar
   const pct = (t / (gameState.timeLimit || 30)) * 100;
   const fill = document.getElementById("timerFill");
   fill.style.width = pct + "%";
   fill.style.background = pct > 50 ? "var(--grn)" : pct > 25 ? "var(--org)" : "var(--acc)";
 });
 
-socket.on("correctAnswer", ({ playerName, points, order, scores }) => {
+socket.on("correctAnswer", ({ playerName, playerAvatar, points, order, subQIndex, scores }) => {
   renderScoreboard(scores);
   playCorrectSound();
+  // 서브퀴즈 정답자 기록
+  const qi = subQIndex !== undefined ? subQIndex : (gameState.subQIndex || 0);
+  if (!gameState.subQAnswerers) gameState.subQAnswerers = {};
+  if (!gameState.subQAnswerers[qi]) gameState.subQAnswerers[qi] = [];
+  if (!gameState.subQAnswerers[qi].find(p => p.name === playerName)) {
+    gameState.subQAnswerers[qi].push({ name: playerName, avatar: playerAvatar || "" });
+  }
+  renderSubQList();
   if (playerName === myUser.name) {
     showFeedback("ok", `정답! +${points}점 (${order}등)`);
     gameState.answered = true;
     document.getElementById("answerInput").disabled = true;
     document.getElementById("answerBtn").disabled = true;
-    document.getElementById("skipBtn").disabled = true; // 맞춘 사람은 스킵 불가
+    document.getElementById("skipBtn").disabled = true;
     document.getElementById("skipBtn").title = "정답을 맞췄습니다";
   }
 });
@@ -803,7 +874,7 @@ socket.on("skipVoteUpdate", ({ votes, total, unanswered }) => {
 
 socket.on("hintReveal", ({ hint }) => {
   const el = document.getElementById("chosungHintArea");
-  if (el) { el.textContent = hint; el.style.display = "block"; }
+  if (el) { el.textContent = hint; el.style.display = "flex"; }
 });
 
 socket.on("error", msg => {
@@ -1022,6 +1093,28 @@ function showWaiting(room) {
   `;
 
   document.getElementById("waitHint").textContent = isHost && room.players.length === 1 ? "혼자 시작합니다 — 친구를 초대하면 더 재밌어요!" : "";
+}
+
+function renderSubQList() {
+  const container = document.getElementById("subqList");
+  if (!container) return;
+  const prompts = gameState.subQPrompts || {};
+  const answerers = gameState.subQAnswerers || {};
+  const totalSubQ = gameState.totalSubQ || 1;
+  const currentSubQ = gameState.subQIndex || 0;
+
+  let html = "";
+  for (let i = 0; i < totalSubQ; i++) {
+    const label = prompts[i] || `문제 ${i + 1}`;
+    const names = (answerers[i] || []).map(p => `<span class="name">${p.avatar} ${p.name}</span>`).join(", ");
+    const isDone = (answerers[i] || []).length > 0 && i < currentSubQ;
+    const isCurrent = i === currentSubQ;
+    html += `<div class="gv-subq-row">
+      <span class="gv-subq-label${isDone ? " done" : ""}">${isCurrent ? "▶ " : ""}${label} 정답자 :</span>
+      <span class="gv-subq-answerers">${names || ""}</span>
+    </div>`;
+  }
+  container.innerHTML = html;
 }
 
 function renderScoreboard(scores) {

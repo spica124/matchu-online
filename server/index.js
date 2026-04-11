@@ -442,8 +442,10 @@ io.on("connection", (socket) => {
       io.to(roomId).emit("correctAnswer", {
         playerId: socket.id,
         playerName: player.name,
+        playerAvatar: player.avatar,
         points,
         order,
+        subQIndex: room.currentSubQ,
         scores: getScoresArray(room),
       });
 
