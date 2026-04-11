@@ -37,6 +37,18 @@ const globalRanking = [];     // 글로벌 랭킹 (상위 100개 유지)
 // Helpers
 // ═══════════════════════════════════════════
 
+// 질문의 서브퀴즈 배열 반환 (backward compat)
+function getSubQuestions(q) {
+  if (q.subQuestions && q.subQuestions.length > 0) return q.subQuestions;
+  return [{
+    prompt: q.hint || "",
+    answers: q.answers || [q.answer || ""],
+    timeLimit: q.timeLimit || 30,
+    chosungHint: q.chosungHint || false,
+    hintRevealTime: q.hintRevealTime || 0,
+  }];
+}
+
 function getChosung(str) {
   const CS = ['ㄱ','ㄲ','ㄴ','ㄷ','ㄸ','ㄹ','ㅁ','ㅂ','ㅃ','ㅅ','ㅆ','ㅇ','ㅈ','ㅉ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ'];
   return str.split('').map(ch => {
@@ -63,7 +75,8 @@ function createRoom(id, name, hostId, hostName, hostAvatar, mapId, maxPlayers) {
     status: "waiting",  // waiting | playing | finished
     currentQuestion: 0,
     answerOrder: [],     // 정답 맞춘 순서
-    skipVoters: new Set(), // 스킵 투표한 socketId
+    skipVoters: new Set(),
+    currentSubQ: 0,       // 현재 서브퀴즈 인덱스
     timer: null,
     timeLeft: 0,
     createdAt: Date.now(),
@@ -364,6 +377,7 @@ io.on("connection", (socket) => {
 
     room.status = "playing";
     room.currentQuestion = 0;
+    room.currentSubQ = 0;
     room.answerOrder = [];
 
     // 모든 플레이어 점수 초기화
@@ -401,8 +415,10 @@ io.on("connection", (socket) => {
     const question = map.questions[room.currentQuestion];
     if (!question) return;
 
+    const subQs = getSubQuestions(question);
+    const subQ = subQs[room.currentSubQ] || subQs[0];
     const normalizedAnswer = answer.toLowerCase().trim();
-    const correctAnswers = question.answers || [question.answer || ""];
+    const correctAnswers = subQ.answers || [];
     const isCorrect = correctAnswers.some(a => a.toLowerCase().trim() === normalizedAnswer);
 
     // 본인에게만 입력 내용 표시 (다른 플레이어에게는 숨김)
@@ -436,12 +452,12 @@ io.on("connection", (socket) => {
         text: `${player.name}님이 ${order}등으로 정답! (+${points}점)`,
       });
 
-      // 전원 정답 시 다음 곡으로
+      // 전원 정답 시 다음 서브퀴즈 or 다음 곡
       const allAnswered = Array.from(room.players.values()).every(p => p.answered);
       if (allAnswered) {
         clearInterval(room.timer);
-        io.to(roomId).emit("chatMessage", { type: "system", text: "✅ 전원 정답! 다음 문제로 넘어갑니다." });
-        setTimeout(() => nextQuestion(room), 2000);
+        io.to(roomId).emit("chatMessage", { type: "system", text: "✅ 전원 정답!" });
+        setTimeout(() => nextSubQuestion(room), 1500);
       }
     } else {
       socket.emit("wrongAnswer", { text: "오답!" });
@@ -478,7 +494,7 @@ io.on("connection", (socket) => {
         scores: getScoresArray(room),
       });
       io.to(roomId).emit("chatMessage", { type: "system", text: `⏭ 스킵! 정답: ${revealAnswer}` });
-      setTimeout(() => nextQuestion(room), 2000);
+      setTimeout(() => nextSubQuestion(room), 2000);
     }
   });
 
@@ -514,23 +530,30 @@ function sendQuestion(room) {
   const q = map.questions[room.currentQuestion];
   if (!q) return;
 
+  const subQs = getSubQuestions(q);
+  const subQ = subQs[room.currentSubQ] || subQs[0];
+
   // 플레이어 answered 리셋
   room.players.forEach((p) => (p.answered = false));
   room.answerOrder = [];
   room.skipVoters = new Set();
-  room.timeLeft = q.timeLimit;
+  room.timeLeft = subQ.timeLimit || 30;
 
-  // 문제 전송 (정답 제외)
+  // 문제 전송 (정답 제외) — 첫 서브퀴즈일 때만 미디어 URL 전송 (음악 계속 재생)
   io.to(room.id).emit("question", {
     index: room.currentQuestion,
     total: map.questions.length,
     type: q.type,
-    hint: q.hint,
+    prompt: subQ.prompt || q.hint || "",
     anime: q.anime,
-    timeLimit: q.timeLimit,
-    mediaUrl: q.mediaUrl || "",
+    timeLimit: subQ.timeLimit || 30,
+    mediaUrl: room.currentSubQ === 0 ? (q.mediaUrl || "") : null,
     startTime: q.startTime || 0,
     endTime: q.endTime || 0,
+    subQIndex: room.currentSubQ,
+    totalSubQ: subQs.length,
+    songIndex: room.currentQuestion,
+    totalSongs: map.questions.length,
   });
 
   // 타이머
@@ -540,10 +563,10 @@ function sendQuestion(room) {
     io.to(room.id).emit("timeUpdate", room.timeLeft);
 
     // 초성 힌트 공개 타이밍
-    if (q.chosungHint && q.hintRevealTime > 0) {
-      const revealAt = q.timeLimit - q.hintRevealTime;
+    if (subQ.chosungHint && subQ.hintRevealTime > 0) {
+      const revealAt = (subQ.timeLimit || 30) - subQ.hintRevealTime;
       if (room.timeLeft === revealAt) {
-        const firstAnswer = (q.answers || [q.answer || ""])[0];
+        const firstAnswer = (subQ.answers || [])[0] || "";
         const hint = getChosung(firstAnswer);
         io.to(room.id).emit("hintReveal", { hint });
         io.to(room.id).emit("chatMessage", { type: "system", text: `💡 초성 힌트: ${hint}` });
@@ -553,10 +576,10 @@ function sendQuestion(room) {
     if (room.timeLeft <= 0) {
       clearInterval(room.timer);
       // 시간 초과 — 정답 공개
-      const revealAnswer = (q.answers || [q.answer || "?"])[0];
+      const revealAnswer = (subQ.answers || [])[0] || "?";
       io.to(room.id).emit("timeUp", {
         answer: revealAnswer,
-        answers: q.answers || [revealAnswer],
+        answers: subQ.answers || [revealAnswer],
         anime: q.anime,
         scores: getScoresArray(room),
       });
@@ -566,9 +589,24 @@ function sendQuestion(room) {
         text: `시간 초과! 정답: ${revealAnswer}`,
       });
 
-      setTimeout(() => nextQuestion(room), 3000);
+      setTimeout(() => nextSubQuestion(room), 3000);
     }
   }, 1000);
+}
+
+function nextSubQuestion(room) {
+  const map = maps.get(room.mapId);
+  if (!map) return;
+  const q = map.questions[room.currentQuestion];
+  if (!q) return;
+  const subQs = getSubQuestions(q);
+  room.currentSubQ++;
+  if (room.currentSubQ < subQs.length) {
+    sendQuestion(room); // 같은 곡, 다음 서브퀴즈
+  } else {
+    room.currentSubQ = 0;
+    nextQuestion(room); // 다음 곡으로
+  }
 }
 
 function nextQuestion(room) {

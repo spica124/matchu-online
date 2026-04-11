@@ -212,6 +212,8 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--t1);
 .g-big-ic{font-size:56px;margin-bottom:12px;animation:fl 3s ease infinite}
 @keyframes fl{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
 .g-mlabel{font-size:15px;color:var(--t3);margin-bottom:16px}
+.g-song-info{font-size:13px;color:var(--t3);margin-bottom:10px;font-family:'JetBrains Mono',monospace;letter-spacing:.5px}
+.g-prompt{font-size:24px;font-weight:800;margin-bottom:20px;color:var(--t1);line-height:1.3}
 .g-hint{font-size:20px;font-weight:800;margin-bottom:24px}
 .g-ans-row{display:flex;gap:8px;width:100%;max-width:380px}
 .g-ans-inp{flex:1;padding:12px 16px;background:var(--bg5);border:2px solid var(--brd);border-radius:8px;color:var(--t1);font-family:'Noto Sans KR',sans-serif;font-size:15px;font-weight:600;outline:none;transition:border-color .2s}
@@ -480,8 +482,9 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--t1);
             </div>
             <div class="g-media-in">
               <div class="g-big-ic" id="gameIcon">🎵</div>
-              <div class="g-mlabel" id="gameLabel">🎵 오디오 재생 중...</div>
-              <div class="g-hint" id="gameHint">이 애니의 오프닝 곡 제목은?</div>
+              <div class="g-song-info" id="gameSongInfo">🎵 곡 1/1 &nbsp;·&nbsp; 문제 1/1</div>
+              <div class="g-prompt" id="gamePrompt">정답을 입력하세요</div>
+              <div class="g-hint" id="gameHint" style="display:none"></div>
               <div id="chosungHintArea" style="display:none;margin-bottom:12px;font-size:22px;font-weight:800;letter-spacing:6px;color:var(--ylw);font-family:'JetBrains Mono',monospace"></div>
               <div class="g-ans-row">
                 <input class="g-ans-inp" id="answerInput" placeholder="정답을 입력하세요..." autocomplete="off">
@@ -694,21 +697,26 @@ socket.on("gameStarted", ({ totalQuestions, players }) => {
   navigateTo("game");
 });
 
-socket.on("question", ({ index, total, type, hint, timeLimit, mediaUrl, startTime, endTime }) => {
+socket.on("question", ({ index, total, type, prompt, hint, timeLimit, mediaUrl, startTime, endTime, subQIndex, totalSubQ, songIndex, totalSongs }) => {
   gameState.currentQ = index;
   gameState.totalQ = total;
   gameState.answered = false;
   gameState.timeLeft = timeLimit;
   gameState.timeLimit = timeLimit;
 
-  document.getElementById("gameQC").textContent = `문제 ${index + 1} / ${total}`;
+  const sIdx = songIndex !== undefined ? songIndex : index;
+  const sTot = totalSongs !== undefined ? totalSongs : total;
+  const qIdx = subQIndex !== undefined ? subQIndex : 0;
+  const qTot = totalSubQ !== undefined ? totalSubQ : 1;
+
+  document.getElementById("gameQC").textContent = `곡 ${sIdx + 1} / ${sTot}`;
+  document.getElementById("gameSongInfo").textContent = `🎵 곡 ${sIdx + 1}/${sTot}  ·  문제 ${qIdx + 1}/${qTot}`;
+  document.getElementById("gameIcon").textContent = type === "audio" ? "🎵" : type === "scene" ? "🎬" : "💬";
+  document.getElementById("gamePrompt").textContent = prompt || hint || "정답을 입력하세요";
   document.getElementById("gameTimer").textContent = `⏱ ${timeLimit}s`;
   document.getElementById("gameTimer").classList.remove("urg");
   document.getElementById("timerFill").style.width = "100%";
   document.getElementById("timerFill").style.background = "var(--grn)";
-  document.getElementById("gameIcon").textContent = type === "audio" ? "🎵" : type === "scene" ? "🎬" : "💬";
-  document.getElementById("gameLabel").textContent = type === "audio" ? "🎵 오디오 재생 중..." : type === "scene" ? "🎬 영상 재생 중..." : "💬 대사 퀴즈";
-  document.getElementById("gameHint").textContent = hint;
   document.getElementById("answerInput").value = "";
   document.getElementById("answerInput").disabled = false;
   document.getElementById("answerBtn").disabled = false;
@@ -724,16 +732,18 @@ socket.on("question", ({ index, total, type, hint, timeLimit, mediaUrl, startTim
   document.getElementById("skipBtn").disabled = false;
   document.getElementById("skipCount").textContent = `0/${gameState.playerCount || 1}`;
 
-  // YouTube 오디오 재생 (영상은 숨김)
-  const ytFrame = document.getElementById("youtubeFrame");
-  const ytId = getYouTubeId(mediaUrl || "");
-  if (ytId) {
-    let src = `https://www.youtube-nocookie.com/embed/${ytId}?autoplay=1&rel=0`;
-    if (startTime) src += `&start=${startTime}`;
-    if (endTime) src += `&end=${endTime}`;
-    ytFrame.src = src;
-  } else {
-    ytFrame.src = "";
+  // YouTube 오디오 재생 — 서브퀴즈 0번일 때만 새로 로드 (같은 곡 계속 재생)
+  if (mediaUrl !== null && mediaUrl !== undefined) {
+    const ytFrame = document.getElementById("youtubeFrame");
+    const ytId = getYouTubeId(mediaUrl || "");
+    if (ytId) {
+      let src = `https://www.youtube-nocookie.com/embed/${ytId}?autoplay=1&rel=0`;
+      if (startTime) src += `&start=${startTime}`;
+      if (endTime) src += `&end=${endTime}`;
+      ytFrame.src = src;
+    } else {
+      ytFrame.src = "";
+    }
   }
 });
 
