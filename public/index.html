@@ -19,7 +19,7 @@
   --t1:#e8e8e8;--t2:#999;--t3:#666;
   --brd:#2a2a2a;--brd2:#333;
   --r:10px;--rs:6px;--rl:14px;
-  --side:240px;
+  --side:240px;--th:56px;
 }
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--t1);-webkit-font-smoothing:antialiased}
@@ -201,24 +201,25 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--t1);
 .t-fill{height:100%;border-radius:2px;transition:width 1s linear}
 
 /* Game viewport */
-.gv-wrap{display:grid;grid-template-columns:1fr 260px;gap:0;height:calc(100vh - var(--th));max-height:calc(100vh - var(--th))}
-.gv-main{display:flex;flex-direction:column;padding:16px;gap:10px;overflow:hidden}
-.gv-sidebar{background:var(--bg3);border-left:1px solid var(--brd);padding:16px;overflow-y:auto}
+.gv-wrap{display:grid;grid-template-columns:1fr 260px;gap:0;height:calc(100vh - var(--th));max-height:calc(100vh - var(--th));overflow:hidden}
+.gv-main{display:flex;flex-direction:column;padding:12px;gap:8px;overflow:hidden;height:100%}
+.gv-sidebar{background:var(--bg3);border-left:1px solid var(--brd);padding:16px;overflow-y:auto;height:100%}
 
 /* Top bar */
 .gv-topbar{display:flex;align-items:center;gap:10px}
 .gv-songcount{font-size:13px;font-weight:700;color:var(--t2);white-space:nowrap;font-family:'JetBrains Mono',monospace}
 
 /* Main info card */
-.gv-card{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--bg3);border:1px solid var(--brd);border-radius:var(--rl);padding:32px 24px;text-align:center;position:relative;overflow:hidden;gap:0}
-.gv-instruction{font-size:20px;font-weight:700;color:var(--t1);margin-bottom:10px;line-height:1.4}
-.gv-timer{font-size:28px;font-weight:800;font-family:'JetBrains Mono',monospace;color:var(--t2);margin-bottom:20px;letter-spacing:2px}
+.gv-card{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;background:var(--bg3);border:1px solid var(--brd);border-radius:var(--rl);padding:20px 24px;text-align:center;position:relative;overflow-y:auto;gap:10px;min-height:0}
+.gv-instruction{font-size:20px;font-weight:700;color:var(--t1);line-height:1.4}
+.gv-timer{font-size:28px;font-weight:800;font-family:'JetBrains Mono',monospace;color:var(--t2);letter-spacing:2px}
 .gv-timer.urg{color:var(--acc);animation:tp .6s ease infinite alternate}
 
 /* Sub-question answerer list */
-.gv-subq-list{display:flex;flex-direction:column;gap:6px;width:100%;max-width:420px;margin-bottom:16px}
-.gv-subq-row{display:flex;align-items:baseline;gap:8px;font-size:15px}
-.gv-subq-label{color:var(--ylw);font-weight:700;white-space:nowrap}
+.gv-subq-list{display:flex;flex-direction:column;gap:8px;width:100%;max-width:480px}
+.gv-subq-row{display:flex;align-items:center;gap:10px;font-size:16px;background:var(--bg4);border-radius:var(--rs);padding:10px 14px;border:1px solid var(--brd)}
+.gv-subq-row.done-row{border-color:var(--grn);background:var(--grn-s)}
+.gv-subq-label{color:var(--ylw);font-weight:700;white-space:nowrap;font-size:15px}
 .gv-subq-label.done{color:var(--grn)}
 .gv-subq-answerers{color:var(--t2);font-size:13px;flex:1;text-align:left}
 .gv-subq-answerers .name{color:var(--blu);font-weight:600}
@@ -233,7 +234,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--t1);
 .g-ans-inp:focus{border-color:var(--acc)}
 
 /* Chat */
-.gv-chat{background:var(--bg3);border:1px solid var(--brd);border-radius:var(--rl);padding:10px 14px;max-height:130px;display:flex;flex-direction:column;flex-shrink:0}
+.gv-chat{background:var(--bg3);border:1px solid var(--brd);border-radius:var(--rl);padding:10px 14px;height:340px;display:flex;flex-direction:column;flex-shrink:0}
 
 .fb-toast{position:absolute;top:14px;right:14px;padding:6px 14px;border-radius:var(--rs);font-weight:700;font-size:13px;animation:tin .25s ease;z-index:10}
 @keyframes tin{from{transform:translateX(12px);opacity:0}}
@@ -258,7 +259,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--t1);
 @keyframes pu{from{transform:scale(0)}50%{transform:scale(1.2)}}
 
 .g-chat{background:var(--bg3);border:1px solid var(--brd);border-radius:var(--rl);padding:12px;margin-top:8px;max-height:180px;display:flex;flex-direction:column}
-.chat-log{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:3px;font-size:13px}
+.chat-log{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:5px;font-size:16px}
 .ch-sys{color:var(--org);font-style:italic}
 .ch-ok{color:var(--grn);font-weight:600}
 .ch-nm{font-weight:700}
@@ -313,10 +314,10 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--t1);
   .page{padding:16px 14px}
 
   /* Game */
-  .gv-wrap{grid-template-columns:1fr;height:auto;max-height:none}
-  .gv-sidebar{border-left:none;border-top:1px solid var(--brd);padding:12px 16px}
-  .gv-main{padding:12px}
-  .gv-card{padding:20px 16px}
+  .gv-wrap{grid-template-columns:1fr;height:calc(100vh - var(--th));max-height:calc(100vh - var(--th));grid-template-rows:1fr auto}
+  .gv-sidebar{border-left:none;border-top:1px solid var(--brd);padding:12px 16px;height:auto;max-height:160px;overflow-y:auto}
+  .gv-main{padding:8px}
+  .gv-card{padding:14px 12px}
   .gv-instruction{font-size:17px}
   .gv-timer{font-size:22px}
   .g-ans-row{flex-wrap:wrap}
@@ -387,6 +388,15 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--t1);
       <div class="nav-sec">내 활동</div>
       <button class="nav-i" data-nav="dashboard" onclick="navigateTo('dashboard')"><span class="nav-ic">📋</span> 내 맵 대시보드</button>
     </div>
+    <div style="padding:12px 16px;border-top:1px solid var(--brd);margin-top:auto">
+      <div id="sideAuthLoggedOut">
+        <button class="btn btn-a btn-full btn-sm" onclick="openAuthModal('login')">🔐 로그인 / 회원가입</button>
+      </div>
+      <div id="sideAuthLoggedIn" style="display:none">
+        <div style="font-size:13px;font-weight:700;color:var(--t1);margin-bottom:6px" id="sideAuthName"></div>
+        <button class="btn btn-g btn-full btn-sm" onclick="logout()">로그아웃</button>
+      </div>
+    </div>
   </div>
 
   <!-- MAIN -->
@@ -402,8 +412,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--t1);
       </div>
       <div class="top-r">
         <button class="top-lang">🌐 한국어</button>
-        <button class="top-btn">⚙️</button>
-        <button class="top-btn">👤</button>
+        <button class="top-btn" onclick="openAuthModal('login')" id="topAuthBtn" title="로그인">👤 로그인</button>
       </div>
     </div>
 
@@ -485,13 +494,13 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--t1);
     </div>
 
     <!-- ════ GAME ════ -->
-    <div class="page hide" id="page-game" style="padding:0">
+    <div class="page hide" id="page-game" style="padding:0;max-width:none;display:flex;flex-direction:column;height:calc(100vh - var(--th));overflow:hidden">
       <!-- YouTube 오디오 숨김 -->
       <div id="youtubeArea" style="display:none;width:1px;height:1px;overflow:hidden;position:absolute;opacity:0">
         <iframe id="youtubeFrame" style="width:1px;height:1px;border:none" allow="autoplay; encrypted-media"></iframe>
       </div>
 
-      <div class="gv-wrap">
+      <div class="gv-wrap" style="flex:1;min-height:0">
         <!-- 왼쪽: 메인 게임 영역 -->
         <div class="gv-main">
           <!-- 상단 바 -->
@@ -506,32 +515,31 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--t1);
             <div id="gameFeedback"></div>
             <div class="gv-instruction" id="gamePrompt">음악을 듣고 답을 입력하세요</div>
             <div class="gv-timer" id="gameTimer">- 30초 -</div>
+            <div class="gv-hint" id="gameHint" style="display:none"></div>
+            <div id="chosungHintArea" style="display:none;font-size:18px;font-weight:800;font-family:'JetBrains Mono',monospace;color:var(--ylw);letter-spacing:6px"></div>
 
-            <!-- 서브퀴즈별 정답자 목록 -->
+            <!-- 소문제 목록 + 정답자 -->
             <div class="gv-subq-list" id="subqList"></div>
 
-            <!-- 힌트 (있을 때만 표시) -->
-            <div class="gv-hint" id="gameHint" style="display:none"></div>
-
-            <!-- 입력 영역 -->
-            <div class="gv-input-area">
-              <div class="g-ans-row" style="justify-content:center">
-                <input class="g-ans-inp" id="answerInput" placeholder="정답을 입력하세요..." autocomplete="off" style="max-width:320px">
-                <div id="chosungHintArea" style="display:none;font-size:18px;font-weight:800;letter-spacing:6px;color:var(--ylw);font-family:'JetBrains Mono',monospace;display:flex;align-items:center;padding:0 4px"></div>
-                <button class="btn btn-a" id="answerBtn" onclick="submitAnswer()">제출</button>
-              </div>
-              <div style="text-align:center;margin-top:8px">
-                <button class="btn btn-g btn-sm" id="skipBtn" onclick="voteSkip()" title="스킵 투표">
-                  ⏭ 스킵 <span id="skipCount" style="font-family:'JetBrains Mono',monospace;font-size:11px">0/0</span>
-                </button>
-              </div>
+            <!-- 스킵 -->
+            <div style="text-align:center;margin-top:4px">
+              <button class="btn btn-g btn-sm" id="skipBtn" onclick="voteSkip()">
+                ⏭ 스킵 <span id="skipCount" style="font-family:'JetBrains Mono',monospace;font-size:11px">0/0</span>
+              </button>
             </div>
-
-            <div class="gv-skip-hint">( "Enter"키로 제출, 모두 맞추면 다음 곡으로 넘어갑니다. )</div>
+            <!-- 숨김 (하위 호환) -->
+            <input id="answerInput" style="display:none">
+            <button id="answerBtn" style="display:none"></button>
           </div>
 
-          <!-- 채팅 -->
-          <div class="gv-chat"><div class="chat-log" id="chatLog"></div></div>
+          <!-- 채팅 (입력창이 정답창 겸용) -->
+          <div class="gv-chat">
+            <div class="chat-log" id="chatLog"></div>
+            <div style="display:flex;gap:6px;margin-top:8px">
+              <input class="g-ans-inp" id="chatInput" placeholder="채팅 / 정답 입력..." autocomplete="off" style="flex:1;padding:8px 12px;font-size:13px">
+              <button class="btn btn-a btn-sm" onclick="sendChatOrAnswer()">전송</button>
+            </div>
+          </div>
         </div>
 
         <!-- 오른쪽: 순위판 -->
@@ -578,6 +586,29 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--t1);
   </div>
 </div>
 
+<!-- ════ AUTH MODAL ════ -->
+<div class="modal-bg hide" id="authModal" onclick="hideAuthModal()">
+  <div class="modal" onclick="event.stopPropagation()" style="max-width:400px">
+    <div style="display:flex;gap:0;margin-bottom:20px;background:var(--bg5);border-radius:var(--rs);padding:3px">
+      <button class="btn" id="authTabLogin" onclick="switchAuthTab('login')"
+        style="flex:1;border-radius:6px;font-size:14px;font-weight:700;background:var(--acc);color:#fff">로그인</button>
+      <button class="btn btn-g" id="authTabRegister" onclick="switchAuthTab('register')"
+        style="flex:1;border-radius:6px;font-size:14px;font-weight:700">회원가입</button>
+    </div>
+    <div id="authError" style="display:none;background:var(--acc-s);color:var(--acc);border:1px solid rgba(232,64,94,.3);border-radius:var(--rs);padding:8px 12px;font-size:13px;margin-bottom:12px"></div>
+    <div class="inp-g"><label class="inp-l" id="authUserLabel">아이디 (닉네임)</label><input class="inp" id="authUsername" placeholder="닉네임 입력 (고유)..." autocomplete="username" maxlength="20"></div>
+    <div class="inp-g"><label class="inp-l">비밀번호</label><input class="inp" id="authPassword" type="password" placeholder="비밀번호 입력..." autocomplete="current-password"
+      onkeydown="if(event.key==='Enter')doAuth()"></div>
+    <div id="authAvatarRow" class="inp-g" style="display:none">
+      <label class="inp-l">아바타</label>
+      <div id="avatarBtnGroup" style="display:flex;gap:8px;flex-wrap:wrap"></div>
+      <input type="hidden" id="authAvatar" value="🦊">
+    </div>
+    <button class="btn btn-a btn-full btn-lg" onclick="doAuth()" style="margin-top:4px" id="authSubmitBtn">로그인</button>
+    <button class="btn btn-g btn-full btn-sm" onclick="hideAuthModal()" style="margin-top:8px">취소</button>
+  </div>
+</div>
+
 <!-- ════ CREATE ROOM MODAL ════ -->
 <div class="modal-bg hide" id="createModal" onclick="hideCreateModal()">
   <div class="modal" onclick="event.stopPropagation()">
@@ -594,7 +625,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--t1);
 
 <!-- ════ EDIT MAP MODAL ════ -->
 <div class="modal-bg hide" id="editMapModal" onclick="hideEditMapModal()">
-  <div class="modal" style="max-width:640px" onclick="event.stopPropagation()">
+  <div class="modal" style="max-width:820px;max-height:90vh;overflow-y:auto" onclick="event.stopPropagation()">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
       <h2 style="margin:0">✏️ 맵 수정</h2>
       <button class="btn btn-g btn-sm" onclick="hideEditMapModal()">✕ 닫기</button>
@@ -613,7 +644,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--t1);
       <span class="sec-t" style="font-size:13px">문제 목록 (<span id="emQCount">0</span>)</span>
       <button class="btn btn-g btn-sm" onclick="addEditQ()" style="margin-left:auto">+ 문제 추가</button>
     </div>
-    <div id="emQuestions" style="max-height:340px;overflow-y:auto;padding-right:4px"></div>
+    <div id="emQuestions" style="max-height:60vh;overflow-y:auto;padding-right:4px"></div>
     <div style="display:flex;gap:8px;margin-top:20px">
       <button class="btn btn-g" style="flex:1" onclick="hideEditMapModal()">취소</button>
       <button class="btn btn-a" style="flex:1" onclick="saveEditMap()">💾 저장</button>
@@ -623,12 +654,15 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--t1);
 
 <!-- ════ NAME MODAL ════ -->
 <div class="modal-bg" id="nameModal">
-  <div class="modal" style="text-align:center">
-    <h2>🎯 마추기온라인에 오신 걸 환영합니다!</h2>
-    <p style="color:var(--t2);margin-bottom:20px">닉네임을 입력하고 시작하세요</p>
-    <div class="inp-g"><input class="inp" id="nmInput" placeholder="닉네임 입력..." style="text-align:center;font-size:18px;font-weight:700" maxlength="20"></div>
-    <div style="display:flex;justify-content:center;gap:8px;margin:16px 0;flex-wrap:wrap" id="avatarPicker"></div>
-    <button class="btn btn-a btn-lg btn-full" onclick="registerUser()">입장하기 🚀</button>
+  <div class="modal" style="text-align:center;max-width:400px">
+    <div style="font-size:40px;margin-bottom:8px">🎯</div>
+    <h2 style="margin-bottom:6px">마추기온라인</h2>
+    <p style="color:var(--t2);margin-bottom:20px;font-size:14px">로그인하거나 회원가입하여 시작하세요</p>
+    <div style="display:flex;gap:8px;flex-direction:column">
+      <button class="btn btn-a btn-lg btn-full" onclick="document.getElementById('nameModal').classList.add('hide');openAuthModal('login')">🔐 로그인</button>
+      <button class="btn btn-g btn-lg btn-full" onclick="document.getElementById('nameModal').classList.add('hide');openAuthModal('register')">✏️ 회원가입</button>
+    </div>
+    <p style="color:var(--t3);font-size:12px;margin-top:16px">계정이 있으면 맵 제작·관리가 가능합니다</p>
   </div>
 </div>
 
@@ -639,12 +673,20 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--t1);
 
 const socket = io();
 let myUser = { name: "", avatar: "🦊" };
+let authUser = null;   // { id, username, avatar } — 로그인 시
+let authToken = null;  // JWT
 let currentRoom = null;
 let currentRoomId = null;
 let selectedMapId = null;
 let allMaps = [];
 let gameState = { answered: false, timeLeft: 0, totalQ: 0, currentQ: 0 };
-let creatorQuestions = [{ type:"audio", hint:"", answers:"", mediaUrl:"", startTime:0, endTime:0, chosungHint:false, hintRevealTime:5 }];
+function defaultSubQ(type) {
+  return { prompt: type === "audio" ? "노래 제목은?" : "", answers: "", chosungHint: false, hintRevealTime: 5, showAnswer: true };
+}
+function defaultQ(type) {
+  return { type: type||"audio", mediaUrl:"", startTime:0, endTime:0, timeLimit:30, subQuestions:[defaultSubQ(type||"audio")] };
+}
+let creatorQuestions = [defaultQ("audio")];
 
 const AVATARS = ["🦊","🐱","🐶","🐰","🐼","🦁","🐸","🐧","🐯","🐨","🦄","🐲"];
 const COLORS = ["#FF6B6B","#4ECDC4","#45B7D1","#96CEB4","#FFEAA7","#DDA0DD","#98D8C8","#F7DC6F"];
@@ -654,26 +696,23 @@ const COLORS = ["#FF6B6B","#4ECDC4","#45B7D1","#96CEB4","#FFEAA7","#DDA0DD","#98
 // ═══════════════════════════════════════════
 
 window.addEventListener("DOMContentLoaded", () => {
-  // Avatar picker
-  const picker = document.getElementById("avatarPicker");
-  AVATARS.forEach(a => {
-    const btn = document.createElement("button");
-    btn.textContent = a;
-    btn.style.cssText = "font-size:28px;width:48px;height:48px;border-radius:50%;border:2px solid var(--brd);background:var(--bg5);cursor:pointer;transition:all .15s";
-    btn.onclick = () => {
-      myUser.avatar = a;
-      picker.querySelectorAll("button").forEach(b => b.style.borderColor = "var(--brd)");
-      btn.style.borderColor = "var(--acc)";
-    };
-    if (a === myUser.avatar) btn.style.borderColor = "var(--acc)";
-    picker.appendChild(btn);
+  document.getElementById("chatInput").addEventListener("keydown", e => { if (e.key === "Enter") sendChatOrAnswer(); });
+  // K키 스킵 단축키 (채팅 입력 중 제외)
+  document.addEventListener("keydown", e => {
+    if (e.key === "k" || e.key === "K") {
+      const focused = document.activeElement;
+      if (focused && (focused.tagName === "INPUT" || focused.tagName === "TEXTAREA")) return;
+      if (!currentRoomId) return;
+      const skipBtn = document.getElementById("skipBtn");
+      if (skipBtn && !skipBtn.disabled) voteSkip();
+    }
   });
-
-  // Enter key for name
-  document.getElementById("nmInput").addEventListener("keydown", e => { if (e.key === "Enter") registerUser(); });
-  document.getElementById("answerInput").addEventListener("keydown", e => { if (e.key === "Enter") submitAnswer(); });
-
   renderCreatorQuestions();
+  // 자동 로그인 시도 — 실패하면 nameModal 표시
+  const saved = localStorage.getItem("authToken");
+  if (!saved) {
+    // nameModal은 기본 표시 상태 (modal-bg 클래스에 hide 없음)
+  }
 });
 
 // ═══════════════════════════════════════════
@@ -727,17 +766,21 @@ socket.on("newHost", ({ hostId, hostName }) => {
 });
 
 socket.on("gameStarted", ({ totalQuestions, players }) => {
-  gameState.totalQ = totalQuestions;
-  gameState.currentQ = 0;
-  gameState.answered = false;
-  gameState.playerCount = players.length;
+  // 게임 상태 완전 초기화
+  gameState = {
+    totalQ: totalQuestions, currentQ: 0, answered: false,
+    playerCount: players.length, timeLeft: 0, timeLimit: 0,
+    subQAnswerers: {}, subQPrompts: {}, chosungHints: {}, subQuestions: [], totalSubQ: 0, subQCounts: {},
+  };
   document.getElementById("chatLog").innerHTML = "";
+  document.getElementById("subqList").innerHTML = "";
+  document.getElementById("gameFeedback").innerHTML = "";
   addChat("system", "게임이 시작되었습니다!");
   renderScoreboard(players.map(p => ({ ...p, score: 0 })));
   navigateTo("game");
 });
 
-socket.on("question", ({ index, total, type, prompt, hint, timeLimit, mediaUrl, startTime, endTime, subQIndex, totalSubQ, songIndex, totalSongs }) => {
+socket.on("question", ({ index, total, type, hint, timeLimit, mediaUrl, startTime, endTime, songIndex, totalSongs, subQuestions }) => {
   gameState.currentQ = index;
   gameState.totalQ = total;
   gameState.answered = false;
@@ -746,34 +789,29 @@ socket.on("question", ({ index, total, type, prompt, hint, timeLimit, mediaUrl, 
 
   const sIdx = songIndex !== undefined ? songIndex : index;
   const sTot = totalSongs !== undefined ? totalSongs : total;
-  const qIdx = subQIndex !== undefined ? subQIndex : 0;
-  const qTot = totalSubQ !== undefined ? totalSubQ : 1;
 
-  gameState.subQIndex = qIdx;
-  gameState.totalSubQ = qTot;
-  gameState.songIndex = sIdx;
-  gameState.totalSongs = sTot;
-
-  // 새 곡 시작이면 서브퀴즈 정답자 초기화
-  if (qIdx === 0) {
-    gameState.subQAnswerers = {};
-    gameState.subQPrompts = {};
-  }
-  // 현재 서브퀴즈 라벨 저장
-  gameState.subQPrompts[qIdx] = prompt || hint || `문제 ${qIdx + 1}`;
-  if (!gameState.subQAnswerers[qIdx]) gameState.subQAnswerers[qIdx] = [];
+  // 소문제 목록 초기화 (동시 표시)
+  gameState.subQAnswerers = {};
+  gameState.subQPrompts = {};
+  gameState.myAnsweredSubQs = {};
+  gameState.chosungHints = {};
+  gameState.subQCounts = {};
+  gameState.subQuestions = subQuestions || [];
+  gameState.totalSubQ = (subQuestions || []).length || 1;
+  (subQuestions || []).forEach((sq, i) => {
+    gameState.subQPrompts[i] = sq.prompt || `문제 ${i + 1}`;
+    gameState.subQAnswerers[i] = [];
+  });
 
   document.getElementById("gameQC").textContent = `남은 곡 ( ${sTot - sIdx} / ${sTot} )`;
-  document.getElementById("gamePrompt").textContent = prompt || hint || "음악을 듣고 답을 입력하세요";
+  document.getElementById("gamePrompt").textContent = "음악을 듣고 답을 입력하세요";
   document.getElementById("gameTimer").textContent = `- ${timeLimit}초 -`;
   document.getElementById("gameTimer").classList.remove("urg");
   document.getElementById("timerFill").style.width = "100%";
   document.getElementById("timerFill").style.background = "var(--grn)";
-  document.getElementById("answerInput").value = "";
-  document.getElementById("answerInput").disabled = false;
-  document.getElementById("answerBtn").disabled = false;
   document.getElementById("gameFeedback").innerHTML = "";
-  document.getElementById("answerInput").focus();
+  document.getElementById("chatInput").value = "";
+  document.getElementById("chatInput").focus();
 
   // 힌트 (텍스트 힌트)
   const hintEl = document.getElementById("gameHint");
@@ -792,19 +830,36 @@ socket.on("question", ({ index, total, type, prompt, hint, timeLimit, mediaUrl, 
 
   // 스킵 버튼 초기화
   document.getElementById("skipBtn").disabled = false;
-  document.getElementById("skipCount").textContent = `0/${gameState.playerCount || 1}`;
+  const needed = Math.max(1, Math.ceil((gameState.playerCount || 1) / 2));
+  document.getElementById("skipCount").textContent = `0/${needed}`;
 
   renderSubQList();
 
-  // YouTube 오디오 재생 — 서브퀴즈 0번일 때만 새로 로드 (같은 곡 계속 재생)
+  // YouTube 오디오 재생 + 클립 반복
   if (mediaUrl !== null && mediaUrl !== undefined) {
     const ytFrame = document.getElementById("youtubeFrame");
     const ytId = getYouTubeId(mediaUrl || "");
+    clearInterval(window._ytLoopTimer);
     if (ytId) {
-      let src = `https://www.youtube-nocookie.com/embed/${ytId}?autoplay=1&rel=0`;
+      const clipLen = (endTime && startTime != null && endTime > startTime) ? (endTime - startTime) : 0;
+      const curTimeLimit = timeLimit || gameState.timeLimit || 30;
+      const needsLoop = clipLen > 0 && clipLen < curTimeLimit;
+      let src = `https://www.youtube-nocookie.com/embed/${ytId}?autoplay=1&rel=0&modestbranding=1`;
       if (startTime) src += `&start=${startTime}`;
-      if (endTime) src += `&end=${endTime}`;
+      if (endTime)   src += `&end=${endTime}`;
+      if (needsLoop) src += `&loop=1&playlist=${ytId}`;
       ytFrame.src = src;
+      document.getElementById("youtubeArea").style.display = "block";
+      // 반복: endTime 지나면 startTime으로 재로드
+      if (needsLoop) {
+        window._ytLoopTimer = setInterval(() => {
+          const f = document.getElementById("youtubeFrame");
+          if (f && f.src.includes(ytId)) {
+            let s2 = `https://www.youtube-nocookie.com/embed/${ytId}?autoplay=1&rel=0&modestbranding=1&start=${startTime}&end=${endTime}&loop=1&playlist=${ytId}`;
+            f.src = s2;
+          }
+        }, clipLen * 1000);
+      }
     } else {
       ytFrame.src = "";
     }
@@ -823,25 +878,24 @@ socket.on("timeUpdate", t => {
   fill.style.background = pct > 50 ? "var(--grn)" : pct > 25 ? "var(--org)" : "var(--acc)";
 });
 
-socket.on("correctAnswer", ({ playerName, playerAvatar, points, order, subQIndex, scores }) => {
+socket.on("correctAnswer", ({ playerName, playerAvatar, points, order, subQIndex, scores, subQCount, subQTotal }) => {
   renderScoreboard(scores);
   playCorrectSound();
-  // 서브퀴즈 정답자 기록
-  const qi = subQIndex !== undefined ? subQIndex : (gameState.subQIndex || 0);
+  const qi = subQIndex !== undefined ? subQIndex : 0;
   if (!gameState.subQAnswerers) gameState.subQAnswerers = {};
   if (!gameState.subQAnswerers[qi]) gameState.subQAnswerers[qi] = [];
   if (!gameState.subQAnswerers[qi].find(p => p.name === playerName)) {
     gameState.subQAnswerers[qi].push({ name: playerName, avatar: playerAvatar || "" });
   }
-  renderSubQList();
+  // 소문제별 "x/n명" 카운트 저장
+  if (!gameState.subQCounts) gameState.subQCounts = {};
+  gameState.subQCounts[qi] = { count: subQCount ?? gameState.subQAnswerers[qi].length, total: subQTotal ?? gameState.playerCount };
+
   if (playerName === myUser.name) {
-    showFeedback("ok", `정답! +${points}점 (${order}등)`);
-    gameState.answered = true;
-    document.getElementById("answerInput").disabled = true;
-    document.getElementById("answerBtn").disabled = true;
-    document.getElementById("skipBtn").disabled = true;
-    document.getElementById("skipBtn").title = "정답을 맞췄습니다";
+    showFeedback("ok", `[${gameState.subQPrompts?.[qi] || `문제${qi+1}`}] 정답! +${points}점`);
   }
+  renderSubQList();
+  document.getElementById("chatInput")?.focus();
 });
 
 socket.on("wrongAnswer", ({ text }) => {
@@ -849,11 +903,26 @@ socket.on("wrongAnswer", ({ text }) => {
   setTimeout(() => document.getElementById("gameFeedback").innerHTML = "", 1000);
 });
 
-socket.on("timeUp", ({ answer, scores }) => {
-  showFeedback("no", `시간 초과! 정답: ${answer}`);
-  gameState.answered = true;
-  document.getElementById("answerInput").disabled = true;
-  document.getElementById("answerBtn").disabled = true;
+socket.on("timeUp", ({ answer, revealList, scores }) => {
+  // revealList: [{ prompt, answer, answered }] — 새 포맷
+  // answer: 하위 호환
+  if (revealList) {
+    const unanswered = revealList.filter(r => !r.answered);
+    if (unanswered.length > 0) {
+      const feedbackParts = unanswered.map(r => r.answer != null ? `${r.prompt}: ${r.answer}` : `${r.prompt}: 비공개`);
+      showFeedback("no", `시간 초과! ${feedbackParts.join(" / ")}`);
+      // 미정답 서브퀴즈 정답자 표시에 반영
+      unanswered.forEach(r => {
+        const idx = revealList.indexOf(r);
+        if (!gameState.subQAnswerers) gameState.subQAnswerers = {};
+        const label = r.answer != null ? `정답: ${r.answer}` : "비공개";
+        if (!gameState.subQAnswerers[idx]) gameState.subQAnswerers[idx] = [{ name: label, avatar: "⏰" }];
+      });
+      renderSubQList();
+    }
+  } else if (answer) {
+    showFeedback("no", `시간 초과! 정답: ${answer}`);
+  }
   renderScoreboard(scores);
 });
 
@@ -867,14 +936,17 @@ socket.on("gameOver", ({ scores }) => {
   navigateTo("results");
 });
 
-socket.on("skipVoteUpdate", ({ votes, total, unanswered }) => {
+socket.on("skipVoteUpdate", ({ votes, total, needed }) => {
   const btn = document.getElementById("skipCount");
-  if (btn) btn.textContent = `${votes}/${unanswered ?? total}`;
+  if (btn) btn.textContent = `${votes}/${needed ?? total}`;
 });
 
-socket.on("hintReveal", ({ hint }) => {
-  const el = document.getElementById("chosungHintArea");
-  if (el) { el.textContent = hint; el.style.display = "flex"; }
+socket.on("hintReveal", ({ subQIndex, hint }) => {
+  // 해당 소문제 행에 초성힌트 표시
+  const idx = subQIndex !== undefined ? subQIndex : 0;
+  if (!gameState.chosungHints) gameState.chosungHints = {};
+  gameState.chosungHints[idx] = hint;
+  renderSubQList();
 });
 
 socket.on("error", msg => {
@@ -985,12 +1057,17 @@ function startGame() {
   if (currentRoomId) socket.emit("startGame", { roomId: currentRoomId });
 }
 
-function submitAnswer() {
-  if (gameState.answered) return;
-  const val = document.getElementById("answerInput").value.trim();
+function submitAnswer() {} // 하위 호환 유지
+
+function sendChatOrAnswer() {
+  const input = document.getElementById("chatInput");
+  const val = input.value.trim();
   if (!val) return;
-  socket.emit("submitAnswer", { roomId: currentRoomId, answer: val });
-  document.getElementById("answerInput").value = "";
+  input.value = "";
+  if (currentRoomId) {
+    // 게임 중이면 정답 시도 + 채팅 동시 처리 (서버에서 판별)
+    socket.emit("chat", { roomId: currentRoomId, message: val });
+  }
 }
 
 // ═══════════════════════════════════════════
@@ -1100,18 +1177,27 @@ function renderSubQList() {
   if (!container) return;
   const prompts = gameState.subQPrompts || {};
   const answerers = gameState.subQAnswerers || {};
+  const hints = gameState.chosungHints || {};
+  const counts = gameState.subQCounts || {};
   const totalSubQ = gameState.totalSubQ || 1;
-  const currentSubQ = gameState.subQIndex || 0;
+  const totalPlayers = gameState.playerCount || 1;
 
   let html = "";
   for (let i = 0; i < totalSubQ; i++) {
     const label = prompts[i] || `문제 ${i + 1}`;
-    const names = (answerers[i] || []).map(p => `<span class="name">${p.avatar} ${p.name}</span>`).join(", ");
-    const isDone = (answerers[i] || []).length > 0 && i < currentSubQ;
-    const isCurrent = i === currentSubQ;
-    html += `<div class="gv-subq-row">
-      <span class="gv-subq-label${isDone ? " done" : ""}">${isCurrent ? "▶ " : ""}${label} 정답자 :</span>
-      <span class="gv-subq-answerers">${names || ""}</span>
+    const ans = answerers[i] || [];
+    const cnt = counts[i];
+    const doneCount = cnt ? cnt.count : ans.length;
+    const allDone = doneCount >= totalPlayers;
+    const names = ans.map(p => `<span class="name">${p.avatar} ${p.name}</span>`).join(", ");
+    const chHint = hints[i] ? `<span style="font-size:14px;color:var(--ylw);font-family:'JetBrains Mono',monospace;letter-spacing:4px;margin-left:8px">${hints[i]}</span>` : "";
+    const countBadge = totalPlayers > 1
+      ? `<span style="font-size:11px;font-family:'JetBrains Mono',monospace;color:${allDone?'var(--grn)':'var(--t3)'};margin-left:auto;white-space:nowrap">${doneCount}/${totalPlayers}명</span>`
+      : "";
+    html += `<div class="gv-subq-row${allDone ? " done-row" : ""}">
+      <span class="gv-subq-label${allDone ? " done" : ""}">${allDone ? "✅" : "▶"} ${label} :</span>
+      <span class="gv-subq-answerers">${names}${chHint}</span>
+      ${countBadge}
     </div>`;
   }
   container.innerHTML = html;
@@ -1172,141 +1258,283 @@ function showResults(scores) {
 // Map Creator
 // ═══════════════════════════════════════════
 
-function renderCreatorQuestions() {
-  document.getElementById("cmQCount").textContent = creatorQuestions.length;
-  document.getElementById("cmQuestions").innerHTML = creatorQuestions.map((q, i) => {
+// ── 공통 문제 렌더 함수 (맵 제작 + 수정 공유) ──
+function renderQList(arr, arrName, containerId, countId) {
+  document.getElementById(countId).textContent = arr.length;
+  const fmtTime = s => { const m = Math.floor(s/60); return `${m}:${String(s%60).padStart(2,'0')}`; };
+
+  document.getElementById(containerId).innerHTML = arr.map((q, i) => {
     const ytId = getYouTubeId(q.mediaUrl || "");
     const hasYt = !!ytId;
     const startSec = q.startTime || 0;
     const endSec = q.endTime || 0;
-    const fmtTime = s => { const m = Math.floor(s/60); return `${m}:${String(s%60).padStart(2,'0')}`; };
+    const subs = q.subQuestions || [];
+    const tl = q.timeLimit || 30;
+    const clipLen = (hasYt && endSec > startSec) ? (endSec - startSec) : 0;
+    const willLoop = clipLen > 0 && clipLen < tl;
+
+    const subQHtml = subs.map((sq, si) => {
+      const firstAns = (sq.answers || "").split(",")[0].trim();
+      return `
+      <div style="display:flex;flex-direction:column;gap:6px;padding:10px 14px;border-bottom:1px solid var(--brd);background:${si%2===0?'var(--bg3)':'var(--bg4)'}">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <span style="font-size:11px;font-weight:700;color:var(--t3);white-space:nowrap;min-width:52px">문제 ${si+1}</span>
+          <input class="inp" placeholder="질문 (예: 노래 제목은?)" style="flex:2;min-width:120px" value="${esc(sq.prompt)}"
+            oninput="${arrName}[${i}].subQuestions[${si}].prompt=this.value">
+          <input class="inp" placeholder="정답 (쉼표로 복수 입력)" style="flex:3;min-width:140px" value="${esc(sq.answers)}"
+            oninput="${arrName}[${i}].subQuestions[${si}].answers=this.value"
+            onblur="renderQList(${arrName},'${arrName}','${containerId}','${countId}')">
+          ${subs.length > 1 ? `<button class="btn btn-g btn-sm" onclick="${arrName}[${i}].subQuestions.splice(${si},1);renderQList(${arrName},'${arrName}','${containerId}','${countId}')" style="color:var(--acc);flex:0 0 auto;padding:4px 8px">✕</button>` : '<div style="width:32px"></div>'}
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;padding-left:60px;flex-wrap:wrap">
+          <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;font-weight:600">
+            <input type="checkbox" ${sq.showAnswer!==false?'checked':''} style="width:14px;height:14px;accent-color:var(--grn)"
+              onchange="${arrName}[${i}].subQuestions[${si}].showAnswer=this.checked">
+            🔓 정답 공개
+          </label>
+          <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;font-weight:600">
+            <input type="checkbox" ${sq.chosungHint?'checked':''} style="width:14px;height:14px;accent-color:var(--acc)"
+              onchange="${arrName}[${i}].subQuestions[${si}].chosungHint=this.checked;renderQList(${arrName},'${arrName}','${containerId}','${countId}')">
+            💡 초성 힌트
+          </label>
+          ${sq.chosungHint ? `
+          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+            <span style="font-size:11px;color:var(--t3)">공개:</span>
+            <select class="q-sel" style="font-size:12px;padding:3px 6px"
+              onchange="${arrName}[${i}].subQuestions[${si}].hintRevealTime=+this.value;renderQList(${arrName},'${arrName}','${containerId}','${countId}')">
+              <option value="5"  ${(sq.hintRevealTime||0)==5 ?'selected':''}>5초 후</option>
+              <option value="10" ${(sq.hintRevealTime||0)==10?'selected':''}>10초 후</option>
+              <option value="15" ${(sq.hintRevealTime||0)==15?'selected':''}>15초 후</option>
+              <option value="0"  ${!sq.hintRevealTime?'selected':''}>커스텀</option>
+            </select>
+            ${!sq.hintRevealTime||![5,10,15].includes(sq.hintRevealTime) ? `
+            <input type="number" min="1" max="60" class="inp" style="width:60px;padding:3px 6px;font-size:12px" placeholder="초"
+              value="${sq.hintRevealTime||''}" oninput="${arrName}[${i}].subQuestions[${si}].hintRevealTime=+this.value">` : ''}
+            ${firstAns ? `<span style="font-size:11px;color:var(--ylw);font-family:'JetBrains Mono',monospace">${esc(firstAns)} → ${getChosungClient(firstAns)}</span>` : ''}
+          </div>` : ''}
+        </div>
+      </div>`;
+    }).join("");
+
     return `
     <div style="background:var(--bg3);border:1px solid var(--brd);border-radius:var(--r);margin-bottom:14px;overflow:hidden">
-      <!-- 헤더 -->
-      <div style="display:flex;align-items:center;gap:8px;padding:10px 14px;background:var(--bg4);border-bottom:1px solid var(--brd)">
+      <!-- 곡 헤더 -->
+      <div style="display:flex;align-items:center;gap:8px;padding:10px 14px;background:var(--bg2);border-bottom:1px solid var(--brd);flex-wrap:wrap">
         <span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--t3);min-width:28px">#${i+1}</span>
-        <select class="q-sel" style="flex:0 0 auto" onchange="creatorQuestions[${i}].type=this.value;renderCreatorQuestions()">
-          <option value="audio" ${q.type==='audio'?'selected':''}>🎵 음악</option>
-          <option value="scene" ${q.type==='scene'?'selected':''}>🎬 영상</option>
+        <select class="q-sel" style="flex:0 0 auto" onchange="${arrName}[${i}].type=this.value;renderQList(${arrName},'${arrName}','${containerId}','${countId}')">
+          <option value="audio"     ${q.type==='audio'    ?'selected':''}>🎵 음악</option>
+          <option value="scene"     ${q.type==='scene'    ?'selected':''}>🎬 영상</option>
           <option value="character" ${q.type==='character'?'selected':''}>💬 대사</option>
         </select>
-        <input class="inp" placeholder="힌트 / 질문" style="flex:1" value="${esc(q.hint)}" oninput="creatorQuestions[${i}].hint=this.value">
-        <input class="inp" placeholder="정답 (쉼표로 복수)" style="flex:1" value="${esc(q.answers||q.answer||'')}" oninput="creatorQuestions[${i}].answers=this.value">
-        <button class="btn btn-g btn-sm" onclick="removeCreatorQ(${i})" style="color:var(--acc);flex:0 0 auto">✕</button>
-      </div>
-      <!-- 초성힌트 + 힌트공개시간 -->
-      <div style="display:flex;align-items:center;gap:16px;padding:8px 14px;background:var(--bg5);border-bottom:1px solid var(--brd);flex-wrap:wrap">
-        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;font-weight:600;white-space:nowrap">
-          <input type="checkbox" ${q.chosungHint?'checked':''} onchange="creatorQuestions[${i}].chosungHint=this.checked;renderCreatorQuestions()"
-            style="width:15px;height:15px;accent-color:var(--acc)">
-          💡 초성 힌트 자동 공개
+        <span style="font-size:11px;color:var(--t3)">${subs.length}개 소문제</span>
+        <!-- 제한 시간 (문제 레벨) -->
+        <label style="display:flex;align-items:center;gap:5px;font-size:12px;font-weight:600;color:var(--t2);margin-left:8px">
+          ⏱
+          <input type="number" min="5" max="300" class="inp" style="width:62px;padding:4px 8px;font-family:'JetBrains Mono',monospace"
+            value="${tl}" oninput="${arrName}[${i}].timeLimit=+this.value">
+          <span style="color:var(--t3)">초</span>
         </label>
-        ${q.chosungHint ? `
-        <div style="display:flex;align-items:center;gap:8px">
-          <span style="font-size:12px;color:var(--t3)">공개 시점:</span>
-          <select class="q-sel" onchange="creatorQuestions[${i}].hintRevealTime=+this.value" style="font-size:12px">
-            <option value="5"  ${(q.hintRevealTime||0)==5 ?'selected':''}>5초 후</option>
-            <option value="10" ${(q.hintRevealTime||0)==10?'selected':''}>10초 후</option>
-            <option value="15" ${(q.hintRevealTime||0)==15?'selected':''}>15초 후</option>
-            <option value="0"  ${!q.hintRevealTime?'selected':''}>커스텀</option>
-          </select>
-          ${!q.hintRevealTime||![5,10,15].includes(q.hintRevealTime) ? `
-          <input type="number" min="1" max="60" class="inp" style="width:70px;padding:4px 8px;font-size:12px" placeholder="초"
-            value="${q.hintRevealTime||''}" oninput="creatorQuestions[${i}].hintRevealTime=+this.value">
-          ` : ''}
-          <span style="font-size:11px;color:var(--ylw);font-family:'JetBrains Mono',monospace">
-            예: ${esc((q.answers||q.answer||'정답').toString().split(',')[0].trim())} → ${getChosungClient((q.answers||q.answer||'정답').toString().split(',')[0].trim())}
-          </span>
-        </div>
-        ` : ''}
+        ${willLoop ? `<span style="font-size:11px;color:var(--ylw)">🔁 반복재생 (${clipLen}초 클립)</span>` : ''}
+        <button class="btn btn-g btn-sm" onclick="if(${arrName}.length>1){${arrName}.splice(${i},1);renderQList(${arrName},'${arrName}','${containerId}','${countId}')}else{alert('최소 1개 필요')}" style="color:var(--acc);margin-left:auto">✕ 삭제</button>
       </div>
       <!-- YouTube 영역 -->
-      <div style="display:flex;gap:0">
-        ${hasYt ? `
-        <div style="flex:0 0 320px;background:#000;position:relative;aspect-ratio:16/9;max-width:320px">
-          <iframe src="https://www.youtube-nocookie.com/embed/${ytId}?start=${startSec}&rel=0" style="width:100%;height:100%;border:none" allow="encrypted-media" allowfullscreen></iframe>
-        </div>` : ''}
-        <div style="flex:1;padding:14px;display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;gap:0;border-bottom:1px solid var(--brd);flex-wrap:wrap">
+        ${hasYt ? `<div style="flex:0 0 280px;background:#000;aspect-ratio:16/9;max-width:280px"><iframe id="yt-prev-${arrName}-${i}" src="https://www.youtube-nocookie.com/embed/${ytId}?start=${startSec}&rel=0&modestbranding=1" style="width:100%;height:100%;border:none" allow="autoplay;encrypted-media" allowfullscreen></iframe></div>` : ''}
+        <div style="flex:1;min-width:240px;padding:12px 14px;display:flex;flex-direction:column;gap:10px">
           <div>
-            <div style="font-size:11px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">YouTube URL</div>
+            <div style="font-size:11px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px">YouTube URL</div>
             <input class="inp" placeholder="https://youtu.be/..." value="${esc(q.mediaUrl||'')}"
-              oninput="creatorQuestions[${i}].mediaUrl=this.value;renderCreatorQuestions()" style="width:100%">
+              onblur="${arrName}[${i}].mediaUrl=this.value;renderQList(${arrName},'${arrName}','${containerId}','${countId}')" style="width:100%">
           </div>
           ${hasYt ? `
-          <div>
-            <div style="font-size:11px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">재생 구간</div>
-            <div style="display:flex;align-items:center;gap:8px">
-              <div style="background:var(--bg5);border:1px solid var(--brd);border-radius:var(--rs);padding:8px 12px;flex:1">
-                <div style="font-size:10px;color:var(--t3);margin-bottom:4px">시작</div>
-                <div style="display:flex;align-items:center;gap:6px">
-                  <input type="number" min="0" class="inp" style="width:80px;padding:4px 8px;font-family:'JetBrains Mono',monospace"
-                    value="${startSec}" oninput="creatorQuestions[${i}].startTime=+this.value;renderCreatorQuestions()">
-                  <span style="font-size:13px;color:var(--ylw);font-family:'JetBrains Mono',monospace;font-weight:700">${fmtTime(startSec)}</span>
-                </div>
-              </div>
-              <div style="color:var(--t3);font-size:18px">→</div>
-              <div style="background:var(--bg5);border:1px solid var(--brd);border-radius:var(--rs);padding:8px 12px;flex:1">
-                <div style="font-size:10px;color:var(--t3);margin-bottom:4px">끝 (0=제한없음)</div>
-                <div style="display:flex;align-items:center;gap:6px">
-                  <input type="number" min="0" class="inp" style="width:80px;padding:4px 8px;font-family:'JetBrains Mono',monospace"
-                    value="${endSec}" oninput="creatorQuestions[${i}].endTime=+this.value;renderCreatorQuestions()">
-                  <span style="font-size:13px;color:var(--ylw);font-family:'JetBrains Mono',monospace;font-weight:700">${endSec ? fmtTime(endSec) : '--:--'}</span>
-                </div>
-              </div>
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <div style="display:flex;align-items:center;gap:6px;font-size:12px">
+              <span style="color:var(--t3);min-width:28px">시작</span>
+              <input type="range" min="0" max="600" step="1" value="${startSec}" style="flex:1;accent-color:var(--acc)"
+                oninput="${arrName}[${i}].startTime=+this.value;this.nextElementSibling.textContent=fmtT(+this.value);updateYtPreview('yt-prev-${arrName}-${i}','${ytId}',+this.value)">
+              <span style="font-family:'JetBrains Mono',monospace;color:var(--ylw);min-width:40px;font-size:12px">${fmtTime(startSec)}</span>
+              <input type="number" min="0" max="600" class="inp" style="width:60px;padding:4px 6px;font-family:'JetBrains Mono',monospace;font-size:12px"
+                value="${startSec}" oninput="${arrName}[${i}].startTime=+this.value;this.closest('div').querySelector('input[type=range]').value=this.value;updateYtPreview('yt-prev-${arrName}-${i}','${ytId}',+this.value)">
             </div>
-            ${startSec < endSec ? `
-            <div style="margin-top:8px;background:var(--bg5);border-radius:4px;height:6px;position:relative;overflow:hidden">
-              <div style="position:absolute;left:0;right:0;top:0;bottom:0;background:var(--brd2)"></div>
-              <div style="position:absolute;top:0;bottom:0;background:var(--acc);border-radius:4px;left:0;width:100%"></div>
+            <div style="display:flex;align-items:center;gap:6px;font-size:12px">
+              <span style="color:var(--t3);min-width:28px">끝</span>
+              <input type="range" min="0" max="600" step="1" value="${endSec}" style="flex:1;accent-color:var(--grn)"
+                oninput="${arrName}[${i}].endTime=+this.value;this.nextElementSibling.textContent=fmtT(+this.value)">
+              <span style="font-family:'JetBrains Mono',monospace;color:var(--grn);min-width:40px;font-size:12px">${endSec ? fmtTime(endSec) : '∞'}</span>
+              <input type="number" min="0" max="600" class="inp" style="width:60px;padding:4px 6px;font-family:'JetBrains Mono',monospace;font-size:12px"
+                value="${endSec}" oninput="${arrName}[${i}].endTime=+this.value;this.closest('div').querySelector('input[type=range]').value=this.value">
             </div>
-            <div style="font-size:11px;color:var(--t3);margin-top:4px;font-family:'JetBrains Mono',monospace">${fmtTime(startSec)} ~ ${fmtTime(endSec)} (${endSec-startSec}초)</div>
-            ` : ''}
-          </div>
-          ` : '<div style="color:var(--t3);font-size:13px">URL을 입력하면 영상 미리보기가 표시됩니다</div>'}
+            ${startSec < endSec ? `<div style="font-size:11px;color:var(--t3)">구간: ${fmtTime(startSec)} → ${fmtTime(endSec)} (${endSec-startSec}초)${willLoop?' 🔁 반복':''}</div>` : ''}
+          </div>` : `<div style="font-size:12px;color:var(--t3);padding:8px 0">URL을 입력하면 미리보기와 슬라이더가 표시됩니다</div>`}
         </div>
       </div>
-    </div>
-  `}).join("");
+      <!-- 소문제 목록 -->
+      <div>
+        <div style="padding:6px 14px;background:var(--bg5);display:flex;align-items:center;justify-content:space-between">
+          <span style="font-size:11px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.5px">소문제</span>
+          <button class="btn btn-g btn-sm" onclick="${arrName}[${i}].subQuestions.push(defaultSubQ(${arrName}[${i}].type));renderQList(${arrName},'${arrName}','${containerId}','${countId}')" style="font-size:12px;padding:3px 10px">+ 소문제 추가</button>
+        </div>
+        ${subQHtml}
+      </div>
+    </div>`;
+  }).join("");
 }
 
-function addCreatorQ() {
-  creatorQuestions.push({ type:"audio", hint:"", answers:"", mediaUrl:"", startTime:0, endTime:0, chosungHint:false, hintRevealTime:5 });
-  renderCreatorQuestions();
+// 슬라이더 미리보기 helper (전역)
+function fmtT(s) { const m=Math.floor(s/60); return `${m}:${String(s%60).padStart(2,'0')}`; }
+function updateYtPreview(frameId, ytId, startSec) {
+  const fr = document.getElementById(frameId);
+  if (!fr) return;
+  fr.src = `https://www.youtube-nocookie.com/embed/${ytId}?autoplay=1&start=${Math.floor(startSec)}&rel=0&modestbranding=1`;
 }
+
+function renderCreatorQuestions() { renderQList(creatorQuestions,'creatorQuestions','cmQuestions','cmQCount'); }
+function addCreatorQ() { creatorQuestions.push(defaultQ("audio")); renderCreatorQuestions(); }
+function addSubQ(qi) { creatorQuestions[qi].subQuestions.push(defaultSubQ(creatorQuestions[qi].type)); renderCreatorQuestions(); }
+function removeSubQ(qi, si) { creatorQuestions[qi].subQuestions.splice(si, 1); renderCreatorQuestions(); }
 
 async function submitMap() {
+  if (!authToken) return openAuthModal('login', '맵을 만들려면 로그인이 필요합니다');
   const name = document.getElementById("cmName").value.trim();
   const cat = document.getElementById("cmCat").value;
   if (!name) return alert("맵 이름을 입력해주세요!");
-  if (creatorQuestions.some(q => !(q.answers || q.answer || "").trim())) return alert("모든 문제에 정답을 입력해주세요!");
+  if (creatorQuestions.some(q => (q.subQuestions||[]).some(sq => !sq.answers.trim()))) return alert("모든 소문제에 정답을 입력해주세요!");
 
   try {
     const res = await fetch("/api/maps", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", "Authorization": `Bearer ${authToken}` },
       body: JSON.stringify({
-        name, author: myUser.name, authorId: socket.id,
+        name,
         icon: cat === "kpop" ? "🎤" : cat === "scene" ? "🎬" : cat === "character" ? "💬" : cat === "ost" ? "🎧" : "🎵",
         category: cat, tags: [],
         questions: creatorQuestions.map(q => ({
-          ...q,
-          answers: (q.answers || q.answer || "").split(",").map(a => a.trim()).filter(Boolean),
-          chosungHint: !!q.chosungHint,
-          hintRevealTime: parseInt(q.hintRevealTime) || 0,
+          type: q.type, mediaUrl: q.mediaUrl || "", startTime: q.startTime || 0, endTime: q.endTime || 0,
+          subQuestions: (q.subQuestions || []).map(sq => ({
+            prompt: sq.prompt || "",
+            answers: (sq.answers || "").split(",").map(a => a.trim()).filter(Boolean),
+            timeLimit: sq.timeLimit || 30, chosungHint: !!sq.chosungHint, hintRevealTime: parseInt(sq.hintRevealTime) || 0,
+          })),
         })),
       }),
     });
     const data = await res.json();
     if (data.id) {
       alert("맵이 생성되었습니다! 🎉");
-      creatorQuestions = [{ type:"audio", hint:"", answer:"" }];
+      creatorQuestions = [{ type:"audio", mediaUrl:"", startTime:0, endTime:0, subQuestions:[defaultSubQ("audio")] }];
       document.getElementById("cmName").value = "";
       renderCreatorQuestions();
       socket.emit("getMaps");
       navigateTo("home");
-    }
+    } else { alert(data.error || "맵 생성 실패"); }
   } catch (e) { alert("맵 생성 실패: " + e.message); }
 }
+
+// ═══════════════════════════════════════════
+// Auth
+// ═══════════════════════════════════════════
+
+let _authTab = "login";
+
+function openAuthModal(tab, msg) {
+  _authTab = tab || "login";
+  switchAuthTab(_authTab);
+  document.getElementById("authUsername").value = "";
+  document.getElementById("authPassword").value = "";
+  const errEl = document.getElementById("authError");
+  if (msg) { errEl.textContent = msg; errEl.style.display = "block"; }
+  else { errEl.style.display = "none"; }
+  document.getElementById("authModal").classList.remove("hide");
+  setTimeout(() => document.getElementById("authUsername").focus(), 50);
+}
+function hideAuthModal() { document.getElementById("authModal").classList.add("hide"); }
+
+function switchAuthTab(tab) {
+  _authTab = tab;
+  const isLogin = tab === "login";
+  document.getElementById("authTabLogin").style.background   = isLogin ? "var(--acc)" : "";
+  document.getElementById("authTabLogin").style.color        = isLogin ? "#fff" : "";
+  document.getElementById("authTabRegister").style.background = isLogin ? "" : "var(--acc)";
+  document.getElementById("authTabRegister").style.color     = isLogin ? "" : "#fff";
+  document.getElementById("authAvatarRow").style.display     = isLogin ? "none" : "block";
+  document.getElementById("authSubmitBtn").textContent       = isLogin ? "로그인" : "회원가입 🚀";
+  document.getElementById("authUserLabel").textContent       = isLogin ? "아이디 (닉네임)" : "닉네임 (고유, 변경 불가)";
+  document.getElementById("authUsername").placeholder        = isLogin ? "닉네임 입력..." : "사용할 닉네임 입력...";
+  document.getElementById("authError").style.display = "none";
+  // 아바타 버튼 동적 생성 (회원가입 탭)
+  if (!isLogin) {
+    const group = document.getElementById("avatarBtnGroup");
+    if (group && !group.children.length) {
+      const avs = ["🦊","🐼","🐯","🦁","🐸","🐧","🦄","🐲","🤖","👾","🎭","😎"];
+      group.innerHTML = avs.map(a => `<button class="av-btn" onclick="selectAuthAvatar('${a}')">${a}</button>`).join("");
+      selectAuthAvatar("🦊");
+    }
+  }
+}
+
+function selectAuthAvatar(a) {
+  document.getElementById("authAvatar").value = a;
+  document.querySelectorAll(".av-btn").forEach(b => b.style.borderColor = b.textContent === a ? "var(--acc)" : "");
+}
+
+async function doAuth() {
+  const username = document.getElementById("authUsername").value.trim();
+  const password = document.getElementById("authPassword").value;
+  const errEl = document.getElementById("authError");
+  errEl.style.display = "none";
+  if (!username || !password) { errEl.textContent = "아이디와 비밀번호를 입력해주세요"; errEl.style.display = "block"; return; }
+  try {
+    const body = { username, password };
+    if (_authTab === "register") body.avatar = document.getElementById("authAvatar").value || "🦊";
+    const res = await fetch(`/api/auth/${_authTab}`, {
+      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body),
+    });
+    const data = await res.json();
+    if (!res.ok) { errEl.textContent = data.error || "오류가 발생했습니다"; errEl.style.display = "block"; return; }
+    setAuthUser(data.token, data.user);
+    hideAuthModal();
+  } catch(e) { errEl.textContent = "서버 오류: " + e.message; errEl.style.display = "block"; }
+}
+
+function setAuthUser(token, user) {
+  authToken = token;
+  authUser = user;
+  localStorage.setItem("authToken", token);
+  myUser.name = user.username;
+  myUser.avatar = user.avatar;
+  document.getElementById("nameModal").classList.add("hide");
+  document.getElementById("sideName").textContent = user.username;
+  document.getElementById("sideAvatar").textContent = user.avatar;
+  document.getElementById("sideAuthLoggedOut").style.display = "none";
+  document.getElementById("sideAuthLoggedIn").style.display = "block";
+  document.getElementById("sideAuthName").textContent = `${user.avatar} ${user.username}`;
+  document.getElementById("topAuthBtn").textContent = `${user.avatar} ${user.username}`;
+  socket.emit("register", { name: user.username, avatar: user.avatar });
+}
+
+function logout() {
+  authToken = null; authUser = null;
+  localStorage.removeItem("authToken");
+  document.getElementById("sideAuthLoggedOut").style.display = "block";
+  document.getElementById("sideAuthLoggedIn").style.display = "none";
+  document.getElementById("topAuthBtn").textContent = "👤 로그인";
+}
+
+// 페이지 로드 시 저장된 토큰 확인
+(async function initAuth() {
+  const saved = localStorage.getItem("authToken");
+  if (!saved) return; // nameModal 그대로 표시
+  try {
+    const res = await fetch("/api/auth/me", { headers: { "Authorization": `Bearer ${saved}` } });
+    if (res.ok) {
+      const user = await res.json();
+      setAuthUser(saved, user);
+      document.getElementById("nameModal").classList.add("hide");
+    } else {
+      localStorage.removeItem("authToken");
+    }
+  } catch {}
+})();
 
 function esc(s) { return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
 
@@ -1316,9 +1544,13 @@ function esc(s) { return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").re
 
 async function loadDashboard() {
   const el = document.getElementById("dashMapList");
+  if (!authToken) {
+    el.innerHTML = '<div class="empty">대시보드를 사용하려면 <a href="#" onclick="openAuthModal(\'login\')" style="color:var(--acc)">로그인</a>이 필요합니다.</div>';
+    return;
+  }
   el.innerHTML = '<div class="empty">로딩 중...</div>';
   try {
-    const res = await fetch(`/api/maps/mine/${socket.id}`);
+    const res = await fetch(`/api/maps/mine`, { headers: { "Authorization": `Bearer ${authToken}` } });
     const data = await res.json();
     document.getElementById("dashSubtitle").textContent = `총 ${data.length}개의 맵을 만들었습니다`;
     if (!data.length) {
@@ -1353,8 +1585,7 @@ async function deleteMap(mapId, mapName) {
   try {
     const res = await fetch(`/api/maps/${mapId}`, {
       method: "DELETE",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ authorId: socket.id }),
+      headers: { "Content-Type": "application/json", "Authorization": `Bearer ${authToken}` },
     });
     const data = await res.json();
     if (res.ok) {
@@ -1387,17 +1618,26 @@ async function openEditMap(mapId) {
     document.getElementById("emCat").value = full.category || m.category || "anime-song";
 
     // answers가 없으면 빈 배열로 초기화
-    editQuestions = (full.questions || m.questions || []).map(q => ({
-      type: q.type || "audio",
-      hint: q.hint || "",
-      answers: (q.answers || [q.answer || ""]).join(", "),
-      mediaUrl: q.mediaUrl || "",
-      startTime: q.startTime || 0,
-      endTime: q.endTime || 0,
-      chosungHint: !!q.chosungHint,
-      hintRevealTime: q.hintRevealTime || 0,
-      timeLimit: q.timeLimit || 30,
-    }));
+    editQuestions = (full.questions || m.questions || []).map(q => {
+      // sub-questions가 있으면 그대로, 없으면 기존 answers로 변환
+      let subs = (q.subQuestions && q.subQuestions.length > 0)
+        ? q.subQuestions.map(sq => ({
+            prompt: sq.prompt || "",
+            answers: Array.isArray(sq.answers) ? sq.answers.join(", ") : (sq.answers || ""),
+            chosungHint: !!sq.chosungHint,
+            hintRevealTime: sq.hintRevealTime || 0,
+            showAnswer: sq.showAnswer !== false,
+          }))
+        : [{ prompt: q.hint || "", answers: (q.answers || []).join(", "), chosungHint: !!q.chosungHint, hintRevealTime: q.hintRevealTime || 0, showAnswer: true }];
+      return {
+        type: q.type || "audio",
+        mediaUrl: q.mediaUrl || "",
+        startTime: q.startTime || 0,
+        endTime: q.endTime || 0,
+        timeLimit: q.timeLimit || 30,
+        subQuestions: subs,
+      };
+    });
 
     renderEditQuestions();
     document.getElementById("editMapModal").classList.remove("hide");
@@ -1410,61 +1650,29 @@ function hideEditMapModal() {
   editQuestions = [];
 }
 
-function addEditQ() {
-  editQuestions.push({ type:"audio", hint:"", answers:"", mediaUrl:"", startTime:0, endTime:0, chosungHint:false, hintRevealTime:0, timeLimit:30 });
-  renderEditQuestions();
-}
-
-function removeEditQ(i) {
-  if (editQuestions.length <= 1) return alert("최소 1개의 문제가 필요합니다.");
-  editQuestions.splice(i, 1);
-  renderEditQuestions();
-}
-
-function renderEditQuestions() {
-  document.getElementById("emQCount").textContent = editQuestions.length;
-  document.getElementById("emQuestions").innerHTML = editQuestions.map((q, i) => `
-    <div style="background:var(--bg5);border:1px solid var(--brd);border-radius:var(--rs);padding:10px;margin-bottom:8px">
-      <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px">
-        <span style="font-size:11px;color:var(--t3);min-width:24px">#${i+1}</span>
-        <select class="q-sel" onchange="editQuestions[${i}].type=this.value">
-          <option value="audio" ${q.type==='audio'?'selected':''}>🎵 음악</option>
-          <option value="scene" ${q.type==='scene'?'selected':''}>🎬 영상</option>
-          <option value="character" ${q.type==='character'?'selected':''}>💬 대사</option>
-        </select>
-        <input class="inp" style="flex:1" placeholder="힌트" value="${esc(q.hint)}" oninput="editQuestions[${i}].hint=this.value">
-        <button class="btn btn-g btn-sm" style="color:var(--acc)" onclick="removeEditQ(${i})">✕</button>
-      </div>
-      <div style="display:flex;gap:8px">
-        <input class="inp" style="flex:2" placeholder="정답 (쉼표로 복수)" value="${esc(q.answers||'')}" oninput="editQuestions[${i}].answers=this.value">
-        <input class="inp" style="flex:1" placeholder="제한시간(초)" type="number" min="5" max="120" value="${q.timeLimit||30}" oninput="editQuestions[${i}].timeLimit=+this.value">
-      </div>
-      <div style="display:flex;gap:8px;margin-top:6px">
-        <input class="inp" style="flex:3" placeholder="YouTube URL (선택)" value="${esc(q.mediaUrl||'')}" oninput="editQuestions[${i}].mediaUrl=this.value">
-        <input class="inp" style="flex:1;width:70px" type="number" min="0" placeholder="시작초" value="${q.startTime||0}" oninput="editQuestions[${i}].startTime=+this.value">
-        <input class="inp" style="flex:1;width:70px" type="number" min="0" placeholder="끝초" value="${q.endTime||0}" oninput="editQuestions[${i}].endTime=+this.value">
-      </div>
-    </div>
-  `).join("");
-}
+function renderEditQuestions() { renderQList(editQuestions,'editQuestions','emQuestions','emQCount'); }
+function addEditQ() { editQuestions.push(defaultQ("audio")); renderEditQuestions(); }
 
 async function saveEditMap() {
   if (!editMapId) return;
   const name = document.getElementById("emName").value.trim();
   const cat = document.getElementById("emCat").value;
   if (!name) return alert("맵 이름을 입력해주세요.");
-  if (editQuestions.some(q => !(q.answers||"").trim())) return alert("모든 문제에 정답을 입력해주세요.");
+  if (editQuestions.some(q => (q.subQuestions||[]).some(sq => !(sq.answers||"").trim()))) return alert("모든 소문제에 정답을 입력해주세요.");
 
   try {
     const res = await fetch(`/api/maps/${editMapId}`, {
       method: "PUT",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", "Authorization": `Bearer ${authToken}` },
       body: JSON.stringify({
-        name, category: cat, authorId: socket.id,
+        name, category: cat,
         icon: cat==="kpop"?"🎤":cat==="scene"?"🎬":cat==="character"?"💬":cat==="ost"?"🎧":"🎵",
         questions: editQuestions.map(q => ({
-          ...q,
-          answers: (q.answers||"").split(",").map(a=>a.trim()).filter(Boolean),
+          type: q.type, mediaUrl: q.mediaUrl, startTime: q.startTime, endTime: q.endTime, timeLimit: q.timeLimit,
+          subQuestions: (q.subQuestions||[]).map(sq => ({
+            ...sq,
+            answers: typeof sq.answers === 'string' ? sq.answers.split(",").map(a=>a.trim()).filter(Boolean) : sq.answers,
+          })),
         })),
       }),
     });
@@ -1500,6 +1708,7 @@ function getYouTubeId(url) {
 }
 
 function stopYoutube() {
+  clearInterval(window._ytLoopTimer);
   const f = document.getElementById("youtubeFrame");
   if (f) { f.src = ""; document.getElementById("youtubeArea").style.display = "none"; }
 }

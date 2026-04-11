@@ -1,53 +1,103 @@
 // ═══════════════════════════════════════════════════════════════
-// 마추기온라인.io — Server (Express + Socket.IO)
+// 마추기온라인.io — Server (Express + Socket.IO + MongoDB + Auth)
 // ═══════════════════════════════════════════════════════════════
 
-const express = require("express");
-const http = require("http");
+require("dotenv").config();
+const express   = require("express");
+const http      = require("http");
 const { Server } = require("socket.io");
-const path = require("path");
+const path      = require("path");
 const { v4: uuidv4 } = require("uuid");
+const mongoose  = require("mongoose");
+const bcrypt    = require("bcryptjs");
+const jwt       = require("jsonwebtoken");
 
-const app = express();
+const app    = express();
 const server = http.createServer(app);
-const io = new Server(server, {
-  cors: { origin: "*" },
-  pingTimeout: 60000,
-  pingInterval: 25000,
-});
+const io     = new Server(server, { cors: { origin: "*" }, pingTimeout: 60000, pingInterval: 25000 });
 
-// ── Static files ──
 app.use(express.static(path.join(__dirname, "../public")));
 app.use(express.json());
 
+const JWT_SECRET   = process.env.JWT_SECRET || "matchu-secret";
+const MONGODB_URI  = process.env.MONGODB_URI || "mongodb://localhost:27017/matchu-online";
+
 // ═══════════════════════════════════════════
-// In-Memory Data Store
-// (프로덕션에서는 Redis나 DB 사용 권장)
+// MongoDB
 // ═══════════════════════════════════════════
 
-const users = new Map();      // socketId → { id, name, avatar, score }
-const rooms = new Map();      // roomId → Room object
-const maps = new Map();       // mapId → Map object
+mongoose.connect(MONGODB_URI)
+  .then(() => console.log("✅ MongoDB 연결 성공"))
+  .catch(e  => console.error("❌ MongoDB 연결 실패:", e.message));
+
+// ── Schemas ──
+
+const userSchema = new mongoose.Schema({
+  username:  { type: String, required: true, unique: true, trim: true },
+  password:  { type: String, required: true },
+  avatar:    { type: String, default: "🦊" },
+  createdAt: { type: Date, default: Date.now },
+});
+const UserModel = mongoose.model("User", userSchema);
+
+const subQSchema = new mongoose.Schema({
+  prompt:         { type: String, default: "" },
+  answers:        { type: [String], default: [] },
+  timeLimit:      { type: Number, default: 30 },
+  chosungHint:    { type: Boolean, default: false },
+  hintRevealTime: { type: Number, default: 0 },
+  showAnswer:     { type: Boolean, default: true },
+}, { _id: false });
+
+const questionSchema = new mongoose.Schema({
+  id:             Number,
+  type:           { type: String, default: "audio" },
+  hint:           { type: String, default: "" },
+  answers:        { type: [String], default: [] },
+  anime:          { type: String, default: "" },
+  timeLimit:      { type: Number, default: 30 },
+  mediaUrl:       { type: String, default: "" },
+  startTime:      { type: Number, default: 0 },
+  endTime:        { type: Number, default: 0 },
+  chosungHint:    { type: Boolean, default: false },
+  hintRevealTime: { type: Number, default: 0 },
+  subQuestions:   { type: [subQSchema], default: [] },
+}, { _id: false });
+
+const mapSchema = new mongoose.Schema({
+  mapId:     { type: String, required: true, unique: true, index: true },
+  name:      { type: String, required: true },
+  author:    { type: String, default: "익명" },
+  authorId:  { type: String, default: "" },   // User._id
+  icon:      { type: String, default: "🎵" },
+  category:  { type: String, default: "anime-song" },
+  tags:      { type: [String], default: [] },
+  plays:     { type: Number, default: 0 },
+  rating:    { type: Number, default: 0 },
+  questions: { type: [questionSchema], default: [] },
+  createdAt: { type: Date, default: Date.now },
+});
+const MapModel = mongoose.model("Map", mapSchema);
+
+const rankingSchema = new mongoose.Schema({
+  name: String, avatar: String, score: Number,
+  mapName: String, date: { type: Date, default: Date.now },
+});
+const RankingModel = mongoose.model("Ranking", rankingSchema);
+
+// ═══════════════════════════════════════════
+// In-Memory
+// ═══════════════════════════════════════════
+
+const users = new Map();  // socketId → { id, name, avatar, score }
+const rooms = new Map();  // roomId   → Room
 let onlineCount = 0;
-const globalRanking = [];     // 글로벌 랭킹 (상위 100개 유지)
-
-// 예시 맵 없음 — 사용자가 직접 제작
 
 // ═══════════════════════════════════════════
 // Helpers
 // ═══════════════════════════════════════════
 
-// 질문의 서브퀴즈 배열 반환 (backward compat)
-function getSubQuestions(q) {
-  if (q.subQuestions && q.subQuestions.length > 0) return q.subQuestions;
-  return [{
-    prompt: q.hint || "",
-    answers: q.answers || [q.answer || ""],
-    timeLimit: q.timeLimit || 30,
-    chosungHint: q.chosungHint || false,
-    hintRevealTime: q.hintRevealTime || 0,
-  }];
-}
+function hasKorean(str) { return /[가-힣ㄱ-ㅎㅏ-ㅣ]/.test(str); }
 
 function getChosung(str) {
   const CS = ['ㄱ','ㄲ','ㄴ','ㄷ','ㄸ','ㄹ','ㅁ','ㅂ','ㅃ','ㅅ','ㅆ','ㅇ','ㅈ','ㅉ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ'];
@@ -58,408 +108,321 @@ function getChosung(str) {
   }).join('');
 }
 
+function getSubQuestions(q) {
+  if (q.subQuestions && q.subQuestions.length > 0) return q.subQuestions;
+  return [{ prompt: q.hint || "", answers: q.answers || [], timeLimit: q.timeLimit || 30, chosungHint: q.chosungHint || false, hintRevealTime: q.hintRevealTime || 0 }];
+}
+
+function normalizeQuestions(questions) {
+  return questions.map((q, i) => {
+    let subQuestions = [];
+    if (Array.isArray(q.subQuestions) && q.subQuestions.length > 0) {
+      subQuestions = q.subQuestions.map(sq => {
+        let ans = Array.isArray(sq.answers)
+          ? sq.answers.map(a => a.toLowerCase().trim()).filter(Boolean)
+          : (sq.answers || "").split(",").map(a => a.toLowerCase().trim()).filter(Boolean);
+        if (!ans.length) ans = [""];
+        return { prompt: sq.prompt || "", answers: ans, timeLimit: parseInt(sq.timeLimit) || 30, chosungHint: !!sq.chosungHint, hintRevealTime: parseInt(sq.hintRevealTime) || 0, showAnswer: sq.showAnswer !== false };
+      });
+    }
+    let answers = Array.isArray(q.answers)
+      ? q.answers.map(a => a.toLowerCase().trim()).filter(Boolean)
+      : (q.answers || q.answer || "").split(",").map(a => a.toLowerCase().trim()).filter(Boolean);
+    if (!answers.length) answers = [""];
+    return {
+      id: i + 1, type: q.type || "audio", hint: q.hint || "", answers, anime: q.anime || "",
+      timeLimit: q.timeLimit || 30, mediaUrl: q.mediaUrl || "",
+      startTime: parseInt(q.startTime) || 0, endTime: parseInt(q.endTime) || 0,
+      chosungHint: !!q.chosungHint, hintRevealTime: parseInt(q.hintRevealTime) || 0, subQuestions,
+    };
+  });
+}
+
+// ── Auth Middleware ──
+function authMiddleware(req, res, next) {
+  const token = req.headers.authorization?.split(" ")[1];
+  if (!token) return res.status(401).json({ error: "로그인이 필요합니다" });
+  try {
+    req.user = jwt.verify(token, JWT_SECRET);
+    next();
+  } catch { res.status(401).json({ error: "토큰이 유효하지 않습니다" }); }
+}
+
 // ═══════════════════════════════════════════
-// Room Class
+// REST API — Auth
+// ═══════════════════════════════════════════
+
+app.post("/api/auth/register", async (req, res) => {
+  try {
+    const { username, password, avatar } = req.body;
+    if (!username || !password) return res.status(400).json({ error: "아이디와 비밀번호를 입력해주세요" });
+    if (username.length < 2) return res.status(400).json({ error: "아이디는 2자 이상이어야 합니다" });
+    if (password.length < 4) return res.status(400).json({ error: "비밀번호는 4자 이상이어야 합니다" });
+    const existing = await UserModel.findOne({ username });
+    if (existing) return res.status(400).json({ error: "이미 사용 중인 아이디입니다" });
+    const hashed = await bcrypt.hash(password, 10);
+    const user = await UserModel.create({ username, password: hashed, avatar: avatar || "🦊" });
+    const token = jwt.sign({ id: user._id.toString(), username: user.username, avatar: user.avatar }, JWT_SECRET, { expiresIn: "30d" });
+    res.json({ token, user: { id: user._id.toString(), username: user.username, avatar: user.avatar } });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.post("/api/auth/login", async (req, res) => {
+  try {
+    const { username, password } = req.body;
+    if (!username || !password) return res.status(400).json({ error: "아이디와 비밀번호를 입력해주세요" });
+    const user = await UserModel.findOne({ username });
+    if (!user) return res.status(400).json({ error: "아이디 또는 비밀번호가 틀렸습니다" });
+    const ok = await bcrypt.compare(password, user.password);
+    if (!ok) return res.status(400).json({ error: "아이디 또는 비밀번호가 틀렸습니다" });
+    const token = jwt.sign({ id: user._id.toString(), username: user.username, avatar: user.avatar }, JWT_SECRET, { expiresIn: "30d" });
+    res.json({ token, user: { id: user._id.toString(), username: user.username, avatar: user.avatar } });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.get("/api/auth/me", authMiddleware, async (req, res) => {
+  try {
+    const user = await UserModel.findById(req.user.id, "username avatar createdAt");
+    if (!user) return res.status(404).json({ error: "사용자를 찾을 수 없습니다" });
+    res.json({ id: user._id.toString(), username: user.username, avatar: user.avatar });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// ═══════════════════════════════════════════
+// REST API — Maps
+// ═══════════════════════════════════════════
+
+app.get("/api/maps", async (req, res) => {
+  try {
+    const list = await MapModel.find({}, "mapId name author icon category tags plays rating questions").lean();
+    res.json(list.map(m => ({ id: m.mapId, name: m.name, author: m.author, icon: m.icon, category: m.category, tags: m.tags, questionCount: m.questions.length, plays: m.plays, rating: m.rating })));
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.get("/api/maps/mine", authMiddleware, async (req, res) => {
+  try {
+    const list = await MapModel.find({ authorId: req.user.id }, "mapId name icon category tags plays rating author createdAt questions").lean();
+    res.json(list.map(m => ({ id: m.mapId, name: m.name, icon: m.icon, category: m.category, tags: m.tags, questionCount: m.questions.length, plays: m.plays, rating: m.rating, author: m.author, createdAt: m.createdAt })));
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.get("/api/maps/full/:id", authMiddleware, async (req, res) => {
+  try {
+    const m = await MapModel.findOne({ mapId: req.params.id }).lean();
+    if (!m) return res.status(404).json({ error: "맵을 찾을 수 없습니다" });
+    if (m.authorId !== req.user.id) return res.status(403).json({ error: "권한 없음" });
+    res.json({ ...m, id: m.mapId });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.get("/api/maps/:id", async (req, res) => {
+  try {
+    const m = await MapModel.findOne({ mapId: req.params.id }).lean();
+    if (!m) return res.status(404).json({ error: "맵을 찾을 수 없습니다" });
+    res.json({ id: m.mapId, name: m.name, author: m.author, icon: m.icon, category: m.category, tags: m.tags, questions: m.questions.map(q => ({ id: q.id, type: q.type, hint: q.hint, timeLimit: q.timeLimit })) });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.post("/api/maps", authMiddleware, async (req, res) => {
+  try {
+    const { name, icon, category, tags, questions } = req.body;
+    if (!name || !questions || questions.length === 0) return res.status(400).json({ error: "맵 이름과 최소 1개의 문제가 필요합니다" });
+    const mapId = "map-" + uuidv4().slice(0, 8);
+    const map = await MapModel.create({ mapId, name, author: req.user.username, authorId: req.user.id, icon: icon || "🎵", category: category || "anime-song", tags: tags || [], questions: normalizeQuestions(questions) });
+    res.json({ id: mapId, message: "맵이 생성되었습니다!" });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.put("/api/maps/:id", authMiddleware, async (req, res) => {
+  try {
+    const m = await MapModel.findOne({ mapId: req.params.id });
+    if (!m) return res.status(404).json({ error: "맵을 찾을 수 없습니다" });
+    if (m.authorId !== req.user.id) return res.status(403).json({ error: "수정 권한이 없습니다" });
+    const { name, icon, category, tags, questions } = req.body;
+    if (name) m.name = name;
+    if (icon) m.icon = icon;
+    if (category) m.category = category;
+    if (tags) m.tags = tags;
+    if (questions && questions.length > 0) m.questions = normalizeQuestions(questions);
+    await m.save();
+    res.json({ message: "맵이 수정되었습니다!" });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.delete("/api/maps/:id", authMiddleware, async (req, res) => {
+  try {
+    const m = await MapModel.findOne({ mapId: req.params.id });
+    if (!m) return res.status(404).json({ error: "맵을 찾을 수 없습니다" });
+    if (m.authorId !== req.user.id) return res.status(403).json({ error: "삭제 권한이 없습니다" });
+    await MapModel.deleteOne({ mapId: req.params.id });
+    res.json({ message: "맵이 삭제되었습니다!" });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.get("/api/ranking", async (req, res) => {
+  try { res.json(await RankingModel.find().sort({ score: -1 }).limit(100).lean()); }
+  catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.get("/api/rooms", (req, res) => {
+  res.json(Array.from(rooms.values()).filter(r => r.status !== "finished").map(r => ({
+    id: r.id, name: r.name, hostName: r.hostName, mapId: r.mapId,
+    mapName: r.map?.name || "알 수 없음", mapIcon: r.map?.icon || "❓",
+    players: r.players.size, maxPlayers: r.maxPlayers, status: r.status,
+  })));
+});
+
+app.get("/api/status", async (req, res) => {
+  try { res.json({ online: onlineCount, rooms: rooms.size, maps: await MapModel.countDocuments() }); }
+  catch { res.json({ online: onlineCount, rooms: rooms.size, maps: 0 }); }
+});
+
+app.get("*", (req, res) => res.sendFile(path.join(__dirname, "../public/index.html")));
+
+// ═══════════════════════════════════════════
+// Room
 // ═══════════════════════════════════════════
 
 function createRoom(id, name, hostId, hostName, hostAvatar, mapId, maxPlayers) {
   return {
-    id,
-    name,
-    hostId,
-    hostName: hostName,
-    hostAvatar,
-    mapId,
+    id, name, hostId, hostName, hostAvatar, mapId,
     maxPlayers: Math.min(Math.max(maxPlayers, 1), 8),
-    players: new Map(), // socketId → { id, name, avatar, score, answered }
-    status: "waiting",  // waiting | playing | finished
+    players: new Map(),
+    status: "waiting",
     currentQuestion: 0,
-    answerOrder: [],     // 정답 맞춘 순서
+    answeredSubQs: new Map(),  // subQIndex → { playerName, playerAvatar }
     skipVoters: new Set(),
-    currentSubQ: 0,       // 현재 서브퀴즈 인덱스
     timer: null,
     timeLeft: 0,
+    map: null,
     createdAt: Date.now(),
   };
 }
 
 // ═══════════════════════════════════════════
-// REST API
-// ═══════════════════════════════════════════
-
-// 맵 목록
-app.get("/api/maps", (req, res) => {
-  const list = Array.from(maps.values()).map((m) => ({
-    id: m.id,
-    name: m.name,
-    author: m.author,
-    icon: m.icon,
-    category: m.category,
-    tags: m.tags,
-    questionCount: m.questions.length,
-    plays: m.plays,
-    rating: m.rating,
-  }));
-  res.json(list);
-});
-
-// 맵 상세
-app.get("/api/maps/:id", (req, res) => {
-  const m = maps.get(req.params.id);
-  if (!m) return res.status(404).json({ error: "맵을 찾을 수 없습니다" });
-  res.json({
-    ...m,
-    questions: m.questions.map((q) => ({
-      id: q.id,
-      type: q.type,
-      hint: q.hint,
-      timeLimit: q.timeLimit,
-      // 정답은 서버에서만 보관
-    })),
-  });
-});
-
-// 맵 전체 데이터 (수정용 — authorId 본인만)
-app.get("/api/maps/full/:id", (req, res) => {
-  const m = maps.get(req.params.id);
-  if (!m) return res.status(404).json({ error: "맵을 찾을 수 없습니다" });
-  const { authorId } = req.query;
-  if (m.authorId && m.authorId !== authorId) return res.status(403).json({ error: "권한 없음" });
-  res.json(m); // 정답 포함 전체 반환
-});
-
-// 내 맵 목록
-app.get("/api/maps/mine/:authorId", (req, res) => {
-  const { authorId } = req.params;
-  const list = Array.from(maps.values())
-    .filter(m => m.authorId === authorId)
-    .map(m => ({
-      id: m.id, name: m.name, icon: m.icon, category: m.category,
-      tags: m.tags, questionCount: m.questions.length, plays: m.plays,
-      rating: m.rating, author: m.author, createdAt: m.createdAt,
-    }));
-  res.json(list);
-});
-
-// 맵 수정 (authorId 검증)
-app.put("/api/maps/:id", (req, res) => {
-  const m = maps.get(req.params.id);
-  if (!m) return res.status(404).json({ error: "맵을 찾을 수 없습니다" });
-  if (m.authorId && m.authorId !== req.body.authorId) return res.status(403).json({ error: "수정 권한이 없습니다" });
-
-  const { name, icon, category, tags, questions } = req.body;
-  if (name) m.name = name;
-  if (icon) m.icon = icon;
-  if (category) m.category = category;
-  if (tags) m.tags = tags;
-  if (questions && questions.length > 0) {
-    m.questions = questions.map((q, i) => {
-      let answers;
-      if (Array.isArray(q.answers)) {
-        answers = q.answers.map(a => a.toLowerCase().trim()).filter(Boolean);
-      } else {
-        answers = (q.answers || q.answer || "").split(",").map(a => a.toLowerCase().trim()).filter(Boolean);
-      }
-      if (!answers.length) answers = [""];
-      return {
-        id: i + 1, type: q.type || "audio", hint: q.hint || "", answers,
-        anime: q.anime || "", timeLimit: q.timeLimit || 30,
-        mediaUrl: q.mediaUrl || "", startTime: parseInt(q.startTime) || 0,
-        endTime: parseInt(q.endTime) || 0, chosungHint: !!q.chosungHint,
-        hintRevealTime: parseInt(q.hintRevealTime) || 0,
-      };
-    });
-  }
-  res.json({ message: "맵이 수정되었습니다!" });
-});
-
-// 맵 삭제 (authorId 검증)
-app.delete("/api/maps/:id", (req, res) => {
-  const m = maps.get(req.params.id);
-  if (!m) return res.status(404).json({ error: "맵을 찾을 수 없습니다" });
-  const { authorId } = req.body;
-  if (m.authorId && m.authorId !== authorId) return res.status(403).json({ error: "삭제 권한이 없습니다" });
-  maps.delete(req.params.id);
-  res.json({ message: "맵이 삭제되었습니다!" });
-});
-
-// 맵 생성
-app.post("/api/maps", (req, res) => {
-  const { name, author, authorId, icon, category, tags, questions } = req.body;
-  if (!name || !questions || questions.length === 0) {
-    return res.status(400).json({ error: "맵 이름과 최소 1개의 문제가 필요합니다" });
-  }
-  const id = "map-" + uuidv4().slice(0, 8);
-  const map = {
-    id,
-    name,
-    author: author || "익명",
-    authorId: authorId || "",
-    icon: icon || "🎵",
-    category: category || "anime-song",
-    tags: tags || [],
-    plays: 0,
-    rating: 0,
-    createdAt: Date.now(),
-    questions: questions.map((q, i) => {
-      // 복수 정답: answers 배열 또는 answer 문자열(쉼표 구분) 지원
-      let answers;
-      if (Array.isArray(q.answers)) {
-        answers = q.answers.map(a => a.toLowerCase().trim()).filter(Boolean);
-      } else {
-        const raw = q.answers || q.answer || "";
-        answers = raw.split(",").map(a => a.toLowerCase().trim()).filter(Boolean);
-      }
-      if (answers.length === 0) answers = [""];
-      return {
-        id: i + 1,
-        type: q.type || "audio",
-        hint: q.hint || "",
-        answers,
-        anime: q.anime || "",
-        timeLimit: q.timeLimit || 30,
-        mediaUrl: q.mediaUrl || "",
-        startTime: parseInt(q.startTime) || 0,
-        endTime: parseInt(q.endTime) || 0,
-        chosungHint: !!q.chosungHint,
-        hintRevealTime: parseInt(q.hintRevealTime) || 0,
-      };
-    }),
-  };
-  maps.set(id, map);
-  res.json({ id, message: "맵이 생성되었습니다!" });
-});
-
-// 글로벌 랭킹
-app.get("/api/ranking", (req, res) => {
-  res.json(globalRanking.slice(0, 100));
-});
-
-// 방 목록
-app.get("/api/rooms", (req, res) => {
-  const list = Array.from(rooms.values()).filter(r => r.status !== "finished").map((r) => ({
-    id: r.id,
-    name: r.name,
-    hostName: r.hostName,
-    mapId: r.mapId,
-    mapName: maps.get(r.mapId)?.name || "알 수 없음",
-    mapIcon: maps.get(r.mapId)?.icon || "❓",
-    players: r.players.size,
-    maxPlayers: r.maxPlayers,
-    status: r.status,
-  }));
-  res.json(list);
-});
-
-// 서버 상태
-app.get("/api/status", (req, res) => {
-  res.json({
-    online: onlineCount,
-    rooms: rooms.size,
-    maps: maps.size,
-  });
-});
-
-// SPA fallback
-app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "../public/index.html"));
-});
-
-// ═══════════════════════════════════════════
-// Socket.IO — Real-time Game Logic
+// Socket.IO
 // ═══════════════════════════════════════════
 
 io.on("connection", (socket) => {
   onlineCount++;
-  console.log(`[+] 접속: ${socket.id} (온라인: ${onlineCount})`);
-
-  // 전체 온라인 수 브로드캐스트
   io.emit("onlineCount", onlineCount);
+  console.log(`[+] ${socket.id} (온라인: ${onlineCount})`);
 
-  // ── 유저 등록 ──
   socket.on("register", ({ name, avatar }) => {
-    users.set(socket.id, {
-      id: socket.id,
-      name: name || "Player_" + Math.floor(Math.random() * 9999),
-      avatar: avatar || "🦊",
-      score: 0,
-    });
+    users.set(socket.id, { id: socket.id, name: name || "Player_" + Math.floor(Math.random() * 9999), avatar: avatar || "🦊", score: 0 });
     socket.emit("registered", users.get(socket.id));
   });
 
-  // ── 방 목록 요청 ──
   socket.on("getRooms", () => {
-    const list = Array.from(rooms.values()).map((r) => ({
-      id: r.id,
-      name: r.name,
-      hostName: r.hostName,
-      mapId: r.mapId,
-      mapName: maps.get(r.mapId)?.name || "알 수 없음",
-      mapIcon: maps.get(r.mapId)?.icon || "❓",
-      players: r.players.size,
-      maxPlayers: r.maxPlayers,
-      status: r.status,
-    }));
-    socket.emit("roomList", list);
+    socket.emit("roomList", Array.from(rooms.values()).map(r => ({
+      id: r.id, name: r.name, hostName: r.hostName, mapId: r.mapId,
+      mapName: r.map?.name || "알 수 없음", mapIcon: r.map?.icon || "❓",
+      players: r.players.size, maxPlayers: r.maxPlayers, status: r.status,
+    })));
   });
 
-  // ── 맵 목록 요청 ──
-  socket.on("getMaps", () => {
-    const list = Array.from(maps.values()).map((m) => ({
-      id: m.id,
-      name: m.name,
-      author: m.author,
-      icon: m.icon,
-      category: m.category,
-      tags: m.tags,
-      questionCount: m.questions.length,
-      plays: m.plays,
-      rating: m.rating,
-    }));
-    socket.emit("mapList", list);
+  socket.on("getMaps", async () => {
+    try {
+      const list = await MapModel.find({}, "mapId name author icon category tags plays rating questions").lean();
+      socket.emit("mapList", list.map(m => ({ id: m.mapId, name: m.name, author: m.author, icon: m.icon, category: m.category, tags: m.tags, questionCount: m.questions.length, plays: m.plays, rating: m.rating })));
+    } catch { socket.emit("mapList", []); }
   });
 
-  // ── 방 생성 ──
-  socket.on("createRoom", ({ name, mapId, maxPlayers }) => {
+  socket.on("createRoom", async ({ name, mapId, maxPlayers }) => {
     const user = users.get(socket.id);
     if (!user) return socket.emit("error", "먼저 등록해주세요");
-    if (!maps.has(mapId)) return socket.emit("error", "맵을 찾을 수 없습니다");
-
-    const roomId = "room-" + uuidv4().slice(0, 8);
-    const room = createRoom(roomId, name, socket.id, user.name, user.avatar, mapId, maxPlayers);
-    room.players.set(socket.id, { ...user, score: 0, answered: false });
-    rooms.set(roomId, room);
-
-    socket.join(roomId);
-    socket.emit("roomJoined", getRoomState(room));
-    broadcastRoomList();
-
-    console.log(`[방 생성] ${name} (${roomId}) by ${user.name}`);
+    try {
+      const map = await MapModel.findOne({ mapId }).lean();
+      if (!map) return socket.emit("error", "맵을 찾을 수 없습니다");
+      const roomId = "room-" + uuidv4().slice(0, 8);
+      const room = createRoom(roomId, name, socket.id, user.name, user.avatar, mapId, maxPlayers);
+      room.map = map;
+      room.players.set(socket.id, { ...user, score: 0, answeredSubQs: new Set() });
+      rooms.set(roomId, room);
+      socket.join(roomId);
+      socket.emit("roomJoined", getRoomState(room));
+      broadcastRoomList();
+    } catch (e) { socket.emit("error", "방 생성 실패: " + e.message); }
   });
 
-  // ── 방 참가 ──
   socket.on("joinRoom", ({ roomId }) => {
     const user = users.get(socket.id);
     if (!user) return socket.emit("error", "먼저 등록해주세요");
-
     const room = rooms.get(roomId);
     if (!room) return socket.emit("error", "방을 찾을 수 없습니다");
     if (room.status !== "waiting") return socket.emit("error", "이미 게임이 진행 중입니다");
     if (room.players.size >= room.maxPlayers) return socket.emit("error", "방이 가득 찼습니다");
-
-    room.players.set(socket.id, { ...user, score: 0, answered: false });
+    room.players.set(socket.id, { ...user, score: 0, answeredSubQs: new Set() });
     socket.join(roomId);
-
     socket.emit("roomJoined", getRoomState(room));
-    io.to(roomId).emit("playerJoined", {
-      player: { id: socket.id, name: user.name, avatar: user.avatar },
-      players: getPlayersArray(room),
-    });
+    io.to(roomId).emit("playerJoined", { player: { id: socket.id, name: user.name, avatar: user.avatar }, players: getPlayersArray(room) });
     broadcastRoomList();
-
-    console.log(`[참가] ${user.name} → ${room.name}`);
   });
 
-  // ── 방 나가기 ──
-  socket.on("leaveRoom", () => {
-    leaveAllRooms(socket);
-  });
+  socket.on("leaveRoom", () => leaveAllRooms(socket));
 
-  // ── 게임 시작 (호스트만) ──
-  socket.on("startGame", ({ roomId }) => {
+  socket.on("startGame", async ({ roomId }) => {
     const room = rooms.get(roomId);
     if (!room) return;
     if (room.hostId !== socket.id) return socket.emit("error", "호스트만 시작할 수 있습니다");
-    if (room.players.size < 1) return socket.emit("error", "최소 1명이 필요합니다");
-
-    const map = maps.get(room.mapId);
-    if (!map) return socket.emit("error", "맵 데이터를 찾을 수 없습니다");
-
-    room.status = "playing";
-    room.currentQuestion = 0;
-    room.currentSubQ = 0;
-    room.answerOrder = [];
-
-    // 모든 플레이어 점수 초기화
-    room.players.forEach((p, sid) => {
-      p.score = 0;
-      p.answered = false;
-    });
-
-    // 맵 플레이 수 증가
-    map.plays++;
-
-    io.to(roomId).emit("gameStarted", {
-      totalQuestions: map.questions.length,
-      players: getPlayersArray(room),
-    });
-
-    // 첫 문제 전송
-    sendQuestion(room);
-    broadcastRoomList();
-
-    console.log(`[게임 시작] ${room.name} (${map.questions.length}문제)`);
+    try {
+      const map = await MapModel.findOne({ mapId: room.mapId }).lean();
+      if (!map) return socket.emit("error", "맵 데이터를 찾을 수 없습니다");
+      room.map = map;
+      room.status = "playing";
+      room.currentQuestion = 0;
+      room.players.forEach(p => { p.score = 0; p.answeredSubQs = new Set(); });
+      await MapModel.updateOne({ mapId: room.mapId }, { $inc: { plays: 1 } });
+      io.to(roomId).emit("gameStarted", { totalQuestions: map.questions.length, players: getPlayersArray(room) });
+      sendQuestion(room);
+      broadcastRoomList();
+    } catch (e) { socket.emit("error", "게임 시작 실패: " + e.message); }
   });
 
   // ── 정답 제출 ──
-  socket.on("submitAnswer", ({ roomId, answer }) => {
+  socket.on("submitAnswer", ({ roomId, answer, subQIndex }) => {
     const room = rooms.get(roomId);
-    if (!room || room.status !== "playing") return;
-
+    if (!room || room.status !== "playing" || !room.map) return;
     const player = room.players.get(socket.id);
-    if (!player || player.answered) return;
+    if (!player) return;
 
-    const map = maps.get(room.mapId);
-    if (!map) return;
-
-    const question = map.questions[room.currentQuestion];
+    const question = room.map.questions[room.currentQuestion];
     if (!question) return;
-
     const subQs = getSubQuestions(question);
-    const subQ = subQs[room.currentSubQ] || subQs[0];
     const normalizedAnswer = answer.toLowerCase().trim();
-    const correctAnswers = subQ.answers || [];
-    const isCorrect = correctAnswers.some(a => a.toLowerCase().trim() === normalizedAnswer);
 
-    // 본인에게만 입력 내용 표시 (다른 플레이어에게는 숨김)
-    socket.emit("chatMessage", {
-      type: "answer",
-      name: player.name,
-      text: answer,
-    });
+    // 이 플레이어가 아직 안 맞춘 소문제 중 정답 스캔
+    let matchedIdx = -1;
+    for (let i = 0; i < subQs.length; i++) {
+      if (player.answeredSubQs.has(i)) continue;
+      if (subQs[i].answers.some(a => a.toLowerCase().trim() === normalizedAnswer)) {
+        matchedIdx = i; break;
+      }
+    }
 
-    if (isCorrect) {
-      player.answered = true;
-      room.answerOrder.push(socket.id);
+    socket.emit("chatMessage", { type: "answer", name: player.name, text: answer });
 
-      // 순서 기반 점수: 인원수 - (순서-1) = 8명이면 1등 8점, 2등 7점, 1명이면 1점
-      const order = room.answerOrder.length;
-      const points = Math.max(1, room.players.size - order + 1);
+    if (matchedIdx >= 0) {
+      player.answeredSubQs.add(matchedIdx);
+      if (!room.answeredSubQs.has(matchedIdx)) room.answeredSubQs.set(matchedIdx, new Set());
+      room.answeredSubQs.get(matchedIdx).add(socket.id);
 
+      const orderInSubQ = room.answeredSubQs.get(matchedIdx).size;
+      const points = Math.max(1, room.players.size - (orderInSubQ - 1));
       player.score += points;
 
-      // 정답 알림
       io.to(roomId).emit("correctAnswer", {
-        playerId: socket.id,
-        playerName: player.name,
-        playerAvatar: player.avatar,
-        points,
-        order,
-        subQIndex: room.currentSubQ,
-        scores: getScoresArray(room),
+        playerId: socket.id, playerName: player.name, playerAvatar: player.avatar,
+        points, order: orderInSubQ, subQIndex: matchedIdx, scores: getScoresArray(room),
+        subQTotal: room.players.size, subQCount: orderInSubQ,
       });
+      io.to(roomId).emit("chatMessage", { type: "correct", text: `${player.name}님이 [${subQs[matchedIdx].prompt || `문제${matchedIdx+1}`}] 정답! (+${points}점)` });
 
-      io.to(roomId).emit("chatMessage", {
-        type: "correct",
-        text: `${player.name}님이 ${order}등으로 정답! (+${points}점)`,
-      });
-
-      // 전원 정답 시 다음 서브퀴즈 or 다음 곡
-      const allAnswered = Array.from(room.players.values()).every(p => p.answered);
-      if (allAnswered) {
+      const allDone = subQs.every((_, i) => (room.answeredSubQs.get(i)?.size ?? 0) >= room.players.size);
+      if (allDone) {
         clearInterval(room.timer);
-        io.to(roomId).emit("chatMessage", { type: "system", text: "✅ 전원 정답!" });
-        setTimeout(() => nextSubQuestion(room), 1500);
+        io.to(roomId).emit("chatMessage", { type: "system", text: "✅ 모든 플레이어가 모든 문제 완료!" });
+        setTimeout(() => nextQuestion(room), 1500);
       }
     } else {
       socket.emit("wrongAnswer", { text: "오답!" });
@@ -469,300 +432,218 @@ io.on("connection", (socket) => {
   // ── 스킵 투표 ──
   socket.on("skipVote", ({ roomId }) => {
     const room = rooms.get(roomId);
-    if (!room || room.status !== "playing") return;
+    if (!room || room.status !== "playing" || !room.map) return;
     const player = room.players.get(socket.id);
     if (!player) return;
-    if (player.answered) return; // 맞춘 사람은 스킵 불가
 
     room.skipVoters.add(socket.id);
-
-    // 아직 못 맞춘 플레이어만 집계
-    const unanswered = Array.from(room.players.values()).filter(p => !p.answered);
+    const question = room.map.questions[room.currentQuestion];
+    const subQs = getSubQuestions(question);
     const votes = room.skipVoters.size;
-    const total = room.players.size;
+    const needed = Math.max(1, Math.ceil(room.players.size / 2));
+    io.to(roomId).emit("skipVoteUpdate", { votes, total: room.players.size, needed });
 
-    io.to(roomId).emit("skipVoteUpdate", { votes, total, unanswered: unanswered.length });
-
-    // 미정답자 절반 이상이 스킵 투표하면 스킵
-    if (votes >= Math.ceil(unanswered.length / 2)) {
+    if (votes >= needed) {
       clearInterval(room.timer);
-      const map = maps.get(room.mapId);
-      const q = map?.questions[room.currentQuestion];
-      const revealAnswer = q ? (q.answers || [q.answer || "?"])[0] : "?";
-      io.to(roomId).emit("timeUp", {
-        answer: revealAnswer,
-        answers: q?.answers || [revealAnswer],
-        anime: q?.anime || "",
-        scores: getScoresArray(room),
-      });
-      io.to(roomId).emit("chatMessage", { type: "system", text: `⏭ 스킵! 정답: ${revealAnswer}` });
-      setTimeout(() => nextSubQuestion(room), 2000);
+      // 미답 서브퀴즈 정답 공개
+      const revealList = subQs.map((sq, i) => ({ prompt: sq.prompt || `문제${i+1}`, answer: sq.showAnswer !== false ? ((sq.answers || [])[0] || "?") : null, answered: room.answeredSubQs.has(i) }));
+      io.to(roomId).emit("timeUp", { revealList, scores: getScoresArray(room) });
+      const unanswered = revealList.filter(r => !r.answered).map(r => `${r.prompt}: ${r.answer}`).join(", ");
+      io.to(roomId).emit("chatMessage", { type: "system", text: `⏭ 스킵! 정답: ${unanswered}` });
+      setTimeout(() => nextQuestion(room), 2000);
     }
   });
 
-  // ── 채팅 ──
   socket.on("chat", ({ roomId, message }) => {
     const user = users.get(socket.id);
     if (!user || !message.trim()) return;
-    io.to(roomId).emit("chatMessage", {
-      type: "chat",
-      name: user.name,
-      text: message.trim(),
-    });
+    const msg = message.trim();
+    const room = rooms.get(roomId);
+
+    // 게임 중이면 정답 체크 먼저
+    if (room && room.status === "playing" && room.map) {
+      const player = room.players.get(socket.id);
+      const question = room.map.questions[room.currentQuestion];
+      if (player && question) {
+        const subQs = getSubQuestions(question);
+        const normalized = msg.toLowerCase();
+        let matchedIdx = -1;
+        for (let i = 0; i < subQs.length; i++) {
+          if (player.answeredSubQs.has(i)) continue; // 이 플레이어가 이미 맞춘 소문제 제외
+          if (subQs[i].answers.some(a => a.toLowerCase().trim() === normalized)) {
+            matchedIdx = i; break;
+          }
+        }
+        if (matchedIdx >= 0) {
+          player.answeredSubQs.add(matchedIdx);
+          // answeredSubQs: Map(subQIndex → Set(playerId))
+          if (!room.answeredSubQs.has(matchedIdx)) room.answeredSubQs.set(matchedIdx, new Set());
+          room.answeredSubQs.get(matchedIdx).add(socket.id);
+
+          const orderInSubQ = room.answeredSubQs.get(matchedIdx).size; // 이 소문제 내 순위
+          const points = Math.max(1, room.players.size - (orderInSubQ - 1));
+          player.score += points;
+
+          io.to(roomId).emit("correctAnswer", {
+            playerId: socket.id, playerName: player.name, playerAvatar: player.avatar,
+            points, order: orderInSubQ, subQIndex: matchedIdx, scores: getScoresArray(room),
+            subQTotal: room.players.size, subQCount: orderInSubQ,
+          });
+          io.to(roomId).emit("chatMessage", { type: "correct", text: `${player.name}님이 [${subQs[matchedIdx].prompt || `문제${matchedIdx+1}`}] 정답! (+${points}점)` });
+
+          // 모든 플레이어가 모든 소문제를 맞췄는지 확인
+          const allDone = subQs.every((_, i) => (room.answeredSubQs.get(i)?.size ?? 0) >= room.players.size);
+          if (allDone) {
+            clearInterval(room.timer);
+            io.to(roomId).emit("chatMessage", { type: "system", text: "✅ 모든 플레이어가 모든 문제 완료!" });
+            setTimeout(() => nextQuestion(room), 1500);
+          }
+          return; // 정답이면 채팅으로 안 보냄
+        }
+      }
+    }
+
+    // 정답 아니면 일반 채팅
+    io.to(roomId).emit("chatMessage", { type: "chat", name: user.name, text: msg });
   });
 
-  // ── 연결 종료 ──
   socket.on("disconnect", () => {
     onlineCount = Math.max(0, onlineCount - 1);
     io.emit("onlineCount", onlineCount);
     leaveAllRooms(socket);
     users.delete(socket.id);
-    console.log(`[-] 접속 해제: ${socket.id} (온라인: ${onlineCount})`);
+    console.log(`[-] ${socket.id} (온라인: ${onlineCount})`);
   });
 });
 
 // ═══════════════════════════════════════════
-// Game Logic Helpers
+// Game Logic
 // ═══════════════════════════════════════════
 
 function sendQuestion(room) {
-  const map = maps.get(room.mapId);
-  if (!map) return;
-
-  const q = map.questions[room.currentQuestion];
+  if (!room.map) return;
+  const q = room.map.questions[room.currentQuestion];
   if (!q) return;
 
   const subQs = getSubQuestions(q);
-  const subQ = subQs[room.currentSubQ] || subQs[0];
+  const timeLimit = q.timeLimit || 30;
 
-  // 플레이어 answered 리셋
-  room.players.forEach((p) => (p.answered = false));
-  room.answerOrder = [];
+  // 서브퀴즈 상태 초기화
+  room.answeredSubQs = new Map();
   room.skipVoters = new Set();
-  room.timeLeft = subQ.timeLimit || 30;
+  room.timeLeft = timeLimit;
+  room.players.forEach(p => { p.answeredSubQs = new Set(); });
 
-  // 문제 전송 (정답 제외) — 첫 서브퀴즈일 때만 미디어 URL 전송 (음악 계속 재생)
   io.to(room.id).emit("question", {
     index: room.currentQuestion,
-    total: map.questions.length,
+    total: room.map.questions.length,
     type: q.type,
-    prompt: subQ.prompt || q.hint || "",
     anime: q.anime,
-    timeLimit: subQ.timeLimit || 30,
-    mediaUrl: room.currentSubQ === 0 ? (q.mediaUrl || "") : null,
+    timeLimit,
+    mediaUrl: q.mediaUrl || "",
     startTime: q.startTime || 0,
     endTime: q.endTime || 0,
-    subQIndex: room.currentSubQ,
-    totalSubQ: subQs.length,
     songIndex: room.currentQuestion,
-    totalSongs: map.questions.length,
+    totalSongs: room.map.questions.length,
+    // 모든 서브퀴즈 한 번에 전송 (정답 제외)
+    subQuestions: subQs.map((sq, i) => ({ index: i, prompt: sq.prompt || q.hint || "", chosungHint: sq.chosungHint && hasKorean((sq.answers || [])[0] || "") })),
   });
 
-  // 타이머
   clearTimeout(room.timer);
   room.timer = setInterval(() => {
     room.timeLeft--;
     io.to(room.id).emit("timeUpdate", room.timeLeft);
 
-    // 초성 힌트 공개 타이밍
-    if (subQ.chosungHint && subQ.hintRevealTime > 0) {
-      const revealAt = (subQ.timeLimit || 30) - subQ.hintRevealTime;
+    // 초성 힌트 공개 (각 서브퀴즈별)
+    subQs.forEach((sq, i) => {
+      if (room.answeredSubQs.has(i)) return;
+      if (!sq.chosungHint || !sq.hintRevealTime) return;
+      const firstAnswer = (sq.answers || [])[0] || "";
+      if (!hasKorean(firstAnswer)) return; // 한국어만
+      const revealAt = timeLimit - sq.hintRevealTime;
       if (room.timeLeft === revealAt) {
-        const firstAnswer = (subQ.answers || [])[0] || "";
         const hint = getChosung(firstAnswer);
-        io.to(room.id).emit("hintReveal", { hint });
-        io.to(room.id).emit("chatMessage", { type: "system", text: `💡 초성 힌트: ${hint}` });
+        io.to(room.id).emit("hintReveal", { subQIndex: i, hint });
+        io.to(room.id).emit("chatMessage", { type: "system", text: `💡 [${sq.prompt || `문제${i+1}`}] 초성 힌트: ${hint}` });
       }
-    }
+    });
 
     if (room.timeLeft <= 0) {
       clearInterval(room.timer);
-      // 시간 초과 — 정답 공개
-      const revealAnswer = (subQ.answers || [])[0] || "?";
-      io.to(room.id).emit("timeUp", {
-        answer: revealAnswer,
-        answers: subQ.answers || [revealAnswer],
-        anime: q.anime,
-        scores: getScoresArray(room),
-      });
-
-      io.to(room.id).emit("chatMessage", {
-        type: "system",
-        text: `시간 초과! 정답: ${revealAnswer}`,
-      });
-
-      setTimeout(() => nextSubQuestion(room), 3000);
+      const revealList = subQs.map((sq, i) => ({ prompt: sq.prompt || `문제${i+1}`, answer: sq.showAnswer !== false ? ((sq.answers || [])[0] || "?") : null, answered: room.answeredSubQs.has(i) }));
+      io.to(room.id).emit("timeUp", { revealList, scores: getScoresArray(room) });
+      const unanswered = revealList.filter(r => !r.answered);
+      if (unanswered.length > 0) {
+        io.to(room.id).emit("chatMessage", { type: "system", text: `시간 초과! 정답: ${unanswered.map(r => `${r.prompt}: ${r.answer}`).join(", ")}` });
+      }
+      setTimeout(() => nextQuestion(room), 3000);
     }
   }, 1000);
 }
 
-function nextSubQuestion(room) {
-  const map = maps.get(room.mapId);
-  if (!map) return;
-  const q = map.questions[room.currentQuestion];
-  if (!q) return;
-  const subQs = getSubQuestions(q);
-  room.currentSubQ++;
-  if (room.currentSubQ < subQs.length) {
-    sendQuestion(room); // 같은 곡, 다음 서브퀴즈
-  } else {
-    room.currentSubQ = 0;
-    nextQuestion(room); // 다음 곡으로
-  }
-}
-
 function nextQuestion(room) {
   room.currentQuestion++;
-  const map = maps.get(room.mapId);
-
-  if (!map || room.currentQuestion >= map.questions.length) {
-    // 게임 종료
+  if (!room.map || room.currentQuestion >= room.map.questions.length) {
     room.status = "finished";
     clearInterval(room.timer);
-
     const finalScores = getScoresArray(room);
     io.to(room.id).emit("gameOver", { scores: finalScores });
-
-    // 글로벌 랭킹 업데이트 — 게임에 참가한 모든 플레이어 기록
-    const mapObj = maps.get(room.mapId);
-    finalScores.forEach(p => {
-      if (p.score > 0) {
-        globalRanking.push({
-          name: p.name,
-          avatar: p.avatar,
-          score: p.score,
-          mapName: mapObj ? mapObj.name : "알 수 없음",
-          date: new Date().toISOString(),
-        });
-      }
-    });
-    globalRanking.sort((a, b) => b.score - a.score);
-    if (globalRanking.length > 100) globalRanking.splice(100);
-
-    io.to(room.id).emit("chatMessage", {
-      type: "system",
-      text: "🏆 게임 종료!",
-    });
-
-    // 결과 화면 표시 후 3초 뒤 즉시 방 삭제
-    setTimeout(() => {
-      if (rooms.has(room.id)) {
-        clearInterval(room.timer);
-        rooms.delete(room.id);
-        broadcastRoomList();
-        console.log(`[방 삭제] ${room.name} (게임 종료)`);
-      }
-    }, 3000);
-
+    io.to(room.id).emit("chatMessage", { type: "system", text: "🏆 게임 종료!" });
+    const mapName = room.map?.name || "알 수 없음";
+    const docs = finalScores.filter(p => p.score > 0).map(p => ({ name: p.name, avatar: p.avatar, score: p.score, mapName }));
+    if (docs.length) RankingModel.insertMany(docs).catch(e => console.error("랭킹 저장 실패:", e.message));
+    setTimeout(() => { if (rooms.has(room.id)) { clearInterval(room.timer); rooms.delete(room.id); broadcastRoomList(); } }, 3000);
     broadcastRoomList();
     return;
   }
-
   sendQuestion(room);
 }
 
 function leaveAllRooms(socket) {
   rooms.forEach((room, roomId) => {
-    if (room.players.has(socket.id)) {
-      room.players.delete(socket.id);
-      socket.leave(roomId);
-
-      const user = users.get(socket.id);
-      io.to(roomId).emit("playerLeft", {
-        playerId: socket.id,
-        playerName: user?.name || "???",
-        players: getPlayersArray(room),
-      });
-
-      io.to(roomId).emit("chatMessage", {
-        type: "system",
-        text: `${user?.name || "???"} 님이 나갔습니다.`,
-      });
-
-      // 방이 비면 삭제 (게임 중/종료 무관)
-      if (room.players.size === 0) {
-        clearInterval(room.timer);
-        rooms.delete(roomId);
-        console.log(`[방 삭제] ${room.name} (${roomId}) — 플레이어 없음`);
-      } else if (room.hostId === socket.id) {
-        // 호스트가 나갔으면 다음 사람을 호스트로
-        const nextHost = room.players.keys().next().value;
-        room.hostId = nextHost;
-        const nextUser = room.players.get(nextHost);
-        room.hostName = nextUser?.name || "???";
-        io.to(roomId).emit("newHost", { hostId: nextHost, hostName: room.hostName });
-      }
-
-      broadcastRoomList();
+    if (!room.players.has(socket.id)) return;
+    room.players.delete(socket.id);
+    socket.leave(roomId);
+    const user = users.get(socket.id);
+    io.to(roomId).emit("playerLeft", { playerId: socket.id, playerName: user?.name || "???", players: getPlayersArray(room) });
+    io.to(roomId).emit("chatMessage", { type: "system", text: `${user?.name || "???"} 님이 나갔습니다.` });
+    if (room.players.size === 0) { clearInterval(room.timer); rooms.delete(roomId); }
+    else if (room.hostId === socket.id) {
+      const nextHost = room.players.keys().next().value;
+      room.hostId = nextHost;
+      room.hostName = room.players.get(nextHost)?.name || "???";
+      io.to(roomId).emit("newHost", { hostId: nextHost, hostName: room.hostName });
     }
+    broadcastRoomList();
   });
 }
 
 function getRoomState(room) {
-  const map = maps.get(room.mapId);
-  return {
-    id: room.id,
-    name: room.name,
-    hostId: room.hostId,
-    hostName: room.hostName,
-    mapId: room.mapId,
-    mapName: map?.name || "알 수 없음",
-    mapIcon: map?.icon || "❓",
-    questionCount: map?.questions.length || 0,
-    maxPlayers: room.maxPlayers,
-    status: room.status,
-    players: getPlayersArray(room),
-  };
+  return { id: room.id, name: room.name, hostId: room.hostId, hostName: room.hostName, mapId: room.mapId, mapName: room.map?.name || "알 수 없음", mapIcon: room.map?.icon || "❓", questionCount: room.map?.questions?.length || 0, maxPlayers: room.maxPlayers, status: room.status, players: getPlayersArray(room) };
 }
-
 function getPlayersArray(room) {
-  return Array.from(room.players.entries()).map(([sid, p]) => ({
-    id: sid,
-    name: p.name,
-    avatar: p.avatar,
-    score: p.score,
-    isHost: sid === room.hostId,
-  }));
+  return Array.from(room.players.entries()).map(([sid, p]) => ({ id: sid, name: p.name, avatar: p.avatar, score: p.score, isHost: sid === room.hostId }));
 }
-
 function getScoresArray(room) {
-  return Array.from(room.players.values())
-    .map((p) => ({ name: p.name, avatar: p.avatar, score: p.score }))
-    .sort((a, b) => b.score - a.score);
+  return Array.from(room.players.values()).map(p => ({ name: p.name, avatar: p.avatar, score: p.score })).sort((a, b) => b.score - a.score);
 }
-
 function broadcastRoomList() {
-  const list = Array.from(rooms.values())
-    .filter(r => r.status !== "finished")
-    .map((r) => ({
-      id: r.id,
-      name: r.name,
-      hostName: r.hostName,
-      mapId: r.mapId,
-      mapName: maps.get(r.mapId)?.name || "알 수 없음",
-      mapIcon: maps.get(r.mapId)?.icon || "❓",
-      players: r.players.size,
-      maxPlayers: r.maxPlayers,
-      status: r.status,
-    }));
-  io.emit("roomList", list);
+  io.emit("roomList", Array.from(rooms.values()).filter(r => r.status !== "finished").map(r => ({
+    id: r.id, name: r.name, hostName: r.hostName, mapId: r.mapId,
+    mapName: r.map?.name || "알 수 없음", mapIcon: r.map?.icon || "❓",
+    players: r.players.size, maxPlayers: r.maxPlayers, status: r.status,
+  })));
 }
 
 // ═══════════════════════════════════════════
-// Start Server
+// Start
 // ═══════════════════════════════════════════
 
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
   console.log(`
 ╔═══════════════════════════════════════════╗
-║                                           ║
 ║   🎯 마추기온라인.io 서버 시작!           ║
-║                                           ║
 ║   http://localhost:${PORT}                  ║
-║                                           ║
-║   온라인 퀴즈 배틀을 시작하세요!          ║
-║                                           ║
-╚═══════════════════════════════════════════╝
-  `);
+╚═══════════════════════════════════════════╝`);
 });
