@@ -1,0 +1,1476 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>마추기온라인.io — 애니·노래·장면 퀴즈 배틀</title>
+<meta name="description" content="온라인 실시간 멀티플레이어 애니/노래/장면 퀴즈 게임">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎯</text></svg>">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="/socket.io/socket.io.js"></script>
+<style>
+:root {
+  --bg:#121212;--bg2:#1a1a1a;--bg3:#1e1e1e;--bg4:#252525;--bg5:#2a2a2a;--bg6:#282828;
+  --acc:#e8405e;--acc2:#ff5273;--acc-s:rgba(232,64,94,0.12);
+  --grn:#00c853;--grn-s:rgba(0,200,83,0.12);
+  --ylw:#f5c518;--ylw-s:rgba(245,197,24,0.12);
+  --blu:#448aff;--blu-s:rgba(68,138,255,0.12);
+  --org:#ff9100;--org-s:rgba(255,145,0,0.12);
+  --t1:#e8e8e8;--t2:#999;--t3:#666;
+  --brd:#2a2a2a;--brd2:#333;
+  --r:10px;--rs:6px;--rl:14px;
+  --side:240px;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--t1);-webkit-font-smoothing:antialiased}
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--brd2);border-radius:3px}
+
+.layout{display:flex;min-height:100vh}
+
+/* ── Sidebar ── */
+.side{width:var(--side);background:var(--bg2);border-right:1px solid var(--brd);position:fixed;top:0;left:0;bottom:0;z-index:50;overflow-y:auto;display:flex;flex-direction:column}
+.side-logo{padding:20px 20px 16px;font-size:18px;font-weight:800;cursor:pointer;display:flex;align-items:center;gap:6px}
+.side-logo b{color:var(--acc)}
+
+/* User card */
+.s-user{margin:0 12px 12px;padding:14px;background:var(--bg3);border-radius:var(--r);border:1px solid var(--brd)}
+.s-user-top{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.s-av{width:36px;height:36px;background:var(--bg5);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;border:2px solid var(--brd2)}
+.s-name{font-weight:700;font-size:15px}
+.s-stats{display:flex;justify-content:space-around;text-align:center;padding:10px 0;border-top:1px solid var(--brd);border-bottom:1px solid var(--brd);margin-bottom:8px}
+.s-num{font-size:18px;font-weight:800;display:flex;align-items:center;justify-content:center;gap:4px}
+.s-lbl{font-size:11px;color:var(--t3);margin-top:2px}
+.dot-on{width:7px;height:7px;border-radius:50%;background:var(--grn);display:inline-block}
+.s-today{font-size:12px;color:var(--t3);text-align:center}
+
+/* Battle mini */
+.s-battle{margin:0 12px 12px;padding:12px;background:var(--bg3);border-radius:var(--r);border:1px solid var(--brd)}
+.s-battle-t{font-size:13px;font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.b-mini{display:flex;align-items:center;gap:8px;padding:8px;border-radius:var(--rs);cursor:pointer;transition:background .15s}
+.b-mini:hover{background:var(--bg4)}
+.b-badge{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#fff}
+.b-info{flex:1;min-width:0}
+.b-nm{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.b-cnt{font-size:11px;color:var(--t3);font-family:'JetBrains Mono',monospace}
+
+/* Nav */
+.s-nav{padding:8px 12px;flex:1}
+.nav-sec{font-size:11px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:1px;padding:12px 8px 6px}
+.nav-i{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:var(--rs);cursor:pointer;font-size:14px;font-weight:500;color:var(--t2);transition:all .15s;border:none;background:none;width:100%;text-align:left;font-family:'Noto Sans KR',sans-serif}
+.nav-i:hover{background:var(--bg4);color:var(--t1)}
+.nav-i.active{color:var(--acc);background:var(--acc-s)}
+.nav-ic{font-size:16px;width:22px;text-align:center}
+
+/* ── Main ── */
+.main{flex:1;margin-left:var(--side);display:flex;flex-direction:column;min-height:100vh}
+
+/* Top bar */
+.top{height:56px;border-bottom:1px solid var(--brd);display:flex;align-items:center;padding:0 24px;gap:16px;background:var(--bg2);position:sticky;top:0;z-index:40}
+.srch{flex:1;max-width:560px;position:relative}
+.srch input{width:100%;height:38px;padding:0 16px 0 40px;background:var(--bg5);border:1px solid var(--brd);border-radius:8px;color:var(--t1);font-family:'Noto Sans KR',sans-serif;font-size:14px;outline:none;transition:border-color .2s}
+.srch input:focus{border-color:var(--acc)}
+.srch input::placeholder{color:var(--t3)}
+.srch-ic{position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:15px;color:var(--t3)}
+.srch-key{position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:11px;color:var(--t3);background:var(--bg);padding:2px 6px;border-radius:4px;border:1px solid var(--brd);font-family:'JetBrains Mono',monospace}
+.top-r{display:flex;align-items:center;gap:12px;margin-left:auto}
+.top-btn{width:36px;height:36px;border-radius:50%;background:var(--bg5);border:1px solid var(--brd);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px}
+.top-lang{font-size:13px;color:var(--t2);display:flex;align-items:center;gap:4px;cursor:pointer;padding:6px 10px;border-radius:var(--rs);border:1px solid var(--brd);background:none;font-family:'Noto Sans KR',sans-serif}
+
+/* ── Page ── */
+.page{flex:1;padding:28px 32px;max-width:960px}
+.hide{display:none!important}
+
+/* Hero */
+.hero{text-align:center;margin-bottom:28px}
+.hero h1{font-size:26px;font-weight:800;letter-spacing:-.5px;margin-bottom:6px}
+.hero p{font-size:14px;color:var(--t2)}
+
+/* Quick actions */
+.qactions{display:flex;justify-content:center;gap:24px;margin-bottom:28px;flex-wrap:wrap}
+.qact{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--t2);cursor:pointer;padding:8px 0;border:none;background:none;font-family:'Noto Sans KR',sans-serif;transition:color .15s}
+.qact:hover{color:var(--t1)}
+
+/* CTA */
+.cta{display:flex;align-items:center;justify-content:space-between;padding:18px 24px;background:var(--bg3);border:1px solid var(--brd);border-radius:var(--rl);margin-bottom:28px}
+.cta-l{display:flex;align-items:center;gap:14px}
+.cta-heart{width:44px;height:44px;background:var(--acc-s);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px}
+.cta-tt{font-weight:700;font-size:15px;margin-bottom:2px}
+.cta-ts{font-size:13px;color:var(--t2)}
+
+/* Buttons */
+.btn{padding:10px 20px;border:none;border-radius:8px;font-family:'Noto Sans KR',sans-serif;font-weight:700;font-size:14px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:all .15s}
+.btn-a{background:var(--acc);color:#fff}.btn-a:hover{background:var(--acc2)}
+.btn-g{background:transparent;color:var(--t2);border:1px solid var(--brd)}.btn-g:hover{background:var(--bg4);color:var(--t1)}
+.btn-sm{padding:6px 14px;font-size:13px}
+.btn-lg{padding:14px 28px;font-size:16px}
+.btn-full{width:100%;justify-content:center}
+.btn:disabled{opacity:.35;cursor:not-allowed}
+
+/* Section */
+.sec-h{display:flex;align-items:center;gap:8px;margin-bottom:16px}
+.sec-t{font-size:16px;font-weight:800}
+
+/* Live */
+.live-g{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:32px}
+.live-c{background:var(--bg3);border:1px solid var(--brd);border-radius:var(--rl);overflow:hidden;cursor:pointer;transition:all .2s}
+.live-c:hover{border-color:var(--brd2);transform:translateY(-2px)}
+.live-media{height:160px;background:linear-gradient(135deg,#1a1a2e,#16213e);position:relative;display:flex;align-items:center;justify-content:center}
+.live-badge{position:absolute;top:12px;left:12px;background:var(--acc);color:#fff;font-size:11px;font-weight:800;padding:3px 10px;border-radius:4px;display:flex;align-items:center;gap:4px}
+.live-badge::before{content:'';width:6px;height:6px;border-radius:50%;background:#fff;animation:lp 1.5s ease infinite}
+@keyframes lp{0%,100%{opacity:1}50%{opacity:.3}}
+.live-timer{position:absolute;bottom:10px;right:12px;font-size:12px;color:rgba(255,255,255,.8);background:rgba(0,0,0,.6);padding:3px 8px;border-radius:4px;font-family:'JetBrains Mono',monospace}
+.live-art{font-size:64px;opacity:.4}
+.live-body{padding:14px 16px}
+.live-tags{display:flex;gap:6px;margin-bottom:8px}
+.live-tag{font-size:11px;font-weight:700;padding:2px 8px;border-radius:3px;border:1px solid var(--brd2);color:var(--t2)}
+.live-tag.off{border-color:var(--ylw);color:var(--ylw)}
+.live-title{font-size:15px;font-weight:700;margin-bottom:6px}
+.live-prog{display:flex;align-items:center;gap:8px}
+.live-pb{flex:1;height:4px;background:var(--bg5);border-radius:2px;overflow:hidden}
+.live-pf{height:100%;background:var(--acc);border-radius:2px}
+.live-pt{font-size:12px;font-family:'JetBrains Mono',monospace;color:var(--t3)}
+
+.promo{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px;border:1px dashed var(--ylw);background:var(--ylw-s);border-radius:var(--rl);cursor:pointer}
+.promo-ic{font-size:36px;margin-bottom:12px}
+.promo-t{font-size:16px;font-weight:800;margin-bottom:6px}
+.promo-s{font-size:13px;color:var(--t2);margin-bottom:14px}
+.promo-l{color:var(--ylw);font-size:14px;font-weight:700;border:none;background:none;cursor:pointer;font-family:'Noto Sans KR',sans-serif}
+
+/* Room list */
+.r-list{display:flex;flex-direction:column;gap:8px;margin-bottom:32px}
+.r-row{display:flex;align-items:center;gap:14px;padding:14px 18px;background:var(--bg3);border:1px solid var(--brd);border-radius:var(--r);cursor:pointer;transition:all .15s}
+.r-row:hover{background:var(--bg4);border-color:var(--brd2)}
+.r-icon{font-size:28px;width:44px;height:44px;background:var(--bg5);border-radius:var(--rs);display:flex;align-items:center;justify-content:center}
+.r-info{flex:1;min-width:0}
+.r-nm{font-weight:700;font-size:14px;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.r-meta{font-size:12px;color:var(--t3);display:flex;gap:12px}
+.r-st{font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;white-space:nowrap;font-family:'JetBrains Mono',monospace}
+.r-st.wait{background:var(--grn-s);color:var(--grn)}
+.r-st.play{background:var(--org-s);color:var(--org)}
+.r-dots{display:flex;align-items:center;gap:2px}
+.r-dot{width:8px;height:8px;border-radius:50%}
+.r-dot.f{background:var(--grn)}
+.r-dot.e{background:var(--bg5);border:1px solid var(--brd2)}
+.r-cnt{font-size:12px;font-family:'JetBrains Mono',monospace;color:var(--t3);margin-left:6px}
+
+/* Map grid */
+.m-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;margin-bottom:32px}
+.m-card{background:var(--bg3);border:1px solid var(--brd);border-radius:var(--r);padding:16px;cursor:pointer;transition:all .2s}
+.m-card:hover{border-color:var(--brd2);transform:translateY(-2px)}
+.m-card.sel{border-color:var(--acc);box-shadow:0 0 0 1px var(--acc)}
+.m-ic{font-size:32px;margin-bottom:8px}
+.m-nm{font-weight:700;font-size:14px;margin-bottom:2px}
+.m-au{font-size:12px;color:var(--t3);margin-bottom:8px}
+.m-st{display:flex;gap:10px;font-size:11px;color:var(--t2);font-family:'JetBrains Mono',monospace}
+.m-tags{display:flex;gap:4px;margin-top:8px;flex-wrap:wrap}
+.m-tag{font-size:10px;padding:2px 6px;border-radius:3px;background:var(--bg5);color:var(--t3);border:1px solid var(--brd)}
+
+/* Filters */
+.filters{display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap}
+.fchip{padding:6px 14px;border-radius:20px;font-size:13px;font-weight:600;border:1px solid var(--brd);background:var(--bg3);color:var(--t2);cursor:pointer;transition:all .15s;font-family:'Noto Sans KR',sans-serif}
+.fchip:hover{border-color:var(--brd2);color:var(--t1)}
+.fchip.act{background:var(--acc);color:#fff;border-color:var(--acc)}
+
+/* ── Modal ── */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.65);backdrop-filter:blur(4px);z-index:200;display:flex;align-items:center;justify-content:center}
+.modal{background:var(--bg2);border:1px solid var(--brd2);border-radius:var(--rl);padding:28px;width:90%;max-width:520px;max-height:90vh;overflow-y:auto;animation:mup .25s ease}
+@keyframes mup{from{transform:translateY(16px);opacity:0}}
+.modal h2{font-size:20px;font-weight:800;margin-bottom:20px}
+.inp-g{margin-bottom:14px}
+.inp-l{display:block;font-size:12px;font-weight:700;color:var(--t3);margin-bottom:5px;text-transform:uppercase;letter-spacing:.5px}
+.inp{width:100%;padding:10px 14px;background:var(--bg5);border:1px solid var(--brd);border-radius:var(--rs);color:var(--t1);font-family:'Noto Sans KR',sans-serif;font-size:14px;outline:none;transition:border-color .15s}
+.inp:focus{border-color:var(--acc)}
+.inp::placeholder{color:var(--t3)}
+
+/* ── Waiting ── */
+.w-head{text-align:center;padding:20px 0}
+.w-rn{font-size:22px;font-weight:800;margin-bottom:4px}
+.w-rm{font-size:14px;color:var(--t2)}
+.w-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:24px 0}
+.w-slot{aspect-ratio:1;background:var(--bg3);border:2px dashed var(--brd);border-radius:var(--r);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;transition:all .2s}
+.w-slot.filled{border-style:solid;border-color:var(--grn);background:var(--grn-s)}
+.w-slot.host{border-color:var(--acc);background:var(--acc-s)}
+.w-emoji{font-size:32px}
+.w-name{font-size:13px;font-weight:600}
+.host-b{font-size:10px;background:var(--acc);color:#fff;padding:2px 8px;border-radius:10px;font-weight:800}
+.w-acts{display:flex;gap:12px;justify-content:center;margin-top:20px}
+
+/* ── Game ── */
+.g-top{display:flex;justify-content:space-between;align-items:center;padding:10px 16px;background:var(--bg3);border:1px solid var(--brd);border-radius:var(--r);margin-bottom:4px}
+.g-qc{font-family:'JetBrains Mono',monospace;font-size:14px;color:var(--t2)}
+.g-timer{font-family:'JetBrains Mono',monospace;font-size:22px;font-weight:700;display:flex;align-items:center;gap:6px}
+.g-timer.urg{color:var(--acc);animation:tp .6s ease infinite alternate}
+@keyframes tp{to{opacity:.4}}
+.t-track{width:100%;height:3px;background:var(--bg5);border-radius:2px;margin-bottom:12px;overflow:hidden}
+.t-fill{height:100%;border-radius:2px;transition:width 1s linear}
+
+.g-body{display:grid;grid-template-columns:1fr 260px;gap:12px}
+
+.g-media{background:var(--bg3);border:1px solid var(--brd);border-radius:var(--rl);min-height:320px;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;overflow:hidden}
+.g-media::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 40% 40%,rgba(232,64,94,.06) 0%,transparent 60%),radial-gradient(circle at 70% 70%,rgba(68,138,255,.05) 0%,transparent 60%)}
+.g-media-in{position:relative;z-index:1;text-align:center;padding:32px}
+.g-big-ic{font-size:56px;margin-bottom:12px;animation:fl 3s ease infinite}
+@keyframes fl{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+.g-mlabel{font-size:15px;color:var(--t3);margin-bottom:16px}
+.g-hint{font-size:20px;font-weight:800;margin-bottom:24px}
+.g-ans-row{display:flex;gap:8px;width:100%;max-width:380px}
+.g-ans-inp{flex:1;padding:12px 16px;background:var(--bg5);border:2px solid var(--brd);border-radius:8px;color:var(--t1);font-family:'Noto Sans KR',sans-serif;font-size:15px;font-weight:600;outline:none;transition:border-color .2s}
+.g-ans-inp:focus{border-color:var(--acc)}
+
+.fb-toast{position:absolute;top:14px;right:14px;padding:6px 14px;border-radius:var(--rs);font-weight:700;font-size:13px;animation:tin .25s ease}
+@keyframes tin{from{transform:translateX(12px);opacity:0}}
+.fb-ok{background:var(--grn-s);color:var(--grn);border:1px solid rgba(0,200,83,.3)}
+.fb-no{background:var(--acc-s);color:var(--acc);border:1px solid rgba(232,64,94,.3)}
+
+.sc-panel{background:var(--bg3);border:1px solid var(--brd);border-radius:var(--rl);padding:14px}
+.sc-title{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--t3);margin-bottom:10px;font-family:'JetBrains Mono',monospace}
+.sc-row{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:var(--rs);margin-bottom:4px;background:var(--bg5);transition:all .2s}
+.sc-row.me{border:1px solid var(--blu);background:var(--blu-s)}
+.sc-rank{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;width:22px;text-align:center}
+.sc-r1{color:#ffd700}.sc-r2{color:#c0c0c0}.sc-r3{color:#cd7f32}
+.sc-av{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px}
+.sc-nm{flex:1;font-weight:600;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sc-pts{font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:700;color:var(--ylw)}
+.sc-delta{font-size:11px;font-weight:700;color:var(--grn);animation:pu .3s ease}
+@keyframes pu{from{transform:scale(0)}50%{transform:scale(1.2)}}
+
+.g-chat{background:var(--bg3);border:1px solid var(--brd);border-radius:var(--rl);padding:12px;margin-top:8px;max-height:180px;display:flex;flex-direction:column}
+.chat-log{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:3px;font-size:13px}
+.ch-sys{color:var(--org);font-style:italic}
+.ch-ok{color:var(--grn);font-weight:600}
+.ch-nm{font-weight:700}
+
+/* ── Results ── */
+.res{text-align:center;padding:40px 0}
+.res-trophy{font-size:56px;margin-bottom:12px}
+.res-h{font-size:28px;font-weight:900;margin-bottom:4px}
+.res-s{font-size:14px;color:var(--t2);margin-bottom:28px}
+.podium{display:flex;justify-content:center;align-items:flex-end;gap:12px;margin-bottom:28px}
+.pod-col{display:flex;flex-direction:column;align-items:center;gap:6px}
+.pod-bar{width:72px;border-radius:10px 10px 0 0;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding:12px 6px}
+.pod-1{height:140px;background:linear-gradient(180deg,rgba(255,215,0,.25),rgba(255,215,0,.05));border:1px solid rgba(255,215,0,.3)}
+.pod-2{height:100px;background:linear-gradient(180deg,rgba(192,192,192,.25),rgba(192,192,192,.05));border:1px solid rgba(192,192,192,.3)}
+.pod-3{height:75px;background:linear-gradient(180deg,rgba(205,127,50,.25),rgba(205,127,50,.05));border:1px solid rgba(205,127,50,.3)}
+.pod-emoji{font-size:28px}
+.pod-nm{font-weight:700;font-size:13px}
+.pod-pts{font-family:'JetBrains Mono',monospace;font-size:16px;font-weight:700;color:var(--ylw)}
+
+/* Creator */
+.q-row{display:flex;gap:8px;align-items:center;padding:10px;background:var(--bg5);border:1px solid var(--brd);border-radius:var(--rs);margin-bottom:8px}
+.q-num{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--t3);min-width:28px}
+.q-sel{padding:6px 10px;background:var(--bg3);border:1px solid var(--brd);border-radius:var(--rs);color:var(--t1);font-family:'Noto Sans KR',sans-serif;font-size:13px;outline:none}
+
+/* Empty state */
+.empty{text-align:center;padding:40px;color:var(--t3);font-size:14px}
+
+/* ── Hamburger ── */
+.hamburger{display:none;width:38px;height:38px;border-radius:var(--rs);background:var(--bg5);border:1px solid var(--brd);flex-direction:column;align-items:center;justify-content:center;gap:5px;cursor:pointer}
+.hamburger span{display:block;width:18px;height:2px;background:var(--t1);border-radius:2px;transition:all .25s}
+.side-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:49;backdrop-filter:blur(2px)}
+
+@media(max-width:900px){
+  :root{--side:220px}
+}
+@media(max-width:768px){
+  :root{--side:260px}
+  /* Sidebar — slide in/out */
+  .side{transform:translateX(-100%);transition:transform .25s ease;z-index:100;display:flex}
+  .side.open{transform:translateX(0)}
+  .side-overlay.show{display:block}
+  .main{margin-left:0}
+  .hamburger{display:flex}
+
+  /* Top bar */
+  .top{padding:0 14px;gap:10px}
+  .srch{flex:1}
+  .srch-key{display:none}
+  .top-lang{display:none}
+
+  /* Pages */
+  .page{padding:16px 14px}
+
+  /* Game */
+  .g-body{grid-template-columns:1fr}
+  .g-top{flex-wrap:wrap;gap:6px}
+  .g-ans-row{flex-wrap:wrap}
+  .g-ans-inp{min-width:0}
+  .sc-panel{margin-top:8px}
+  .g-chat{max-height:120px}
+
+  /* Waiting */
+  .w-grid{grid-template-columns:repeat(2,1fr)}
+
+  /* Maps */
+  .m-grid{grid-template-columns:repeat(2,1fr)}
+
+  /* Results podium */
+  .podium{flex-wrap:wrap}
+  .pod-bar{width:60px}
+
+  /* Map creator */
+  .q-row{flex-wrap:wrap}
+
+  /* Modals */
+  .modal{width:95%;padding:20px 16px;max-height:95vh}
+  .crMapGrid{grid-template-columns:repeat(3,1fr)!important}
+}
+@media(max-width:480px){
+  .m-grid{grid-template-columns:1fr}
+  .w-grid{grid-template-columns:repeat(2,1fr)}
+  .hero h1{font-size:20px}
+  .qactions{gap:14px}
+  .qact{font-size:13px}
+  .g-hint{font-size:16px}
+  .g-ans-row{gap:6px}
+  .btn-lg{padding:12px 20px;font-size:14px}
+  .sc-panel{padding:10px}
+}
+</style>
+</head>
+<body>
+
+<div class="side-overlay" id="sideOverlay" onclick="closeSidebar()"></div>
+<div class="layout">
+  <!-- SIDEBAR -->
+  <div class="side" id="sidebar">
+    <div class="side-logo" onclick="navigateTo('home')">🎯 마추기<b>온라인</b></div>
+    <div class="s-user">
+      <div class="s-user-top">
+        <div class="s-av" id="sideAvatar">🦊</div>
+        <div class="s-name" id="sideName">Player</div>
+      </div>
+      <div class="s-stats">
+        <div><div class="s-num"><span class="dot-on"></span> <span id="onlineNum">0</span></div><div class="s-lbl">온라인</div></div>
+        <div><div class="s-num" id="loginNum">0</div><div class="s-lbl">로그인 중</div></div>
+      </div>
+      <div class="s-today">오늘 로그인: <span id="todayNum">0</span></div>
+    </div>
+    <div class="s-battle">
+      <div class="s-battle-t"><span class="dot-on"></span> 배틀룸 <span id="battleCount">0</span>개</div>
+      <div id="battleMini"></div>
+    </div>
+    <div class="s-nav">
+      <button class="nav-i active" data-nav="home" onclick="navigateTo('home')"><span class="nav-ic">🏠</span> 홈</button>
+      <button class="nav-i" data-nav="guide" onclick="navigateTo('guide')"><span class="nav-ic">📖</span> 가이드</button>
+      <div class="nav-sec">맵 찾기</div>
+      <button class="nav-i" data-nav="popular" onclick="navigateTo('popular')"><span class="nav-ic">🔥</span> 인기</button>
+      <button class="nav-i" data-nav="new" onclick="navigateTo('new')"><span class="nav-ic">⭐</span> 신규</button>
+      <button class="nav-i" data-nav="browse" onclick="navigateTo('browse')"><span class="nav-ic">🔲</span> 전체 보기</button>
+      <button class="nav-i" data-nav="create-map" onclick="navigateTo('create-map')"><span class="nav-ic">✏️</span> 맵 제작</button>
+      <div class="nav-sec">커뮤니티</div>
+      <button class="nav-i" data-nav="ranking" onclick="navigateTo('ranking')"><span class="nav-ic">🏆</span> 글로벌 랭킹</button>
+      <div class="nav-sec">내 활동</div>
+      <button class="nav-i" data-nav="dashboard" onclick="navigateTo('dashboard')"><span class="nav-ic">📋</span> 내 맵 대시보드</button>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="top">
+      <button class="hamburger" onclick="toggleSidebar()" aria-label="메뉴">
+        <span></span><span></span><span></span>
+      </button>
+      <div class="srch">
+        <span class="srch-ic">🔍</span>
+        <input placeholder="맵 또는 아티스트로 검색..." />
+        <span class="srch-key">/</span>
+      </div>
+      <div class="top-r">
+        <button class="top-lang">🌐 한국어</button>
+        <button class="top-btn">⚙️</button>
+        <button class="top-btn">👤</button>
+      </div>
+    </div>
+
+    <!-- ════ HOME ════ -->
+    <div class="page" id="page-home">
+      <div class="hero">
+        <h1>애니 · 노래 · 장면 퀴즈 — 마추기온라인</h1>
+        <p>점수를 랭킹에 등록하고 전국의 플레이어와 경쟁하세요</p>
+      </div>
+      <div class="qactions">
+        <button class="qact" onclick="navigateTo('ranking')">🏆 글로벌 랭킹</button>
+        <button class="qact" onclick="showCreateModal()">🎮 배틀 룸 생성</button>
+        <button class="qact" onclick="startSolo()">🎯 혼자 하기</button>
+        <button class="qact" onclick="navigateTo('create-map')">✏️ 맵 제작</button>
+      </div>
+      <div class="cta">
+        <div class="cta-l">
+          <div class="cta-heart">❤️</div>
+          <div><div class="cta-tt">함께 만들어가요</div><div class="cta-ts">좋아하는 애니 퀴즈를 즐길 수 있는 곳, 여러분의 응원으로.</div></div>
+        </div>
+        <button class="btn btn-a" onclick="navigateTo('create-map')">맵 제작하기 ✏️</button>
+      </div>
+      <div class="sec-h"><span>🎮</span><span class="sec-t">열린 배틀룸</span></div>
+      <div class="r-list" id="roomList">
+        <div class="empty">아직 열린 방이 없습니다. 첫 번째 방을 만들어보세요!</div>
+      </div>
+    </div>
+
+    <!-- ════ BROWSE MAPS ════ -->
+    <div class="page hide" id="page-browse">
+      <div class="sec-h"><span>🗺️</span><span class="sec-t">맵 탐색</span></div>
+      <div class="filters" id="mapFilters"></div>
+      <div class="m-grid" id="mapGrid"></div>
+    </div>
+
+    <!-- ════ CREATE MAP ════ -->
+    <div class="page hide" id="page-create-map">
+      <div class="sec-h"><span>✏️</span><span class="sec-t">맵 제작</span></div>
+      <div style="background:var(--bg3);border:1px solid var(--brd);border-radius:var(--rl);padding:20px;margin-bottom:16px">
+        <div class="inp-g"><label class="inp-l">맵 이름</label><input class="inp" id="cmName" placeholder="예: 나만의 애니 퀴즈"></div>
+        <div class="inp-g"><label class="inp-l">카테고리</label>
+          <select class="inp q-sel" id="cmCat" style="width:100%;cursor:pointer">
+            <option value="anime-song">🎵 애니 노래</option><option value="scene">🎬 애니 장면</option>
+            <option value="character">💬 캐릭터 대사</option><option value="kpop">🎤 K-POP</option><option value="ost">🎧 OST</option>
+          </select>
+        </div>
+      </div>
+      <div class="sec-h" style="margin-top:20px">
+        <span class="sec-t" style="font-size:14px">문제 목록 (<span id="cmQCount">1</span>)</span>
+        <button class="btn btn-g btn-sm" onclick="addCreatorQ()" style="margin-left:auto">+ 문제 추가</button>
+      </div>
+      <div id="cmQuestions"></div>
+      <button class="btn btn-a btn-lg btn-full" style="margin-top:20px" onclick="submitMap()">🚀 맵 공개하기</button>
+    </div>
+
+    <!-- ════ GUIDE ════ -->
+    <div class="page hide" id="page-guide">
+      <div class="sec-h"><span>📖</span><span class="sec-t">가이드</span></div>
+      <div style="background:var(--bg3);border:1px solid var(--brd);border-radius:var(--rl);padding:24px;line-height:1.8">
+        <h3 style="margin-bottom:12px">🎯 마추기온라인 사용법</h3>
+        <p style="margin-bottom:12px"><b>1. 방 만들기</b> — "배틀 룸 생성" 버튼으로 방 이름, 맵, 최대 인원을 설정하세요.</p>
+        <p style="margin-bottom:12px"><b>2. 방 참가</b> — 홈 화면의 방 목록에서 "대기중" 방을 클릭하면 참가할 수 있습니다.</p>
+        <p style="margin-bottom:12px"><b>3. 게임 플레이</b> — 호스트가 시작하면 문제가 나옵니다. 빨리 정답을 입력할수록 높은 점수!</p>
+        <p style="margin-bottom:12px"><b>4. 맵 제작</b> — "맵 제작" 메뉴에서 나만의 퀴즈를 만들어 공유하세요.</p>
+        <p><b>5. 점수 계산</b> — 맞춘 순서와 남은 시간에 따라 점수가 결정됩니다. 1등으로 맞추면 보너스!</p>
+      </div>
+    </div>
+
+    <!-- ════ WAITING ROOM ════ -->
+    <div class="page hide" id="page-waiting">
+      <div class="w-head">
+        <div style="font-size:12px;color:var(--t3);margin-bottom:4px">대기실</div>
+        <div class="w-rn" id="waitRoomName">방 이름</div>
+        <div class="w-rm" id="waitMapInfo">🎵 맵 이름 · 10문제</div>
+      </div>
+      <div class="w-grid" id="waitGrid"></div>
+      <div class="w-acts" id="waitActions"></div>
+      <div id="waitHint" style="text-align:center;margin-top:10px;font-size:12px;color:var(--t3)"></div>
+    </div>
+
+    <!-- ════ GAME ════ -->
+    <div class="page hide" id="page-game">
+      <div class="g-top">
+        <div class="g-qc" id="gameQC">문제 1 / 10</div>
+        <div style="flex:1"></div>
+        <div class="g-timer" id="gameTimer">⏱ 30s</div>
+        <div style="flex:1"></div>
+        <button class="btn btn-g btn-sm" onclick="leaveGameConfirm()" style="color:var(--acc);border-color:var(--acc)">🚪 나가기</button>
+      </div>
+      <div class="t-track"><div class="t-fill" id="timerFill" style="width:100%;background:var(--grn)"></div></div>
+      <div class="g-body">
+        <div>
+          <div class="g-media">
+            <div id="gameFeedback"></div>
+            <!-- YouTube는 게임 중 숨김, 오디오만 재생 -->
+            <div id="youtubeArea" style="display:none;width:1px;height:1px;overflow:hidden;position:absolute;opacity:0">
+              <iframe id="youtubeFrame" style="width:1px;height:1px;border:none"
+                allow="autoplay; encrypted-media"></iframe>
+            </div>
+            <div class="g-media-in">
+              <div class="g-big-ic" id="gameIcon">🎵</div>
+              <div class="g-mlabel" id="gameLabel">🎵 오디오 재생 중...</div>
+              <div class="g-hint" id="gameHint">이 애니의 오프닝 곡 제목은?</div>
+              <div id="chosungHintArea" style="display:none;margin-bottom:12px;font-size:22px;font-weight:800;letter-spacing:6px;color:var(--ylw);font-family:'JetBrains Mono',monospace"></div>
+              <div class="g-ans-row">
+                <input class="g-ans-inp" id="answerInput" placeholder="정답을 입력하세요..." autocomplete="off">
+                <button class="btn btn-a" id="answerBtn" onclick="submitAnswer()">제출</button>
+                <button class="btn btn-g btn-sm" id="skipBtn" onclick="voteSkip()" title="스킵 투표">⏭ 스킵 <span id="skipCount" style="font-family:'JetBrains Mono',monospace;font-size:11px">0/0</span></button>
+              </div>
+            </div>
+          </div>
+          <div class="g-chat"><div class="chat-log" id="chatLog"></div></div>
+        </div>
+        <div class="sc-panel">
+          <div class="sc-title">🏆 순위</div>
+          <div id="scoreBoard"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════ DASHBOARD ════ -->
+    <div class="page hide" id="page-dashboard">
+      <div class="sec-h"><span>📋</span><span class="sec-t">내 맵 대시보드</span></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+        <span style="font-size:13px;color:var(--t3)" id="dashSubtitle">내가 만든 퀴즈 맵을 관리하세요</span>
+        <button class="btn btn-a btn-sm" onclick="navigateTo('create-map')">+ 새 맵 만들기</button>
+      </div>
+      <div id="dashMapList"><div class="empty">로딩 중...</div></div>
+    </div>
+
+    <!-- ════ RANKING ════ -->
+    <div class="page hide" id="page-ranking">
+      <div class="sec-h"><span>🏆</span><span class="sec-t">글로벌 랭킹</span></div>
+      <div style="background:var(--bg3);border:1px solid var(--brd);border-radius:var(--rl);overflow:hidden">
+        <div style="display:grid;grid-template-columns:48px 1fr 1fr 100px;gap:0;padding:10px 16px;border-bottom:1px solid var(--brd);font-size:11px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;font-family:'JetBrains Mono',monospace">
+          <span>#</span><span>플레이어</span><span>맵</span><span style="text-align:right">점수</span>
+        </div>
+        <div id="rankingList"><div class="empty">랭킹 데이터 로딩 중...</div></div>
+      </div>
+      <button class="btn btn-g btn-sm" style="margin-top:12px" onclick="loadRanking()">🔄 새로고침</button>
+    </div>
+
+    <!-- ════ RESULTS ════ -->
+    <div class="page hide" id="page-results">
+      <div class="res">
+        <div class="res-trophy">🏆</div>
+        <div class="res-h">게임 종료!</div>
+        <div class="res-s">모든 문제가 끝났습니다</div>
+        <div class="podium" id="podiumArea"></div>
+        <div id="finalScores" style="max-width:360px;margin:0 auto 24px;text-align:left;background:var(--bg3);border:1px solid var(--brd);border-radius:var(--rl);padding:16px"></div>
+        <button class="btn btn-a btn-lg" onclick="backToLobby()">🏠 로비로 돌아가기</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════ CREATE ROOM MODAL ════ -->
+<div class="modal-bg hide" id="createModal" onclick="hideCreateModal()">
+  <div class="modal" onclick="event.stopPropagation()">
+    <h2>🎮 새 배틀룸 만들기</h2>
+    <div class="inp-g"><label class="inp-l">방 이름</label><input class="inp" id="crName" placeholder="방 이름을 입력하세요"></div>
+    <div class="inp-g"><label class="inp-l">최대 인원</label><input class="inp" id="crMax" type="number" min="2" max="8" value="8"></div>
+    <div class="inp-g"><label class="inp-l">맵 선택</label><div class="m-grid" id="crMapGrid" style="max-height:220px;overflow-y:auto"></div></div>
+    <div style="display:flex;gap:8px;margin-top:20px">
+      <button class="btn btn-g" style="flex:1" onclick="hideCreateModal()">취소</button>
+      <button class="btn btn-a" style="flex:1" id="crSubmit" onclick="createRoom()">방 만들기</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════ EDIT MAP MODAL ════ -->
+<div class="modal-bg hide" id="editMapModal" onclick="hideEditMapModal()">
+  <div class="modal" style="max-width:640px" onclick="event.stopPropagation()">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+      <h2 style="margin:0">✏️ 맵 수정</h2>
+      <button class="btn btn-g btn-sm" onclick="hideEditMapModal()">✕ 닫기</button>
+    </div>
+    <div class="inp-g"><label class="inp-l">맵 이름</label><input class="inp" id="emName" placeholder="맵 이름"></div>
+    <div class="inp-g"><label class="inp-l">카테고리</label>
+      <select class="inp q-sel" id="emCat" style="width:100%;cursor:pointer">
+        <option value="anime-song">🎵 애니 노래</option>
+        <option value="scene">🎬 애니 장면</option>
+        <option value="character">💬 캐릭터 대사</option>
+        <option value="kpop">🎤 K-POP</option>
+        <option value="ost">🎧 OST</option>
+      </select>
+    </div>
+    <div class="sec-h" style="margin-top:16px">
+      <span class="sec-t" style="font-size:13px">문제 목록 (<span id="emQCount">0</span>)</span>
+      <button class="btn btn-g btn-sm" onclick="addEditQ()" style="margin-left:auto">+ 문제 추가</button>
+    </div>
+    <div id="emQuestions" style="max-height:340px;overflow-y:auto;padding-right:4px"></div>
+    <div style="display:flex;gap:8px;margin-top:20px">
+      <button class="btn btn-g" style="flex:1" onclick="hideEditMapModal()">취소</button>
+      <button class="btn btn-a" style="flex:1" onclick="saveEditMap()">💾 저장</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════ NAME MODAL ════ -->
+<div class="modal-bg" id="nameModal">
+  <div class="modal" style="text-align:center">
+    <h2>🎯 마추기온라인에 오신 걸 환영합니다!</h2>
+    <p style="color:var(--t2);margin-bottom:20px">닉네임을 입력하고 시작하세요</p>
+    <div class="inp-g"><input class="inp" id="nmInput" placeholder="닉네임 입력..." style="text-align:center;font-size:18px;font-weight:700" maxlength="20"></div>
+    <div style="display:flex;justify-content:center;gap:8px;margin:16px 0;flex-wrap:wrap" id="avatarPicker"></div>
+    <button class="btn btn-a btn-lg btn-full" onclick="registerUser()">입장하기 🚀</button>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════
+// Client State & Socket
+// ═══════════════════════════════════════════
+
+const socket = io();
+let myUser = { name: "", avatar: "🦊" };
+let currentRoom = null;
+let currentRoomId = null;
+let selectedMapId = null;
+let allMaps = [];
+let gameState = { answered: false, timeLeft: 0, totalQ: 0, currentQ: 0 };
+let creatorQuestions = [{ type:"audio", hint:"", answers:"", mediaUrl:"", startTime:0, endTime:0, chosungHint:false, hintRevealTime:5 }];
+
+const AVATARS = ["🦊","🐱","🐶","🐰","🐼","🦁","🐸","🐧","🐯","🐨","🦄","🐲"];
+const COLORS = ["#FF6B6B","#4ECDC4","#45B7D1","#96CEB4","#FFEAA7","#DDA0DD","#98D8C8","#F7DC6F"];
+
+// ═══════════════════════════════════════════
+// Init
+// ═══════════════════════════════════════════
+
+window.addEventListener("DOMContentLoaded", () => {
+  // Avatar picker
+  const picker = document.getElementById("avatarPicker");
+  AVATARS.forEach(a => {
+    const btn = document.createElement("button");
+    btn.textContent = a;
+    btn.style.cssText = "font-size:28px;width:48px;height:48px;border-radius:50%;border:2px solid var(--brd);background:var(--bg5);cursor:pointer;transition:all .15s";
+    btn.onclick = () => {
+      myUser.avatar = a;
+      picker.querySelectorAll("button").forEach(b => b.style.borderColor = "var(--brd)");
+      btn.style.borderColor = "var(--acc)";
+    };
+    if (a === myUser.avatar) btn.style.borderColor = "var(--acc)";
+    picker.appendChild(btn);
+  });
+
+  // Enter key for name
+  document.getElementById("nmInput").addEventListener("keydown", e => { if (e.key === "Enter") registerUser(); });
+  document.getElementById("answerInput").addEventListener("keydown", e => { if (e.key === "Enter") submitAnswer(); });
+
+  renderCreatorQuestions();
+});
+
+// ═══════════════════════════════════════════
+// Socket Events
+// ═══════════════════════════════════════════
+
+socket.on("onlineCount", n => {
+  document.getElementById("onlineNum").textContent = n;
+  document.getElementById("loginNum").textContent = Math.floor(n * 0.14);
+  document.getElementById("todayNum").textContent = Math.floor(n * 0.5);
+});
+
+socket.on("registered", user => {
+  myUser = user;
+  document.getElementById("sideAvatar").textContent = user.avatar;
+  document.getElementById("sideName").textContent = user.name;
+  document.getElementById("nameModal").classList.add("hide");
+  socket.emit("getRooms");
+  socket.emit("getMaps");
+});
+
+socket.on("roomList", rooms => {
+  renderRoomList(rooms);
+  renderBattleMini(rooms);
+});
+
+socket.on("mapList", maps => {
+  allMaps = maps;
+  renderMapGrid(maps);
+  renderCreateModalMaps(maps);
+});
+
+socket.on("roomJoined", room => {
+  currentRoom = room;
+  currentRoomId = room.id;
+  showWaiting(room);
+  navigateTo("waiting");
+});
+
+socket.on("playerJoined", ({ players }) => {
+  if (currentRoom) { currentRoom.players = players; showWaiting(currentRoom); }
+});
+
+socket.on("playerLeft", ({ playerName, players }) => {
+  if (currentRoom) { currentRoom.players = players; showWaiting(currentRoom); }
+  addChat("system", `${playerName}님이 나갔습니다.`);
+});
+
+socket.on("newHost", ({ hostId, hostName }) => {
+  if (currentRoom) { currentRoom.hostId = hostId; currentRoom.hostName = hostName; showWaiting(currentRoom); }
+});
+
+socket.on("gameStarted", ({ totalQuestions, players }) => {
+  gameState.totalQ = totalQuestions;
+  gameState.currentQ = 0;
+  gameState.answered = false;
+  gameState.playerCount = players.length;
+  document.getElementById("chatLog").innerHTML = "";
+  addChat("system", "게임이 시작되었습니다!");
+  renderScoreboard(players.map(p => ({ ...p, score: 0 })));
+  navigateTo("game");
+});
+
+socket.on("question", ({ index, total, type, hint, timeLimit, mediaUrl, startTime, endTime }) => {
+  gameState.currentQ = index;
+  gameState.totalQ = total;
+  gameState.answered = false;
+  gameState.timeLeft = timeLimit;
+  gameState.timeLimit = timeLimit;
+
+  document.getElementById("gameQC").textContent = `문제 ${index + 1} / ${total}`;
+  document.getElementById("gameTimer").textContent = `⏱ ${timeLimit}s`;
+  document.getElementById("gameTimer").classList.remove("urg");
+  document.getElementById("timerFill").style.width = "100%";
+  document.getElementById("timerFill").style.background = "var(--grn)";
+  document.getElementById("gameIcon").textContent = type === "audio" ? "🎵" : type === "scene" ? "🎬" : "💬";
+  document.getElementById("gameLabel").textContent = type === "audio" ? "🎵 오디오 재생 중..." : type === "scene" ? "🎬 영상 재생 중..." : "💬 대사 퀴즈";
+  document.getElementById("gameHint").textContent = hint;
+  document.getElementById("answerInput").value = "";
+  document.getElementById("answerInput").disabled = false;
+  document.getElementById("answerBtn").disabled = false;
+  document.getElementById("gameFeedback").innerHTML = "";
+  document.getElementById("answerInput").focus();
+
+  // 초성 힌트 영역 리셋
+  const chArea = document.getElementById("chosungHintArea");
+  chArea.style.display = "none";
+  chArea.textContent = "";
+
+  // 스킵 버튼 초기화
+  document.getElementById("skipBtn").disabled = false;
+  document.getElementById("skipCount").textContent = `0/${gameState.playerCount || 1}`;
+
+  // YouTube 오디오 재생 (영상은 숨김)
+  const ytFrame = document.getElementById("youtubeFrame");
+  const ytId = getYouTubeId(mediaUrl || "");
+  if (ytId) {
+    let src = `https://www.youtube-nocookie.com/embed/${ytId}?autoplay=1&rel=0`;
+    if (startTime) src += `&start=${startTime}`;
+    if (endTime) src += `&end=${endTime}`;
+    ytFrame.src = src;
+  } else {
+    ytFrame.src = "";
+  }
+});
+
+socket.on("timeUpdate", t => {
+  gameState.timeLeft = t;
+  const el = document.getElementById("gameTimer");
+  el.textContent = `⏱ ${t}s`;
+  if (t <= 5) el.classList.add("urg"); else el.classList.remove("urg");
+
+  // Update bar
+  const pct = (t / (gameState.timeLimit || 30)) * 100;
+  const fill = document.getElementById("timerFill");
+  fill.style.width = pct + "%";
+  fill.style.background = pct > 50 ? "var(--grn)" : pct > 25 ? "var(--org)" : "var(--acc)";
+});
+
+socket.on("correctAnswer", ({ playerName, points, order, scores }) => {
+  renderScoreboard(scores);
+  playCorrectSound();
+  if (playerName === myUser.name) {
+    showFeedback("ok", `정답! +${points}점 (${order}등)`);
+    gameState.answered = true;
+    document.getElementById("answerInput").disabled = true;
+    document.getElementById("answerBtn").disabled = true;
+    document.getElementById("skipBtn").disabled = true; // 맞춘 사람은 스킵 불가
+    document.getElementById("skipBtn").title = "정답을 맞췄습니다";
+  }
+});
+
+socket.on("wrongAnswer", ({ text }) => {
+  showFeedback("no", text);
+  setTimeout(() => document.getElementById("gameFeedback").innerHTML = "", 1000);
+});
+
+socket.on("timeUp", ({ answer, scores }) => {
+  showFeedback("no", `시간 초과! 정답: ${answer}`);
+  gameState.answered = true;
+  document.getElementById("answerInput").disabled = true;
+  document.getElementById("answerBtn").disabled = true;
+  renderScoreboard(scores);
+});
+
+socket.on("chatMessage", ({ type, name, text }) => {
+  addChat(type, text, name);
+});
+
+socket.on("gameOver", ({ scores }) => {
+  stopYoutube();
+  showResults(scores);
+  navigateTo("results");
+});
+
+socket.on("skipVoteUpdate", ({ votes, total, unanswered }) => {
+  const btn = document.getElementById("skipCount");
+  if (btn) btn.textContent = `${votes}/${unanswered ?? total}`;
+});
+
+socket.on("hintReveal", ({ hint }) => {
+  const el = document.getElementById("chosungHintArea");
+  if (el) { el.textContent = hint; el.style.display = "block"; }
+});
+
+socket.on("error", msg => {
+  alert(msg);
+});
+
+// ═══════════════════════════════════════════
+// UI Functions
+// ═══════════════════════════════════════════
+
+function navigateTo(page) {
+  closeSidebar();
+  // 게임 중에는 사이드바로 이탈 차단 (leaveGameConfirm 으로만 나갈 수 있음)
+  const inGame = currentRoomId && !document.getElementById("page-game").classList.contains("hide");
+  const gamePages = ["game"];
+  if (inGame && !gamePages.includes(page) && page !== "results") {
+    leaveGameConfirm();
+    return;
+  }
+
+  document.querySelectorAll(".page").forEach(p => p.classList.add("hide"));
+  const el = document.getElementById("page-" + page);
+  if (el) el.classList.remove("hide");
+
+  document.querySelectorAll(".nav-i").forEach(n => n.classList.remove("active"));
+  const nav = document.querySelector(`.nav-i[data-nav="${page}"]`);
+  if (nav) nav.classList.add("active");
+
+  if (page === "home") { socket.emit("getRooms"); socket.emit("getMaps"); }
+  if (page === "ranking") { loadRanking(); }
+  if (page === "dashboard") { loadDashboard(); }
+  if (page === "browse" || page === "popular" || page === "new") {
+    document.getElementById("page-browse").classList.remove("hide");
+    socket.emit("getMaps");
+  }
+}
+
+function leaveGameConfirm() {
+  if (confirm("게임에서 나가시겠습니까?")) {
+    stopYoutube();
+    leaveRoom();
+  }
+}
+
+function backToLobby() {
+  currentRoom = null;
+  currentRoomId = null;
+  stopYoutube();
+  navigateTo("home");
+}
+
+// ── 사이드바 모바일 토글 ──
+function toggleSidebar() {
+  const sb = document.getElementById("sidebar");
+  const ov = document.getElementById("sideOverlay");
+  sb.classList.toggle("open");
+  ov.classList.toggle("show");
+}
+function closeSidebar() {
+  document.getElementById("sidebar").classList.remove("open");
+  document.getElementById("sideOverlay").classList.remove("show");
+}
+
+function voteSkip() {
+  if (!currentRoomId) return;
+  document.getElementById("skipBtn").disabled = true;
+  socket.emit("skipVote", { roomId: currentRoomId });
+}
+
+function registerUser() {
+  const name = document.getElementById("nmInput").value.trim();
+  if (!name) return alert("닉네임을 입력해주세요!");
+  myUser.name = name;
+  socket.emit("register", { name: myUser.name, avatar: myUser.avatar });
+}
+
+function showCreateModal() {
+  document.getElementById("createModal").classList.remove("hide");
+  socket.emit("getMaps");
+}
+
+function hideCreateModal() {
+  document.getElementById("createModal").classList.add("hide");
+  selectedMapId = null;
+}
+
+function createRoom() {
+  const name = document.getElementById("crName").value.trim();
+  const max = parseInt(document.getElementById("crMax").value) || 8;
+  if (!name) return alert("방 이름을 입력해주세요!");
+  if (!selectedMapId) return alert("맵을 선택해주세요!");
+  socket.emit("createRoom", { name, mapId: selectedMapId, maxPlayers: max });
+  hideCreateModal();
+}
+
+function joinRoom(roomId) {
+  socket.emit("joinRoom", { roomId });
+}
+
+function leaveRoom() {
+  socket.emit("leaveRoom");
+  currentRoom = null;
+  currentRoomId = null;
+  navigateTo("home");
+}
+
+function startGame() {
+  if (currentRoomId) socket.emit("startGame", { roomId: currentRoomId });
+}
+
+function submitAnswer() {
+  if (gameState.answered) return;
+  const val = document.getElementById("answerInput").value.trim();
+  if (!val) return;
+  socket.emit("submitAnswer", { roomId: currentRoomId, answer: val });
+  document.getElementById("answerInput").value = "";
+}
+
+// ═══════════════════════════════════════════
+// Render Functions
+// ═══════════════════════════════════════════
+
+function renderRoomList(rooms) {
+  const el = document.getElementById("roomList");
+  if (!rooms.length) {
+    el.innerHTML = '<div class="empty">아직 열린 방이 없습니다. 첫 번째 방을 만들어보세요!</div>';
+    return;
+  }
+  el.innerHTML = rooms.map(r => `
+    <div class="r-row" onclick="${r.status === 'waiting' ? `joinRoom('${r.id}')` : ''}">
+      <div class="r-icon">${r.mapIcon}</div>
+      <div class="r-info">
+        <div class="r-nm">${esc(r.name)}</div>
+        <div class="r-meta"><span>${esc(r.mapName)}</span><span>호스트: ${esc(r.hostName)}</span></div>
+      </div>
+      <span class="r-st ${r.status === 'waiting' ? 'wait' : 'play'}">${r.status === 'waiting' ? '대기중' : '게임중'}</span>
+      <div class="r-dots">
+        ${Array.from({length:r.maxPlayers}).map((_,i) => `<span class="r-dot ${i < r.players ? 'f' : 'e'}"></span>`).join("")}
+        <span class="r-cnt">${r.players}/${r.maxPlayers}</span>
+      </div>
+    </div>
+  `).join("");
+}
+
+function renderBattleMini(rooms) {
+  const waiting = rooms.filter(r => r.status === "waiting").slice(0, 3);
+  document.getElementById("battleCount").textContent = waiting.length;
+  document.getElementById("battleMini").innerHTML = waiting.map(r => `
+    <div class="b-mini" onclick="joinRoom('${r.id}')">
+      <div class="b-badge" style="background:var(--acc)">${r.mapIcon}</div>
+      <div class="b-info"><div class="b-nm">${esc(r.name)}</div></div>
+      <div class="b-cnt">${r.players}/${r.maxPlayers}</div>
+    </div>
+  `).join("");
+}
+
+function renderMapGrid(maps, filter) {
+  const cats = [{id:"all",label:"전체",icon:"🏠"},{id:"anime-song",label:"애니",icon:"🎵"},{id:"scene",label:"장면",icon:"🎬"},{id:"character",label:"캐릭터",icon:"💬"},{id:"kpop",label:"K-POP",icon:"🎤"},{id:"ost",label:"OST",icon:"🎧"}];
+  document.getElementById("mapFilters").innerHTML = cats.map(c =>
+    `<button class="fchip ${(!filter && c.id==='all') || filter===c.id ? 'act':''}" onclick="filterMaps('${c.id}')">${c.icon} ${c.label}</button>`
+  ).join("");
+
+  const filtered = filter && filter !== "all" ? maps.filter(m => m.category === filter) : maps;
+  document.getElementById("mapGrid").innerHTML = filtered.map(m => `
+    <div class="m-card" onclick="openCreateWithMap('${m.id}','${esc(m.name)}')">
+      <div class="m-ic">${m.icon}</div>
+      <div class="m-nm">${esc(m.name)}</div>
+      <div class="m-au">by ${esc(m.author)}</div>
+      <div class="m-st"><span>📝 ${m.questionCount}</span><span>▶ ${m.plays}</span><span>⭐ ${m.rating}</span></div>
+      <div class="m-tags">${(m.tags||[]).map(t => `<span class="m-tag">${esc(t)}</span>`).join("")}</div>
+      <button class="btn btn-a btn-sm btn-full" style="margin-top:10px" onclick="event.stopPropagation();openCreateWithMap('${m.id}','${esc(m.name)}')">🎮 이 맵으로 방 만들기</button>
+    </div>
+  `).join("");
+}
+
+function filterMaps(cat) {
+  renderMapGrid(allMaps, cat);
+}
+
+function renderCreateModalMaps(maps) {
+  document.getElementById("crMapGrid").innerHTML = maps.map(m => `
+    <div class="m-card ${selectedMapId===m.id?'sel':''}" onclick="selectMap('${m.id}')" style="padding:12px">
+      <div style="font-size:22px">${m.icon}</div>
+      <div class="m-nm" style="font-size:12px">${esc(m.name)}</div>
+    </div>
+  `).join("");
+}
+
+function selectMap(id) {
+  selectedMapId = id;
+  renderCreateModalMaps(allMaps);
+}
+
+function showWaiting(room) {
+  document.getElementById("waitRoomName").textContent = room.name;
+  document.getElementById("waitMapInfo").textContent = `${room.mapIcon} ${room.mapName} · ${room.questionCount}문제`;
+
+  const grid = document.getElementById("waitGrid");
+  grid.innerHTML = Array.from({length: room.maxPlayers}).map((_, i) => {
+    const p = room.players[i];
+    if (p) {
+      return `<div class="w-slot filled ${p.isHost?'host':''}">
+        <div class="w-emoji">${p.avatar}</div>
+        <div class="w-name">${esc(p.name)}</div>
+        ${p.isHost ? '<span class="host-b">HOST</span>' : ''}
+      </div>`;
+    }
+    return '<div class="w-slot"><span style="font-size:22px;color:var(--t3)">+</span></div>';
+  }).join("");
+
+  const isHost = room.hostId === socket.id;
+  const acts = document.getElementById("waitActions");
+  acts.innerHTML = `
+    <button class="btn btn-g" onclick="leaveRoom()">나가기</button>
+    ${isHost ? `<button class="btn btn-a btn-lg" onclick="startGame()">🎮 게임 시작!</button>` : ''}
+  `;
+
+  document.getElementById("waitHint").textContent = isHost && room.players.length === 1 ? "혼자 시작합니다 — 친구를 초대하면 더 재밌어요!" : "";
+}
+
+function renderScoreboard(scores) {
+  const sorted = [...scores].sort((a,b) => b.score - a.score);
+  document.getElementById("scoreBoard").innerHTML = sorted.map((s, i) => `
+    <div class="sc-row ${s.name === myUser.name ? 'me' : ''}">
+      <span class="sc-rank ${i===0?'sc-r1':i===1?'sc-r2':i===2?'sc-r3':''}">${i===0?'👑':'#'+(i+1)}</span>
+      <div class="sc-av" style="background:${COLORS[i%COLORS.length]}22">${s.avatar}</div>
+      <span class="sc-nm">${esc(s.name)}</span>
+      <span class="sc-pts">${s.score}</span>
+    </div>
+  `).join("");
+}
+
+function showFeedback(type, text) {
+  document.getElementById("gameFeedback").innerHTML = `<div class="fb-toast ${type === 'ok' ? 'fb-ok' : 'fb-no'}">${esc(text)}</div>`;
+}
+
+function addChat(type, text, name) {
+  const log = document.getElementById("chatLog");
+  const cls = type === "system" ? "ch-sys" : type === "correct" ? "ch-ok" : "";
+  log.innerHTML += `<div class="${cls}">${name ? `<span class="ch-nm">${esc(name)}: </span>` : ''}${esc(text)}</div>`;
+  log.scrollTop = log.scrollHeight;
+}
+
+function showResults(scores) {
+  const sorted = [...scores].sort((a,b) => b.score - a.score);
+  const medals = ["🥈","🥇","🥉"];
+  const podiumOrder = [sorted[1], sorted[0], sorted[2]].filter(Boolean);
+  const podiumClasses = ["pod-2", "pod-1", "pod-3"];
+
+  document.getElementById("podiumArea").innerHTML = podiumOrder.map((p, i) => `
+    <div class="pod-col">
+      <div class="pod-emoji">${p.avatar}</div>
+      <div class="pod-nm">${esc(p.name)}</div>
+      <div class="pod-pts">${p.score.toLocaleString()}</div>
+      <div class="pod-bar ${podiumClasses[i]}"><span style="font-size:22px">${medals[i]}</span></div>
+    </div>
+  `).join("");
+
+  document.getElementById("finalScores").innerHTML = `
+    <div class="sc-title">최종 순위</div>
+    ${sorted.map((s, i) => `
+      <div class="sc-row ${s.name === myUser.name ? 'me' : ''}">
+        <span class="sc-rank ${i===0?'sc-r1':i===1?'sc-r2':i===2?'sc-r3':''}">#${i+1}</span>
+        <div class="sc-av" style="background:${COLORS[i%COLORS.length]}22">${s.avatar}</div>
+        <span class="sc-nm">${esc(s.name)}</span>
+        <span class="sc-pts">${s.score.toLocaleString()}</span>
+      </div>
+    `).join("")}
+  `;
+}
+
+// ═══════════════════════════════════════════
+// Map Creator
+// ═══════════════════════════════════════════
+
+function renderCreatorQuestions() {
+  document.getElementById("cmQCount").textContent = creatorQuestions.length;
+  document.getElementById("cmQuestions").innerHTML = creatorQuestions.map((q, i) => {
+    const ytId = getYouTubeId(q.mediaUrl || "");
+    const hasYt = !!ytId;
+    const startSec = q.startTime || 0;
+    const endSec = q.endTime || 0;
+    const fmtTime = s => { const m = Math.floor(s/60); return `${m}:${String(s%60).padStart(2,'0')}`; };
+    return `
+    <div style="background:var(--bg3);border:1px solid var(--brd);border-radius:var(--r);margin-bottom:14px;overflow:hidden">
+      <!-- 헤더 -->
+      <div style="display:flex;align-items:center;gap:8px;padding:10px 14px;background:var(--bg4);border-bottom:1px solid var(--brd)">
+        <span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--t3);min-width:28px">#${i+1}</span>
+        <select class="q-sel" style="flex:0 0 auto" onchange="creatorQuestions[${i}].type=this.value;renderCreatorQuestions()">
+          <option value="audio" ${q.type==='audio'?'selected':''}>🎵 음악</option>
+          <option value="scene" ${q.type==='scene'?'selected':''}>🎬 영상</option>
+          <option value="character" ${q.type==='character'?'selected':''}>💬 대사</option>
+        </select>
+        <input class="inp" placeholder="힌트 / 질문" style="flex:1" value="${esc(q.hint)}" oninput="creatorQuestions[${i}].hint=this.value">
+        <input class="inp" placeholder="정답 (쉼표로 복수)" style="flex:1" value="${esc(q.answers||q.answer||'')}" oninput="creatorQuestions[${i}].answers=this.value">
+        <button class="btn btn-g btn-sm" onclick="removeCreatorQ(${i})" style="color:var(--acc);flex:0 0 auto">✕</button>
+      </div>
+      <!-- 초성힌트 + 힌트공개시간 -->
+      <div style="display:flex;align-items:center;gap:16px;padding:8px 14px;background:var(--bg5);border-bottom:1px solid var(--brd);flex-wrap:wrap">
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;font-weight:600;white-space:nowrap">
+          <input type="checkbox" ${q.chosungHint?'checked':''} onchange="creatorQuestions[${i}].chosungHint=this.checked;renderCreatorQuestions()"
+            style="width:15px;height:15px;accent-color:var(--acc)">
+          💡 초성 힌트 자동 공개
+        </label>
+        ${q.chosungHint ? `
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:12px;color:var(--t3)">공개 시점:</span>
+          <select class="q-sel" onchange="creatorQuestions[${i}].hintRevealTime=+this.value" style="font-size:12px">
+            <option value="5"  ${(q.hintRevealTime||0)==5 ?'selected':''}>5초 후</option>
+            <option value="10" ${(q.hintRevealTime||0)==10?'selected':''}>10초 후</option>
+            <option value="15" ${(q.hintRevealTime||0)==15?'selected':''}>15초 후</option>
+            <option value="0"  ${!q.hintRevealTime?'selected':''}>커스텀</option>
+          </select>
+          ${!q.hintRevealTime||![5,10,15].includes(q.hintRevealTime) ? `
+          <input type="number" min="1" max="60" class="inp" style="width:70px;padding:4px 8px;font-size:12px" placeholder="초"
+            value="${q.hintRevealTime||''}" oninput="creatorQuestions[${i}].hintRevealTime=+this.value">
+          ` : ''}
+          <span style="font-size:11px;color:var(--ylw);font-family:'JetBrains Mono',monospace">
+            예: ${esc((q.answers||q.answer||'정답').toString().split(',')[0].trim())} → ${getChosungClient((q.answers||q.answer||'정답').toString().split(',')[0].trim())}
+          </span>
+        </div>
+        ` : ''}
+      </div>
+      <!-- YouTube 영역 -->
+      <div style="display:flex;gap:0">
+        ${hasYt ? `
+        <div style="flex:0 0 320px;background:#000;position:relative;aspect-ratio:16/9;max-width:320px">
+          <iframe src="https://www.youtube-nocookie.com/embed/${ytId}?start=${startSec}&rel=0" style="width:100%;height:100%;border:none" allow="encrypted-media" allowfullscreen></iframe>
+        </div>` : ''}
+        <div style="flex:1;padding:14px;display:flex;flex-direction:column;gap:10px">
+          <div>
+            <div style="font-size:11px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">YouTube URL</div>
+            <input class="inp" placeholder="https://youtu.be/..." value="${esc(q.mediaUrl||'')}"
+              oninput="creatorQuestions[${i}].mediaUrl=this.value;renderCreatorQuestions()" style="width:100%">
+          </div>
+          ${hasYt ? `
+          <div>
+            <div style="font-size:11px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">재생 구간</div>
+            <div style="display:flex;align-items:center;gap:8px">
+              <div style="background:var(--bg5);border:1px solid var(--brd);border-radius:var(--rs);padding:8px 12px;flex:1">
+                <div style="font-size:10px;color:var(--t3);margin-bottom:4px">시작</div>
+                <div style="display:flex;align-items:center;gap:6px">
+                  <input type="number" min="0" class="inp" style="width:80px;padding:4px 8px;font-family:'JetBrains Mono',monospace"
+                    value="${startSec}" oninput="creatorQuestions[${i}].startTime=+this.value;renderCreatorQuestions()">
+                  <span style="font-size:13px;color:var(--ylw);font-family:'JetBrains Mono',monospace;font-weight:700">${fmtTime(startSec)}</span>
+                </div>
+              </div>
+              <div style="color:var(--t3);font-size:18px">→</div>
+              <div style="background:var(--bg5);border:1px solid var(--brd);border-radius:var(--rs);padding:8px 12px;flex:1">
+                <div style="font-size:10px;color:var(--t3);margin-bottom:4px">끝 (0=제한없음)</div>
+                <div style="display:flex;align-items:center;gap:6px">
+                  <input type="number" min="0" class="inp" style="width:80px;padding:4px 8px;font-family:'JetBrains Mono',monospace"
+                    value="${endSec}" oninput="creatorQuestions[${i}].endTime=+this.value;renderCreatorQuestions()">
+                  <span style="font-size:13px;color:var(--ylw);font-family:'JetBrains Mono',monospace;font-weight:700">${endSec ? fmtTime(endSec) : '--:--'}</span>
+                </div>
+              </div>
+            </div>
+            ${startSec < endSec ? `
+            <div style="margin-top:8px;background:var(--bg5);border-radius:4px;height:6px;position:relative;overflow:hidden">
+              <div style="position:absolute;left:0;right:0;top:0;bottom:0;background:var(--brd2)"></div>
+              <div style="position:absolute;top:0;bottom:0;background:var(--acc);border-radius:4px;left:0;width:100%"></div>
+            </div>
+            <div style="font-size:11px;color:var(--t3);margin-top:4px;font-family:'JetBrains Mono',monospace">${fmtTime(startSec)} ~ ${fmtTime(endSec)} (${endSec-startSec}초)</div>
+            ` : ''}
+          </div>
+          ` : '<div style="color:var(--t3);font-size:13px">URL을 입력하면 영상 미리보기가 표시됩니다</div>'}
+        </div>
+      </div>
+    </div>
+  `}).join("");
+}
+
+function addCreatorQ() {
+  creatorQuestions.push({ type:"audio", hint:"", answers:"", mediaUrl:"", startTime:0, endTime:0, chosungHint:false, hintRevealTime:5 });
+  renderCreatorQuestions();
+}
+
+async function submitMap() {
+  const name = document.getElementById("cmName").value.trim();
+  const cat = document.getElementById("cmCat").value;
+  if (!name) return alert("맵 이름을 입력해주세요!");
+  if (creatorQuestions.some(q => !(q.answers || q.answer || "").trim())) return alert("모든 문제에 정답을 입력해주세요!");
+
+  try {
+    const res = await fetch("/api/maps", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name, author: myUser.name, authorId: socket.id,
+        icon: cat === "kpop" ? "🎤" : cat === "scene" ? "🎬" : cat === "character" ? "💬" : cat === "ost" ? "🎧" : "🎵",
+        category: cat, tags: [],
+        questions: creatorQuestions.map(q => ({
+          ...q,
+          answers: (q.answers || q.answer || "").split(",").map(a => a.trim()).filter(Boolean),
+          chosungHint: !!q.chosungHint,
+          hintRevealTime: parseInt(q.hintRevealTime) || 0,
+        })),
+      }),
+    });
+    const data = await res.json();
+    if (data.id) {
+      alert("맵이 생성되었습니다! 🎉");
+      creatorQuestions = [{ type:"audio", hint:"", answer:"" }];
+      document.getElementById("cmName").value = "";
+      renderCreatorQuestions();
+      socket.emit("getMaps");
+      navigateTo("home");
+    }
+  } catch (e) { alert("맵 생성 실패: " + e.message); }
+}
+
+function esc(s) { return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+
+// ═══════════════════════════════════════════
+// Dashboard — 내 맵 관리
+// ═══════════════════════════════════════════
+
+async function loadDashboard() {
+  const el = document.getElementById("dashMapList");
+  el.innerHTML = '<div class="empty">로딩 중...</div>';
+  try {
+    const res = await fetch(`/api/maps/mine/${socket.id}`);
+    const data = await res.json();
+    document.getElementById("dashSubtitle").textContent = `총 ${data.length}개의 맵을 만들었습니다`;
+    if (!data.length) {
+      el.innerHTML = '<div class="empty">아직 만든 맵이 없습니다. 맵 제작 메뉴에서 첫 맵을 만들어보세요!</div>';
+      return;
+    }
+    el.innerHTML = data.map(m => `
+      <div style="display:flex;align-items:center;gap:14px;padding:14px 18px;background:var(--bg3);border:1px solid var(--brd);border-radius:var(--r);margin-bottom:8px;transition:border-color .15s" onmouseover="this.style.borderColor='var(--brd2)'" onmouseout="this.style.borderColor='var(--brd)'">
+        <div style="font-size:28px;width:44px;height:44px;background:var(--bg5);border-radius:var(--rs);display:flex;align-items:center;justify-content:center">${m.icon}</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-weight:700;font-size:14px;margin-bottom:3px">${esc(m.name)}</div>
+          <div style="font-size:12px;color:var(--t3);display:flex;gap:12px">
+            <span>📝 ${m.questionCount}문제</span>
+            <span>▶ ${m.plays}회 플레이</span>
+            <span>${new Date(m.createdAt).toLocaleDateString('ko-KR')}</span>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;flex-shrink:0">
+          <button class="btn btn-g btn-sm" onclick="openCreateWithMap('${m.id}','${esc(m.name)}')">🎮 방 만들기</button>
+          <button class="btn btn-g btn-sm" onclick="openEditMap('${m.id}')">✏️ 수정</button>
+          <button class="btn btn-sm" style="background:var(--acc-s);color:var(--acc);border:1px solid rgba(232,64,94,.3)" onclick="deleteMap('${m.id}','${esc(m.name)}')">🗑️ 삭제</button>
+        </div>
+      </div>
+    `).join("");
+  } catch(e) {
+    el.innerHTML = '<div class="empty">불러오기 실패. 다시 시도해주세요.</div>';
+  }
+}
+
+async function deleteMap(mapId, mapName) {
+  if (!confirm(`"${mapName}" 맵을 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.`)) return;
+  try {
+    const res = await fetch(`/api/maps/${mapId}`, {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ authorId: socket.id }),
+    });
+    const data = await res.json();
+    if (res.ok) {
+      socket.emit("getMaps");
+      loadDashboard();
+    } else {
+      alert(data.error || "삭제 실패");
+    }
+  } catch(e) { alert("삭제 실패: " + e.message); }
+}
+
+// ── 맵 수정 ──
+let editMapId = null;
+let editQuestions = [];
+
+async function openEditMap(mapId) {
+  try {
+    // 전체 맵 데이터 조회 (authorId로 own maps API 사용)
+    const res = await fetch(`/api/maps/${mapId}`);
+    if (!res.ok) return alert("맵 데이터를 불러오지 못했습니다.");
+    const m = await res.json();
+
+    editMapId = mapId;
+    // 맵 상세는 정답 없이 오므로, mine API로 가져온 후 추가 처리
+    // 편집을 위해 answers 포함된 full data를 mine endpoint에서 직접 가져옴
+    const fullRes = await fetch(`/api/maps/full/${mapId}?authorId=${socket.id}`);
+    const full = fullRes.ok ? await fullRes.json() : m;
+
+    document.getElementById("emName").value = full.name || m.name;
+    document.getElementById("emCat").value = full.category || m.category || "anime-song";
+
+    // answers가 없으면 빈 배열로 초기화
+    editQuestions = (full.questions || m.questions || []).map(q => ({
+      type: q.type || "audio",
+      hint: q.hint || "",
+      answers: (q.answers || [q.answer || ""]).join(", "),
+      mediaUrl: q.mediaUrl || "",
+      startTime: q.startTime || 0,
+      endTime: q.endTime || 0,
+      chosungHint: !!q.chosungHint,
+      hintRevealTime: q.hintRevealTime || 0,
+      timeLimit: q.timeLimit || 30,
+    }));
+
+    renderEditQuestions();
+    document.getElementById("editMapModal").classList.remove("hide");
+  } catch(e) { alert("수정 창을 열지 못했습니다: " + e.message); }
+}
+
+function hideEditMapModal() {
+  document.getElementById("editMapModal").classList.add("hide");
+  editMapId = null;
+  editQuestions = [];
+}
+
+function addEditQ() {
+  editQuestions.push({ type:"audio", hint:"", answers:"", mediaUrl:"", startTime:0, endTime:0, chosungHint:false, hintRevealTime:0, timeLimit:30 });
+  renderEditQuestions();
+}
+
+function removeEditQ(i) {
+  if (editQuestions.length <= 1) return alert("최소 1개의 문제가 필요합니다.");
+  editQuestions.splice(i, 1);
+  renderEditQuestions();
+}
+
+function renderEditQuestions() {
+  document.getElementById("emQCount").textContent = editQuestions.length;
+  document.getElementById("emQuestions").innerHTML = editQuestions.map((q, i) => `
+    <div style="background:var(--bg5);border:1px solid var(--brd);border-radius:var(--rs);padding:10px;margin-bottom:8px">
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px">
+        <span style="font-size:11px;color:var(--t3);min-width:24px">#${i+1}</span>
+        <select class="q-sel" onchange="editQuestions[${i}].type=this.value">
+          <option value="audio" ${q.type==='audio'?'selected':''}>🎵 음악</option>
+          <option value="scene" ${q.type==='scene'?'selected':''}>🎬 영상</option>
+          <option value="character" ${q.type==='character'?'selected':''}>💬 대사</option>
+        </select>
+        <input class="inp" style="flex:1" placeholder="힌트" value="${esc(q.hint)}" oninput="editQuestions[${i}].hint=this.value">
+        <button class="btn btn-g btn-sm" style="color:var(--acc)" onclick="removeEditQ(${i})">✕</button>
+      </div>
+      <div style="display:flex;gap:8px">
+        <input class="inp" style="flex:2" placeholder="정답 (쉼표로 복수)" value="${esc(q.answers||'')}" oninput="editQuestions[${i}].answers=this.value">
+        <input class="inp" style="flex:1" placeholder="제한시간(초)" type="number" min="5" max="120" value="${q.timeLimit||30}" oninput="editQuestions[${i}].timeLimit=+this.value">
+      </div>
+      <div style="display:flex;gap:8px;margin-top:6px">
+        <input class="inp" style="flex:3" placeholder="YouTube URL (선택)" value="${esc(q.mediaUrl||'')}" oninput="editQuestions[${i}].mediaUrl=this.value">
+        <input class="inp" style="flex:1;width:70px" type="number" min="0" placeholder="시작초" value="${q.startTime||0}" oninput="editQuestions[${i}].startTime=+this.value">
+        <input class="inp" style="flex:1;width:70px" type="number" min="0" placeholder="끝초" value="${q.endTime||0}" oninput="editQuestions[${i}].endTime=+this.value">
+      </div>
+    </div>
+  `).join("");
+}
+
+async function saveEditMap() {
+  if (!editMapId) return;
+  const name = document.getElementById("emName").value.trim();
+  const cat = document.getElementById("emCat").value;
+  if (!name) return alert("맵 이름을 입력해주세요.");
+  if (editQuestions.some(q => !(q.answers||"").trim())) return alert("모든 문제에 정답을 입력해주세요.");
+
+  try {
+    const res = await fetch(`/api/maps/${editMapId}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name, category: cat, authorId: socket.id,
+        icon: cat==="kpop"?"🎤":cat==="scene"?"🎬":cat==="character"?"💬":cat==="ost"?"🎧":"🎵",
+        questions: editQuestions.map(q => ({
+          ...q,
+          answers: (q.answers||"").split(",").map(a=>a.trim()).filter(Boolean),
+        })),
+      }),
+    });
+    const data = await res.json();
+    if (res.ok) {
+      alert("맵이 수정되었습니다! 🎉");
+      hideEditMapModal();
+      socket.emit("getMaps");
+      loadDashboard();
+    } else {
+      alert(data.error || "수정 실패");
+    }
+  } catch(e) { alert("수정 실패: " + e.message); }
+}
+
+// ═══════════════════════════════════════════
+// YouTube Helpers
+// ═══════════════════════════════════════════
+
+function getChosungClient(str) {
+  const CS = ['ㄱ','ㄲ','ㄴ','ㄷ','ㄸ','ㄹ','ㅁ','ㅂ','ㅃ','ㅅ','ㅆ','ㅇ','ㅈ','ㅉ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ'];
+  return String(str).split('').map(ch => {
+    const code = ch.charCodeAt(0) - 0xAC00;
+    if (code >= 0 && code <= 11171) return CS[Math.floor(code / 588)];
+    return ch === ' ' ? ' ' : ch;
+  }).join('');
+}
+
+function getYouTubeId(url) {
+  if (!url) return null;
+  const m = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([A-Za-z0-9_-]{11})/);
+  return m ? m[1] : null;
+}
+
+function stopYoutube() {
+  const f = document.getElementById("youtubeFrame");
+  if (f) { f.src = ""; document.getElementById("youtubeArea").style.display = "none"; }
+}
+
+// Web Audio API 정답 소리
+let _audioCtx = null;
+function playCorrectSound() {
+  try {
+    if (!_audioCtx) _audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const ctx = _audioCtx;
+    [[523,0],[659,0.12],[784,0.24]].forEach(([freq, delay]) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.type = "sine"; osc.frequency.value = freq;
+      gain.gain.setValueAtTime(0.25, ctx.currentTime + delay);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + 0.25);
+      osc.start(ctx.currentTime + delay);
+      osc.stop(ctx.currentTime + delay + 0.25);
+    });
+  } catch(e) {}
+}
+
+// 맵 탐색에서 맵 클릭 → 방 생성 모달 (해당 맵 선택된 상태)
+function openCreateWithMap(mapId, mapName) {
+  selectedMapId = mapId;
+  document.getElementById("crName").value = mapName + " 방";
+  showCreateModal();
+  // 모달 내 맵 그리드 렌더 후 선택 표시
+  setTimeout(() => renderCreateModalMaps(allMaps), 50);
+}
+
+
+function removeCreatorQ(i) {
+  if (creatorQuestions.length <= 1) return alert("최소 1개의 문제가 필요합니다.");
+  creatorQuestions.splice(i, 1);
+  renderCreatorQuestions();
+}
+
+// ═══════════════════════════════════════════
+// Solo Play
+// ═══════════════════════════════════════════
+
+function startSolo() {
+  if (!allMaps.length) return alert("먼저 맵을 선택하세요. 맵 탐색으로 이동합니다.");
+  showCreateModal();
+}
+
+// ═══════════════════════════════════════════
+// Global Ranking
+// ═══════════════════════════════════════════
+
+async function loadRanking() {
+  try {
+    const res = await fetch("/api/ranking");
+    const data = await res.json();
+    const el = document.getElementById("rankingList");
+    if (!data.length) {
+      el.innerHTML = '<div class="empty">아직 랭킹 데이터가 없습니다. 게임을 완료하면 등록됩니다!</div>';
+      return;
+    }
+    const medals = ["🥇","🥈","🥉"];
+    el.innerHTML = data.map((r, i) => `
+      <div style="display:grid;grid-template-columns:48px 1fr 1fr 100px;align-items:center;padding:10px 16px;border-bottom:1px solid var(--brd);transition:background .15s" onmouseover="this.style.background='var(--bg4)'" onmouseout="this.style.background=''">
+        <span style="font-size:${i<3?'20px':'14px'};font-family:'JetBrains Mono',monospace;font-weight:700;color:${i===0?'#ffd700':i===1?'#c0c0c0':i===2?'#cd7f32':'var(--t2)'}">${i < 3 ? medals[i] : '#'+(i+1)}</span>
+        <span style="display:flex;align-items:center;gap:8px"><span style="font-size:18px">${esc(r.avatar)}</span><span style="font-weight:700;font-size:14px">${esc(r.name)}</span></span>
+        <span style="font-size:12px;color:var(--t3)">${esc(r.mapName)}</span>
+        <span style="font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--ylw);text-align:right">${r.score.toLocaleString()}</span>
+      </div>
+    `).join("");
+  } catch(e) {
+    document.getElementById("rankingList").innerHTML = '<div class="empty">랭킹을 불러오지 못했습니다.</div>';
+  }
+}
+</script>
+</body>
+</html>
