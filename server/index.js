@@ -780,8 +780,8 @@ io.on("connection", (socket) => {
     // 완료한 플레이어 제외하고 나머지가 모두 스킵 눌렀으면 진행
     if (votes >= needed || allPlayersDoneOrSkipped(room, subQs)) {
       clearInterval(room.timer);
-      // 미답 서브퀴즈 정답 공개
-      const revealList = subQs.map((sq, i) => ({ prompt: sq.prompt || `문제${i+1}`, answer: sq.showAnswer !== false ? ((sq.answers || [])[0] || "?") : null, answered: room.answeredSubQs.has(i) }));
+      // 미답 서브퀴즈 정답 공개 — 모든 플레이어가 맞춘 경우만 answered:true
+      const revealList = subQs.map((sq, i) => ({ prompt: sq.prompt || `문제${i+1}`, answer: sq.showAnswer !== false ? ((sq.answers || [])[0] || "?") : null, answered: (room.answeredSubQs.get(i)?.size ?? 0) >= room.players.size }));
       io.to(roomId).emit("timeUp", { revealList, scores: getScoresArray(room) });
       const unanswered = revealList.filter(r => !r.answered).map(r => `${r.prompt}: ${r.answer}`).join(", ");
       io.to(roomId).emit("chatMessage", { type: "system", text: `⏭ 스킵! 정답: ${unanswered}` });
@@ -920,7 +920,7 @@ function sendQuestion(room) {
 
     if (room.timeLeft <= 0) {
       clearInterval(room.timer);
-      const revealList = subQs.map((sq, i) => ({ prompt: sq.prompt || `문제${i+1}`, answer: sq.showAnswer !== false ? ((sq.answers || [])[0] || "?") : null, answered: room.answeredSubQs.has(i) }));
+      const revealList = subQs.map((sq, i) => ({ prompt: sq.prompt || `문제${i+1}`, answer: sq.showAnswer !== false ? ((sq.answers || [])[0] || "?") : null, answered: (room.answeredSubQs.get(i)?.size ?? 0) >= room.players.size }));
       io.to(room.id).emit("timeUp", { revealList, scores: getScoresArray(room) });
       const unanswered = revealList.filter(r => !r.answered);
       if (unanswered.length > 0) {

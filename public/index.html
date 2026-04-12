@@ -515,7 +515,7 @@ body{font-family:'Nanum Gothic Rounded',sans-serif;background:var(--bg);color:va
     <!-- ════ CREATE MAP ════ -->
     <div class="page hide" id="page-create-map">
       <div class="sec-h"><span class="sec-t">맵 제작</span></div>
-      <div style="background:var(--bg3);border:1px solid var(--brd);border-radius:var(--rl);padding:20px;margin-bottom:16px">
+      <div style="background:var(--bg3);border:1px solid var(--brd);border-radius:var(--rl);padding:20px;margin-bottom:12px">
         <div class="inp-g"><label class="inp-l">맵 이름</label><input class="inp" id="cmName" placeholder="예: 나만의 애니 퀴즈"></div>
         <div class="inp-g"><label class="inp-l">카테고리</label>
           <select class="inp q-sel" id="cmCat" style="width:100%;cursor:pointer"
@@ -525,7 +525,25 @@ body{font-family:'Nanum Gothic Rounded',sans-serif;background:var(--bg);color:va
           </select>
         </div>
       </div>
-      <div class="sec-h" style="margin-top:20px">
+      <!-- 전체 초성힌트 설정 -->
+      <div style="background:var(--bg3);border:1px solid var(--brd);border-radius:var(--rl);padding:14px 18px;margin-bottom:16px;display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+        <span style="font-size:12px;font-weight:800;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;white-space:nowrap">전체 적용</span>
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;font-weight:600">
+          <input type="checkbox" id="cmGlobalChosung" style="width:14px;height:14px;accent-color:var(--acc)" onchange="applyGlobalChosung()">
+          초성 힌트
+        </label>
+        <div style="display:flex;align-items:center;gap:6px" id="cmGlobalTimeRow">
+          <span style="font-size:12px;color:var(--t3)">공개 시간</span>
+          <select class="q-sel" id="cmGlobalRevealSel" style="font-size:12px;padding:3px 8px" onchange="applyGlobalChosung()">
+            <option value="5">5초 후</option>
+            <option value="10">10초 후</option>
+            <option value="15">15초 후</option>
+            <option value="0">커스텀</option>
+          </select>
+          <input type="number" id="cmGlobalRevealCustom" min="1" max="60" class="inp" style="width:56px;padding:3px 6px;font-size:12px;display:none" placeholder="초" oninput="applyGlobalChosung()">
+        </div>
+      </div>
+      <div class="sec-h" style="margin-top:4px">
         <span class="sec-t" style="font-size:14px">문제 목록 (<span id="cmQCount">1</span>)</span>
         <button class="btn btn-g btn-sm" onclick="addCreatorQ()" style="margin-left:auto">+ 문제 추가</button>
       </div>
@@ -919,7 +937,30 @@ let allMaps = [];
 let myFavorites = new Set(); // mapId Set
 let gameState = { answered: false, timeLeft: 0, totalQ: 0, currentQ: 0 };
 function defaultSubQ(prompt) {
-  return { prompt: prompt || "", answers: "", chosungHint: false, hintRevealTime: 5, showAnswer: true };
+  return { prompt: prompt || "", answers: "", chosungHint: globalChosungHint, hintRevealTime: globalHintRevealTime, showAnswer: true };
+}
+let globalChosungHint = false;
+let globalHintRevealTime = 5;
+
+function applyGlobalChosung() {
+  const chk = document.getElementById("cmGlobalChosung");
+  const sel = document.getElementById("cmGlobalRevealSel");
+  const custom = document.getElementById("cmGlobalRevealCustom");
+  if (!chk) return;
+  globalChosungHint = chk.checked;
+  const selVal = parseInt(sel?.value ?? "5");
+  custom.style.display = selVal === 0 ? "block" : "none";
+  globalHintRevealTime = selVal === 0 ? (parseInt(custom.value) || 5) : selVal;
+  // 모든 소문제에 즉시 적용
+  [creatorQuestions].forEach(arr => {
+    arr.forEach(q => {
+      (q.subQuestions || []).forEach(sq => {
+        sq.chosungHint = globalChosungHint;
+        sq.hintRevealTime = globalHintRevealTime;
+      });
+    });
+  });
+  renderCreatorQuestions();
 }
 
 // 카테고리별 기본 소문제 목록
@@ -1821,7 +1862,7 @@ function renderQList(arr, arrName, containerId, countId) {
       <div>
         <div style="padding:6px 14px;background:var(--bg5);display:flex;align-items:center;justify-content:space-between">
           <span style="font-size:11px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.5px">소문제</span>
-          <button class="btn btn-g btn-sm" onclick="${arrName}[${i}].subQuestions.push(defaultSubQ(${arrName}[${i}].type));renderQList(${arrName},'${arrName}','${containerId}','${countId}')" style="font-size:12px;padding:3px 10px">+ 소문제 추가</button>
+          <button class="btn btn-g btn-sm" onclick="${arrName}[${i}].subQuestions.push(defaultSubQ(''));renderQList(${arrName},'${arrName}','${containerId}','${countId}')" style="font-size:12px;padding:3px 10px">+ 소문제 추가</button>
         </div>
         ${subQHtml}
       </div>
