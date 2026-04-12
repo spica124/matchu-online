@@ -1014,6 +1014,11 @@ socket.on("mapList", maps => {
   renderCreateModalMaps(maps);
 });
 
+// 내 맵 목록 (방 만들기 모달 — 내 맵 포함, 승인 여부 무관)
+socket.on("myMapList", maps => {
+  renderCreateModalMaps(maps);
+});
+
 socket.on("roomJoined", room => {
   currentRoom = room;
   currentRoomId = room.id;
@@ -2484,9 +2489,15 @@ function playCorrectSound() {
 function openCreateWithMap(mapId, mapName) {
   selectedMapId = mapId;
   document.getElementById("crName").value = mapName + " 방";
-  showCreateModal();
-  // 모달 내 맵 그리드 렌더 후 선택 표시
-  setTimeout(() => renderCreateModalMaps(allMaps), 50);
+  document.getElementById("createModal").classList.remove("hide");
+  // 내 맵 목록 요청 (승인 안 된 맵도 포함)
+  socket.emit("getMyMaps");
+  setTimeout(() => {
+    // 이미 렌더된 경우 선택 표시
+    document.querySelectorAll(".map-opt").forEach(el => {
+      el.style.borderColor = el.dataset.id === mapId ? "var(--acc)" : "";
+    });
+  }, 200);
 }
 
 

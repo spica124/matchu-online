@@ -581,9 +581,22 @@ io.on("connection", (socket) => {
 
   socket.on("getMaps", async () => {
     try {
-      const list = await MapModel.find({}, "mapId name author icon category tags plays rating questions").lean();
+      const list = await MapModel.find({ status: "approved" }, "mapId name author icon category tags plays rating questions").lean();
       socket.emit("mapList", list.map(m => ({ id: m.mapId, name: m.name, author: m.author, icon: m.icon, category: m.category, tags: m.tags, questionCount: m.questions.length, plays: m.plays, rating: m.rating })));
     } catch { socket.emit("mapList", []); }
+  });
+
+  // 내 맵 목록 (방 만들기용 — 승인 여부 무관)
+  socket.on("getMyMaps", async () => {
+    try {
+      const user = users.get(socket.id);
+      if (!user || !user.userId) return socket.emit("myMapList", []);
+      const list = await MapModel.find(
+        { $or: [{ authorId: user.userId }, { author: user.name }] },
+        "mapId name author icon category tags plays rating questions status"
+      ).lean();
+      socket.emit("myMapList", list.map(m => ({ id: m.mapId, name: m.name, author: m.author, icon: m.icon, category: m.category, tags: m.tags, questionCount: m.questions.length, plays: m.plays, rating: m.rating, status: m.status || "draft" })));
+    } catch { socket.emit("myMapList", []); }
   });
 
   socket.on("createRoom", async ({ name, mapId, maxPlayers, password }) => {
@@ -754,13 +767,9 @@ io.on("connection", (socket) => {
     if (!user || !message?.trim()) return;
     const msg = message.trim();
     if (msg.length > 300) return; // 메시지 최대 길이 제한
-    // 채팅 레이트 리밋: 0.5초에 1개
-    const now2 = Date.now();
-    if (now2 - (user._lastChat || 0) < 500) return;
-    user._lastChat = now2;
     const room = rooms.get(roomId);
 
-    // 게임 중이면 정답 체크 먼저
+    // 게임 중이면 정답 체크 먼저 (레이트 리밋 적용 안 함 — 빠른 연속 정답 허용)
     if (room && room.status === "playing" && room.map) {
       const player = room.players.get(socket.id);
       const question = room.map.questions[room.currentQuestion];
@@ -809,7 +818,10 @@ io.on("connection", (socket) => {
       }
     }
 
-    // 정답 아니면 일반 채팅
+    // 정답 아니면 일반 채팅 — 여기서만 레이트 리밋 적용 (스팸 방지)
+    const nowChat = Date.now();
+    if (nowChat - (user._lastChat || 0) < 500) return;
+    user._lastChat = nowChat;
     io.to(roomId).emit("chatMessage", { type: "chat", name: user.name, text: msg });
   });
 
