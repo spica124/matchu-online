@@ -2217,48 +2217,49 @@ async function loadDashboard() {
     const svgPlay = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>`;
     const svgDoc  = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>`;
 
-    function statusBadge(m) {
-      const s = m.status || "draft";
-      const map = {
-        draft:    { label: "비공개",   color: "var(--t3)",  bg: "var(--bg5)" },
-        pending:  { label: "검토 중",  color: "#f59e0b",    bg: "rgba(245,158,11,.12)" },
-        approved: { label: "배포됨",   color: "var(--grn)", bg: "rgba(34,197,94,.12)" },
-        rejected: { label: "거절됨",   color: "var(--acc)", bg: "var(--acc-s)" },
-      };
-      const c = map[s] || map.draft;
-      return `<span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:99px;background:${c.bg};color:${c.color}">${c.label}</span>`;
-    }
+    const STATUS_BADGE = {
+      draft:    { label: "비공개", color: "var(--t3)",  bg: "var(--bg5)" },
+      pending:  { label: "검토 중", color: "#f59e0b",   bg: "rgba(245,158,11,.12)" },
+      approved: { label: "배포됨",  color: "var(--grn)", bg: "rgba(34,197,94,.12)" },
+      rejected: { label: "거절됨", color: "var(--acc)", bg: "var(--acc-s)" },
+    };
 
-    function submitBtn(m) {
-      const s = m.status || "draft";
-      if (s === "approved") return "";
-      if (s === "pending") return `<button class="btn btn-g btn-sm" onclick="cancelSubmitMap('${m.id}')">신청 취소</button>`;
-      // draft or rejected
-      const label = s === "rejected" ? "재신청" : "배포하기";
-      return `<button class="btn btn-g btn-sm" style="color:var(--grn);border-color:rgba(34,197,94,.3)" onclick="submitMap('${m.id}')">${label}</button>`;
-    }
-
-    el.innerHTML = data.map(m => `
+    el.innerHTML = data.map(mapItem => {
+      const mid   = mapItem.id || mapItem.mapId || "";
+      const mname = esc(mapItem.name || "");
+      const st    = mapItem.status || "draft";
+      const bc    = STATUS_BADGE[st] || STATUS_BADGE.draft;
+      const badge = `<span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:99px;background:${bc.bg};color:${bc.color}">${bc.label}</span>`;
+      const rejectNote = (st === "rejected" && mapItem.rejectReason)
+        ? `<div style="font-size:11px;color:var(--acc);margin-top:4px">거절 사유: ${esc(mapItem.rejectReason)}</div>` : "";
+      let actionBtn = "";
+      if (st === "pending") {
+        actionBtn = `<button class="btn btn-g btn-sm" onclick="cancelSubmitMap('${mid}')">신청 취소</button>`;
+      } else if (st !== "approved") {
+        const lbl = st === "rejected" ? "재신청" : "배포하기";
+        actionBtn = `<button class="btn btn-g btn-sm" style="color:var(--grn);border-color:rgba(34,197,94,.3)" onclick="submitMap('${mid}')">${lbl}</button>`;
+      }
+      return `
       <div style="display:flex;align-items:center;gap:14px;padding:14px 18px;background:var(--bg3);border:1px solid var(--brd);border-radius:var(--r);margin-bottom:8px;transition:border-color .15s" onmouseover="this.style.borderColor='var(--brd2)'" onmouseout="this.style.borderColor='var(--brd)'">
         <div style="flex:1;min-width:0">
           <div style="font-weight:700;font-size:14px;margin-bottom:4px;display:flex;align-items:center;gap:8px">
-            ${esc(m.name)} ${statusBadge(m)}
+            ${mname} ${badge}
           </div>
           <div style="font-size:12px;color:var(--t3);display:flex;gap:12px;align-items:center;flex-wrap:wrap">
-            <span style="display:flex;align-items:center;gap:4px">${svgDoc} ${m.questionCount}문제</span>
-            <span style="display:flex;align-items:center;gap:4px">${svgPlay} ${m.plays}회</span>
-            <span>${new Date(m.createdAt).toLocaleDateString('ko-KR')}</span>
+            <span style="display:flex;align-items:center;gap:4px">${svgDoc} ${mapItem.questionCount}문제</span>
+            <span style="display:flex;align-items:center;gap:4px">${svgPlay} ${mapItem.plays}회</span>
+            <span>${new Date(mapItem.createdAt).toLocaleDateString('ko-KR')}</span>
           </div>
-          ${m.status === "rejected" && m.rejectReason ? `<div style="font-size:11px;color:var(--acc);margin-top:4px">거절 사유: ${esc(m.rejectReason)}</div>` : ""}
+          ${rejectNote}
         </div>
         <div style="display:flex;gap:8px;flex-shrink:0;flex-wrap:wrap;justify-content:flex-end">
-          ${submitBtn(m)}
-          <button class="btn btn-g btn-sm" onclick="openCreateWithMap('${m.id}','${esc(m.name)}')">방 만들기</button>
-          <button class="btn btn-g btn-sm" onclick="openEditMap('${m.id}')">수정</button>
-          <button class="btn btn-sm" style="background:var(--acc-s);color:var(--acc);border:1px solid rgba(232,64,94,.3)" onclick="deleteMap('${m.id}','${esc(m.name)}')">삭제</button>
+          ${actionBtn}
+          <button class="btn btn-g btn-sm" onclick="openCreateWithMap('${mid}','${mname}')">방 만들기</button>
+          <button class="btn btn-g btn-sm" onclick="openEditMap('${mid}')">수정</button>
+          <button class="btn btn-sm" style="background:var(--acc-s);color:var(--acc);border:1px solid rgba(232,64,94,.3)" onclick="deleteMap('${mid}','${mname}')">삭제</button>
         </div>
-      </div>
-    `).join("");
+      </div>`;
+    }).join("");
   } catch(e) {
     el.innerHTML = '<div class="empty">불러오기 실패. 다시 시도해주세요.</div>';
   }
@@ -2277,6 +2278,7 @@ async function deleteMap(mapId, mapName) {
 }
 
 async function submitMap(mapId) {
+  if (!mapId || mapId === "undefined") return alert("맵 ID가 올바르지 않습니다. 대시보드를 새로고침해주세요.");
   if (!confirm("이 맵을 배포 신청하시겠습니까?\n관리자가 검토 후 승인하면 맵 찾기에 공개됩니다.")) return;
   try {
     const { ok, data } = await fetchJSON(`/api/maps/${mapId}/submit`, {

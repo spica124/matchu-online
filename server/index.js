@@ -315,7 +315,7 @@ app.get("/api/maps/mine", authMiddleware, async (req, res) => {
       { $or: [{ authorId: req.user.id }, { author: req.user.username }] },
       "mapId name icon category tags plays rating author authorId createdAt questions status rejectReason submittedAt approvedAt"
     ).lean();
-    res.json(list.map(m => ({ id: m.mapId, name: m.name, icon: m.icon, category: m.category, tags: m.tags, questionCount: m.questions.length, plays: m.plays, rating: m.rating, author: m.author, createdAt: m.createdAt, status: m.status || "draft", rejectReason: m.rejectReason || "", submittedAt: m.submittedAt, approvedAt: m.approvedAt })));
+    res.json(list.map(m => ({ id: m.mapId, mapId: m.mapId, name: m.name, icon: m.icon, category: m.category, tags: m.tags, questionCount: m.questions.length, plays: m.plays, rating: m.rating, author: m.author, createdAt: m.createdAt, status: m.status || "draft", rejectReason: m.rejectReason || "", submittedAt: m.submittedAt, approvedAt: m.approvedAt })));
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
@@ -419,8 +419,12 @@ app.delete("/api/maps/:id", authMiddleware, async (req, res) => {
 // ── 배포 신청 (draft / rejected → pending) ──
 app.post("/api/maps/:id/submit", authMiddleware, async (req, res) => {
   try {
+    console.log(`[배포신청] mapId="${req.params.id}" user="${req.user?.username}"`);
     const m = await MapModel.findOne({ mapId: req.params.id });
-    if (!m) return res.status(404).json({ error: "맵을 찾을 수 없습니다" });
+    if (!m) {
+      console.log(`[배포신청] 맵 없음: mapId="${req.params.id}"`);
+      return res.status(404).json({ error: "맵을 찾을 수 없습니다" });
+    }
     const isOwner = (m.authorId && m.authorId === req.user.id) || m.author === req.user.username;
     if (!isOwner) return res.status(403).json({ error: "권한이 없습니다" });
     if (m.status === "pending") return res.status(400).json({ error: "이미 검토 중입니다" });
