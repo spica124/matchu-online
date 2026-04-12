@@ -277,6 +277,12 @@ app.get("/api/status", async (req, res) => {
   catch { res.json({ online: onlineCount, rooms: rooms.size, maps: 0 }); }
 });
 
+// 전역 에러 핸들러 — 어디서든 예외 발생 시 HTML 대신 JSON 반환
+app.use((err, req, res, next) => {
+  console.error("❌ 서버 오류:", err.message);
+  res.status(500).json({ error: err.message || "서버 오류" });
+});
+
 app.get("*", (req, res) => res.sendFile(path.join(__dirname, "../public/index.html")));
 
 // ═══════════════════════════════════════════
