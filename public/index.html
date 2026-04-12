@@ -665,17 +665,16 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--t1);
   </div>
 </div>
 
-<!-- ════ NAME MODAL ════ -->
-<div class="modal-bg" id="nameModal">
-  <div class="modal" style="text-align:center;max-width:400px">
+<!-- ════ NAME MODAL (로그인 필수 — 배경 클릭으로 닫기 불가) ════ -->
+<div class="modal-bg" id="nameModal" style="cursor:default">
+  <div class="modal" style="text-align:center;max-width:400px" onclick="event.stopPropagation()">
     <div style="font-size:40px;margin-bottom:8px">🎯</div>
     <h2 style="margin-bottom:6px">마추기온라인</h2>
-    <p style="color:var(--t2);margin-bottom:20px;font-size:14px">로그인하거나 회원가입하여 시작하세요</p>
+    <p style="color:var(--t2);margin-bottom:20px;font-size:14px">계속하려면 로그인 또는 회원가입이 필요합니다</p>
     <div style="display:flex;gap:8px;flex-direction:column">
-      <button class="btn btn-a btn-lg btn-full" onclick="document.getElementById('nameModal').classList.add('hide');openAuthModal('login')">🔐 로그인</button>
-      <button class="btn btn-g btn-lg btn-full" onclick="document.getElementById('nameModal').classList.add('hide');openAuthModal('register')">✏️ 회원가입</button>
+      <button class="btn btn-a btn-lg btn-full" onclick="openAuthModal('login')">🔐 로그인</button>
+      <button class="btn btn-g btn-lg btn-full" onclick="openAuthModal('register')">✏️ 회원가입</button>
     </div>
-    <p style="color:var(--t3);font-size:12px;margin-top:16px">계정이 있으면 맵 제작·관리가 가능합니다</p>
   </div>
 </div>
 
@@ -968,6 +967,11 @@ socket.on("error", msg => {
 
 function navigateTo(page) {
   closeSidebar();
+  // 로그인 필수 — 비로그인 상태면 nameModal 표시
+  if (!authToken && page !== "game" && page !== "results") {
+    document.getElementById("nameModal").classList.remove("hide");
+    return;
+  }
   // 게임 중에는 사이드바로 이탈 차단 (leaveGameConfirm 으로만 나갈 수 있음)
   const inGame = currentRoomId && !document.getElementById("page-game").classList.contains("hide");
   const gamePages = ["game"];
@@ -1581,10 +1585,15 @@ function openAuthModal(tab, msg) {
   const errEl = document.getElementById("authError");
   if (msg) { errEl.textContent = msg; errEl.style.display = "block"; }
   else { errEl.style.display = "none"; }
+  document.getElementById("nameModal").classList.add("hide"); // nameModal 먼저 숨김
   document.getElementById("authModal").classList.remove("hide");
   setTimeout(() => document.getElementById("authUsername").focus(), 50);
 }
-function hideAuthModal() { document.getElementById("authModal").classList.add("hide"); }
+function hideAuthModal() {
+  document.getElementById("authModal").classList.add("hide");
+  // 로그인 안 됐으면 nameModal 다시 표시
+  if (!authToken) document.getElementById("nameModal").classList.remove("hide");
+}
 
 function switchAuthTab(tab) {
   _authTab = tab;
@@ -1638,14 +1647,18 @@ function setAuthUser(token, user) {
   localStorage.setItem("authToken", token);
   myUser.name = user.username;
   myUser.avatar = user.avatar;
-  document.getElementById("nameModal").classList.add("hide");
-  document.getElementById("sideName").textContent = user.username;
-  document.getElementById("sideAvatar").textContent = user.avatar;
-  document.getElementById("sideAuthLoggedOut").style.display = "none";
-  document.getElementById("sideAuthLoggedIn").style.display = "block";
-  document.getElementById("sideAuthName").textContent = `${user.avatar} ${user.username}`;
-  document.getElementById("topAuthBtn").textContent = `${user.avatar} ${user.username}`;
+  const g = id => document.getElementById(id);
+  g("nameModal")?.classList.add("hide");
+  if (g("sideName"))          g("sideName").textContent          = user.username;
+  if (g("sideAvatar"))        g("sideAvatar").textContent        = user.avatar;
+  if (g("sideAuthLoggedOut")) g("sideAuthLoggedOut").style.display = "none";
+  if (g("sideAuthLoggedIn"))  g("sideAuthLoggedIn").style.display  = "block";
+  if (g("sideAuthName"))      g("sideAuthName").textContent      = `${user.avatar} ${user.username}`;
+  if (g("topAuthBtn"))        g("topAuthBtn").textContent        = `${user.avatar} ${user.username}`;
   socket.emit("register", { name: user.username, avatar: user.avatar });
+  // 현재 페이지가 없으면 홈으로
+  const anyVisible = [...document.querySelectorAll(".page")].some(p => !p.classList.contains("hide"));
+  if (!anyVisible) navigateTo("home");
 }
 
 function logout() {
@@ -1657,7 +1670,11 @@ function logout() {
   const btn = document.getElementById("topAuthBtn");
   btn.textContent = "👤 로그인";
   btn.onclick = () => openAuthModal('login');
-  navigateTo("home");
+  // 모든 모달 닫기
+  document.querySelectorAll(".modal-bg").forEach(m => { if (m.id !== "nameModal") m.classList.add("hide"); });
+  // 로그인 화면으로 즉시 이동
+  document.getElementById("nameModal").classList.remove("hide");
+  closeSidebar();
 }
 
 // 페이지 로드 시 저장된 토큰 확인
