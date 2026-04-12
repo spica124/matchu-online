@@ -286,19 +286,41 @@ body{font-family:'Nanum Gothic Rounded',sans-serif;background:var(--bg);color:va
 .ch-nm{font-weight:700}
 
 /* ── Results ── */
-.res{text-align:center;padding:40px 0}
-.res-trophy{font-size:56px;margin-bottom:12px}
-.res-h{font-size:28px;font-weight:900;margin-bottom:4px}
-.res-s{font-size:14px;color:var(--t2);margin-bottom:28px}
-.podium{display:flex;justify-content:center;align-items:flex-end;gap:12px;margin-bottom:28px}
-.pod-col{display:flex;flex-direction:column;align-items:center;gap:6px}
-.pod-bar{width:72px;border-radius:10px 10px 0 0;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding:12px 6px}
-.pod-1{height:140px;background:linear-gradient(180deg,rgba(255,215,0,.25),rgba(255,215,0,.05));border:1px solid rgba(255,215,0,.3)}
-.pod-2{height:100px;background:linear-gradient(180deg,rgba(192,192,192,.25),rgba(192,192,192,.05));border:1px solid rgba(192,192,192,.3)}
-.pod-3{height:75px;background:linear-gradient(180deg,rgba(205,127,50,.25),rgba(205,127,50,.05));border:1px solid rgba(205,127,50,.3)}
-.pod-emoji{font-size:28px}
-.pod-nm{font-weight:700;font-size:13px}
-.pod-pts{font-family:'JetBrains Mono',monospace;font-size:16px;font-weight:700;color:var(--ylw)}
+.res-wrap{max-width:480px;margin:0 auto;padding:20px 16px 48px}
+.res-header{text-align:center;padding:28px 16px 20px;background:linear-gradient(160deg,rgba(232,64,94,.08) 0%,transparent 70%);border:1px solid var(--brd);border-radius:var(--rl);margin-bottom:20px}
+.res-trophy-anim{font-size:60px;margin-bottom:8px;display:block;animation:trophy-pop .55s cubic-bezier(.34,1.56,.64,1) both}
+@keyframes trophy-pop{from{transform:scale(.4) translateY(-16px);opacity:0}to{transform:scale(1) translateY(0);opacity:1}}
+.res-title{font-size:24px;font-weight:900;margin:0 0 4px;letter-spacing:-.5px}
+.res-mapname{font-size:12px;color:var(--t3);font-weight:600;margin-top:2px}
+.res-my-rank{display:inline-block;margin-top:10px;padding:4px 14px;border-radius:99px;font-size:13px;font-weight:800;background:rgba(232,64,94,.12);color:var(--acc);border:1px solid rgba(232,64,94,.25)}
+
+/* Podium */
+.podium{display:flex;justify-content:center;align-items:flex-end;gap:6px;margin-bottom:20px;padding:0 4px}
+.pod-col{display:flex;flex-direction:column;align-items:center;gap:6px;flex:1;max-width:110px}
+.pod-avatar{font-size:30px;filter:drop-shadow(0 2px 6px rgba(0,0,0,.35))}
+.pod-nm{font-weight:700;font-size:12px;text-align:center;width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:0 4px}
+.pod-pts{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;color:var(--ylw)}
+.pod-bar{width:100%;border-radius:10px 10px 0 0;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding:14px 6px 10px;border-bottom:none}
+.pod-medal{font-size:22px}
+.pod-1{height:124px;background:linear-gradient(180deg,rgba(255,215,0,.18),rgba(255,215,0,.04));border:1px solid rgba(255,215,0,.4);border-bottom:none}
+.pod-2{height:90px;background:linear-gradient(180deg,rgba(192,192,192,.18),rgba(192,192,192,.04));border:1px solid rgba(192,192,192,.3);border-bottom:none}
+.pod-3{height:66px;background:linear-gradient(180deg,rgba(205,127,50,.18),rgba(205,127,50,.04));border:1px solid rgba(205,127,50,.3);border-bottom:none}
+.pod-ground{height:3px;background:var(--brd);border-radius:0 0 4px 4px;width:calc(100% + 2px);margin:0 -1px}
+
+/* Score list */
+.res-scores{background:var(--bg3);border:1px solid var(--brd);border-radius:var(--rl);overflow:hidden;margin-bottom:20px}
+.res-scores-hd{padding:11px 16px;font-weight:800;font-size:11px;color:var(--t3);border-bottom:1px solid var(--brd);letter-spacing:.8px;text-transform:uppercase}
+.res-row{display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:1px solid var(--brd);transition:background .15s}
+.res-row:last-child{border-bottom:none}
+.res-row.res-me{background:rgba(232,64,94,.06)}
+.res-rank{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;min-width:28px;text-align:center;flex-shrink:0}
+.res-rank-1{color:#ffd700}
+.res-rank-2{color:#c0c0c0}
+.res-rank-3{color:#cd7f32}
+.res-av{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:19px;flex-shrink:0}
+.res-name{flex:1;font-weight:600;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.res-pts{font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:700;color:var(--ylw);white-space:nowrap}
+.res-btns{display:flex;gap:10px;justify-content:center}
 
 /* Creator */
 .q-row{display:flex;gap:8px;align-items:center;padding:10px;background:var(--bg5);border:1px solid var(--brd);border-radius:var(--rs);margin-bottom:8px}
@@ -726,12 +748,21 @@ body{font-family:'Nanum Gothic Rounded',sans-serif;background:var(--bg);color:va
 
     <!-- ════ RESULTS ════ -->
     <div class="page hide" id="page-results">
-      <div class="res">
-        <div class="res-h">게임 종료!</div>
-        <div class="res-s">모든 문제가 끝났습니다</div>
+      <div class="res-wrap">
+        <div class="res-header">
+          <span class="res-trophy-anim">🏆</span>
+          <div class="res-title">게임 종료!</div>
+          <div class="res-mapname" id="resMapName"></div>
+          <div id="resMyRank"></div>
+        </div>
         <div class="podium" id="podiumArea"></div>
-        <div id="finalScores" style="max-width:360px;margin:0 auto 24px;text-align:left;background:var(--bg3);border:1px solid var(--brd);border-radius:var(--rl);padding:16px"></div>
-        <button class="btn btn-a btn-lg" onclick="backToLobby()">로비로 돌아가기</button>
+        <div class="res-scores">
+          <div class="res-scores-hd">최종 순위</div>
+          <div id="finalScores"></div>
+        </div>
+        <div class="res-btns">
+          <button class="btn btn-a btn-lg" onclick="backToLobby()">🏠 로비로 돌아가기</button>
+        </div>
       </div>
     </div>
   </div>
@@ -1621,43 +1652,51 @@ function addChat(type, text, name) {
 
 function showResults(scores) {
   const sorted = [...scores].sort((a,b) => b.score - a.score);
-  // 포디움: 실제 등수(rank)를 각 플레이어에 붙인 후 [2등, 1등, 3등] 순으로 배치
   const rankMedals = ["🥇","🥈","🥉"];
   const rankClasses = ["pod-1","pod-2","pod-3"];
   const withRank = sorted.map((p, i) => ({ ...p, rank: i }));
-  // 1명일 때: 1등만 중앙에, 2명일 때: 2등 왼쪽 / 1등 오른쪽
+
+  // 포디움 순서: 2등·1등·3등 (없으면 생략)
   const podiumOrder = sorted.length === 1
     ? [withRank[0]]
     : [withRank[1], withRank[0], withRank[2]].filter(Boolean);
 
   document.getElementById("podiumArea").innerHTML = podiumOrder.map(p => `
     <div class="pod-col">
-      <div class="pod-emoji">${p.avatar}</div>
+      <div class="pod-avatar">${p.avatar}</div>
       <div class="pod-nm">${esc(p.name)}</div>
-      <div class="pod-pts">${p.score.toLocaleString()}</div>
-      <div class="pod-bar ${rankClasses[p.rank]}"><span style="font-size:22px">${rankMedals[p.rank]}</span></div>
+      <div class="pod-pts">${p.score.toLocaleString()}점</div>
+      <div class="pod-bar ${rankClasses[p.rank]}">
+        <div class="pod-medal">${rankMedals[p.rank]}</div>
+      </div>
+      <div class="pod-ground"></div>
     </div>
   `).join("");
 
-  const myRank = sorted.findIndex(s => s.name === myUser.name);
-  const rankLabel = myRank === 0 ? "🥇 1등!" : myRank === 1 ? "🥈 2등!" : myRank === 2 ? "🥉 3등!" : myRank >= 0 ? `${myRank+1}등` : null;
-  const rankBanner = rankLabel ? `<div style="text-align:center;font-size:20px;font-weight:800;color:var(--ylw);margin-bottom:12px">내 등수: ${rankLabel}</div>` : "";
+  // 맵 이름
+  const mapName = currentRoom?.mapName || "";
+  document.getElementById("resMapName").textContent = mapName ? `🎵 ${mapName}` : "";
 
-  document.getElementById("finalScores").innerHTML = `
-    <div class="sc-title">최종 순위</div>
-    ${rankBanner}
-    ${sorted.map((s, i) => {
-      const rankIcon = i===0?'👑':i===1?'🥈':i===2?'🥉':`${i+1}`;
-      const isMe = s.name === myUser.name;
-      return `
-      <div class="sc-row ${isMe ? 'me' : ''}">
-        <span class="sc-rank ${i===0?'sc-r1':i===1?'sc-r2':i===2?'sc-r3':''}" style="min-width:32px;text-align:center">${rankIcon}</span>
-        <div class="sc-av" style="background:${COLORS[i%COLORS.length]}22">${s.avatar}</div>
-        <span class="sc-nm">${esc(s.name)}${isMe ? ' <span style="font-size:11px;color:var(--acc)">(나)</span>' : ''}</span>
-        <span class="sc-pts">${s.score.toLocaleString()}점</span>
-      </div>`;
-    }).join("")}
-  `;
+  // 내 등수 배너
+  const myRank = sorted.findIndex(s => s.name === myUser.name);
+  const rankEmoji = myRank === 0 ? "🥇" : myRank === 1 ? "🥈" : myRank === 2 ? "🥉" : "🎮";
+  const rankLabel = myRank >= 0 ? `${rankEmoji} 내 등수: ${myRank + 1}등` : null;
+  document.getElementById("resMyRank").innerHTML = rankLabel
+    ? `<div class="res-my-rank">${rankLabel}</div>` : "";
+
+  // 점수 목록
+  document.getElementById("finalScores").innerHTML = sorted.map((s, i) => {
+    const isMe = s.name === myUser.name;
+    const rankCls = i === 0 ? "res-rank-1" : i === 1 ? "res-rank-2" : i === 2 ? "res-rank-3" : "";
+    const rankIcon = i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : `${i+1}`;
+    return `
+    <div class="res-row${isMe ? " res-me" : ""}">
+      <span class="res-rank ${rankCls}">${rankIcon}</span>
+      <div class="res-av" style="background:${COLORS[i%COLORS.length]}22">${s.avatar}</div>
+      <span class="res-name">${esc(s.name)}${isMe ? ' <span style="font-size:11px;color:var(--acc);font-weight:400">(나)</span>' : ''}</span>
+      <span class="res-pts">${s.score.toLocaleString()}점</span>
+    </div>`;
+  }).join("");
 }
 
 // ═══════════════════════════════════════════
@@ -2168,13 +2207,23 @@ async function toggleFavorite(mapId, e) {
     headers: { "Authorization": `Bearer ${authToken}` }
   });
   if (!ok) return;
-  if (data.favorited) myFavorites.add(mapId);
+  const favorited = data.favorited;
+  if (favorited) myFavorites.add(mapId);
   else myFavorites.delete(mapId);
   // 버튼 상태 업데이트
   document.querySelectorAll(`.fav-btn[data-id="${mapId}"]`).forEach(btn => {
-    btn.innerHTML = getFavSvg(myFavorites.has(mapId));
-    btn.style.color = myFavorites.has(mapId) ? "var(--acc)" : "var(--t3)";
+    btn.innerHTML = getFavSvg(favorited);
+    btn.style.color = favorited ? "var(--acc)" : "var(--t3)";
   });
+  // 하트 카운트 업데이트 (모든 카드에 반영)
+  const delta = favorited ? 1 : -1;
+  document.querySelectorAll(`[data-fav-cnt="${mapId}"]`).forEach(el => {
+    const cur = parseInt(el.textContent) || 0;
+    el.textContent = Math.max(0, cur + delta);
+  });
+  // allMaps 배열도 업데이트 (재렌더 시 올바른 값 표시)
+  const mapEntry = allMaps.find(m => m.id === mapId);
+  if (mapEntry) mapEntry.favoritesCount = Math.max(0, (mapEntry.favoritesCount || 0) + delta);
 }
 
 function getFavSvg(filled) {
@@ -2198,7 +2247,7 @@ function renderMapCard(m) {
       <div class="m-st">
         <span>${m.questionCount}문제</span>
         <span style="display:inline-flex;align-items:center;gap:3px">${svgPlay2} ${m.plays}</span>
-        <span style="display:inline-flex;align-items:center;gap:3px">${svgHeart} ${m.favoritesCount||0}</span>
+        <span style="display:inline-flex;align-items:center;gap:3px">${svgHeart} <span data-fav-cnt="${m.id}">${m.favoritesCount||0}</span></span>
       </div>
       <div class="m-tags">${(m.tags||[]).map(t => `<span class="m-tag">${esc(t)}</span>`).join("")}</div>
       <button class="btn btn-a btn-sm btn-full" style="margin-top:10px" onclick="event.stopPropagation();openCreateWithMap('${m.id}','${esc(m.name)}')">이 맵으로 방 만들기</button>
