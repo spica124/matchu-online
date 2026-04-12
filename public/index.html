@@ -415,7 +415,7 @@ body{font-family:'Nanum Gothic Rounded',sans-serif;background:var(--bg);color:va
       <button class="nav-i" data-nav="guide" onclick="navigateTo('guide')"><span class="nav-ic"><svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg></span> 가이드</button>
       <div class="nav-sec">맵 찾기</div>
       <button class="nav-i" data-nav="popular" onclick="navigateTo('popular')"><span class="nav-ic"><svg viewBox="0 0 24 24"><path d="M13 2C13 2 13 8 9 11c-1.5 1.2-3 1.5-3 4a6 6 0 0012 0c0-5-5-13-5-13z"/><path d="M9 17c0-2 1.5-3 3-4"/></svg></span> 인기</button>
-      <button class="nav-i" data-nav="new" onclick="navigateTo('new')"><span class="nav-ic"><svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></span> 신규</button>
+      <button class="nav-i" data-nav="favorites" onclick="navigateTo('favorites')"><span class="nav-ic"><svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg></span> 즐겨찾기</button>
       <button class="nav-i" data-nav="browse" onclick="navigateTo('browse')"><span class="nav-ic"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></span> 전체 보기</button>
       <button class="nav-i" data-nav="create-map" onclick="navigateTo('create-map')"><span class="nav-ic"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></span> 맵 제작</button>
       <div class="nav-sec">커뮤니티</div>
@@ -441,12 +441,6 @@ body{font-family:'Nanum Gothic Rounded',sans-serif;background:var(--bg);color:va
       <button class="hamburger" onclick="toggleSidebar()" aria-label="메뉴">
         <span></span><span></span><span></span>
       </button>
-      <div class="srch">
-        <span class="srch-ic" style="font-size:13px;color:var(--t3)">⌕</span>
-        <input placeholder="맵 또는 아티스트로 검색..." />
-        <span class="srch-key">/</span>
-      </div>
-      
     </div>
 
     <!-- ════ HOME ════ -->
@@ -480,6 +474,16 @@ body{font-family:'Nanum Gothic Rounded',sans-serif;background:var(--bg);color:va
     <!-- ════ BROWSE MAPS ════ -->
     <div class="page hide" id="page-browse">
       <div class="sec-h"><span class="sec-t">맵 탐색</span></div>
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px;flex-wrap:wrap">
+        <input id="mapSearchInput" class="inp" placeholder="맵 이름 또는 제작자 검색..."
+          style="flex:1;min-width:180px;padding:8px 12px;font-size:13px"
+          oninput="applyMapFilter()">
+        <select id="mapSortSelect" class="inp" style="width:auto;padding:8px 12px;font-size:13px;cursor:pointer" onchange="applyMapFilter()">
+          <option value="default">기본순</option>
+          <option value="plays">재생 많은 순</option>
+          <option value="favorites">즐겨찾기 많은 순</option>
+        </select>
+      </div>
       <div class="filters" id="mapFilters"></div>
       <div class="m-grid" id="mapGrid"></div>
     </div>
@@ -680,6 +684,12 @@ body{font-family:'Nanum Gothic Rounded',sans-serif;background:var(--bg);color:va
       </div>
     </div>
 
+    <!-- ════ FAVORITES ════ -->
+    <div class="page hide" id="page-favorites">
+      <div class="sec-h"><span class="sec-t">즐겨찾기</span></div>
+      <div id="favMapList"><div class="empty">로딩 중...</div></div>
+    </div>
+
     <!-- ════ DASHBOARD ════ -->
     <div class="page hide" id="page-dashboard">
       <div class="sec-h"><span class="sec-t">내 맵 대시보드</span></div>
@@ -822,7 +832,24 @@ body{font-family:'Nanum Gothic Rounded',sans-serif;background:var(--bg);color:va
 // Client State & Socket
 // ═══════════════════════════════════════════
 
-const socket = io();
+// 저장된 토큰이 있으면 연결 시 전달 (Socket.IO JWT 미들웨어 인증)
+const socket = io({ auth: { token: localStorage.getItem("authToken") || "" } });
+
+// 연결 성공 시 자동으로 register 호출 (로그인 상태일 때만)
+socket.on("connect", () => {
+  if (localStorage.getItem("authToken")) {
+    socket.emit("register");
+  }
+});
+
+// 인증 오류 처리
+socket.on("connect_error", (err) => {
+  // 토큰 없는 비로그인 상태면 무시, 만료된 토큰이면 로그아웃
+  if (err.message === "유효하지 않은 토큰입니다") {
+    localStorage.removeItem("authToken");
+    console.warn("소켓 인증 실패 — 토큰 만료");
+  }
+});
 
 // 안전한 fetch JSON 파싱 — HTML 응답도 에러 메시지로 처리
 async function fetchJSON(url, opts) {
@@ -840,6 +867,7 @@ let currentRoom = null;
 let currentRoomId = null;
 let selectedMapId = null;
 let allMaps = [];
+let myFavorites = new Set(); // mapId Set
 let gameState = { answered: false, timeLeft: 0, totalQ: 0, currentQ: 0 };
 function defaultSubQ(prompt) {
   return { prompt: prompt || "", answers: "", chosungHint: false, hintRevealTime: 5, showAnswer: true };
@@ -856,12 +884,8 @@ const CATEGORY_SUBQS = {
   "vocaloid":   ["노래 이름", "가수 이름", "작곡가 이름"],
 };
 
-function defaultQ(type) {
-  type = type || "audio";
-  const subs = type === "audio"
-    ? [defaultSubQ("노래 제목"), defaultSubQ("가수")]
-    : [defaultSubQ("")];
-  return { type, mediaUrl:"", startTime:0, endTime:0, timeLimit:30, subQuestions: subs };
+function defaultQ() {
+  return { type: "audio", mediaUrl:"", startTime:0, endTime:0, timeLimit:30, subQuestions: [defaultSubQ("노래 제목"), defaultSubQ("가수")] };
 }
 
 // 카테고리 변경 시 소문제 자동완성
@@ -1213,9 +1237,13 @@ function navigateTo(page) {
   if (page === "home") { socket.emit("getRooms"); socket.emit("getMaps"); }
   if (page === "ranking") { loadRanking(); }
   if (page === "dashboard") { loadDashboard(); }
-  if (page === "browse" || page === "popular" || page === "new") {
+  if (page === "browse" || page === "popular") {
     document.getElementById("page-browse").classList.remove("hide");
     socket.emit("getMaps");
+  }
+  if (page === "favorites") {
+    document.getElementById("page-favorites").classList.remove("hide");
+    loadFavorites();
   }
 }
 
@@ -1259,12 +1287,6 @@ function voteSkip() {
   socket.emit("skipVote", { roomId: currentRoomId });
 }
 
-function registerUser() {
-  const name = document.getElementById("nmInput").value.trim();
-  if (!name) return alert("닉네임을 입력해주세요!");
-  myUser.name = name;
-  socket.emit("register", { name: myUser.name, avatar: myUser.avatar });
-}
 
 function showCreateModal() {
   document.getElementById("createModal").classList.remove("hide");
@@ -1390,26 +1412,41 @@ function renderBattleMini(rooms) {
   `).join("");
 }
 
+let _mapCatFilter = "all";
+
 function renderMapGrid(maps, filter) {
+  if (filter !== undefined) _mapCatFilter = filter;
   const cats = [{id:"all",label:"전체"},{id:"anime-song",label:"애니"},{id:"scene",label:"장면"},{id:"character",label:"캐릭터"},{id:"kpop",label:"K-POP"},{id:"jpop",label:"J-POP"},{id:"ost",label:"OST"},{id:"vocaloid",label:"보컬로이드"}];
   document.getElementById("mapFilters").innerHTML = cats.map(c =>
-    `<button class="fchip ${(!filter && c.id==='all') || filter===c.id ? 'act':''}" onclick="filterMaps('${c.id}')">${c.label}</button>`
+    `<button class="fchip ${_mapCatFilter===c.id ? 'act':''}" onclick="filterMaps('${c.id}')">${c.label}</button>`
   ).join("");
-
-  const filtered = filter && filter !== "all" ? maps.filter(m => m.category === filter) : maps;
-  document.getElementById("mapGrid").innerHTML = filtered.map(m => `
-    <div class="m-card" onclick="openCreateWithMap('${m.id}','${esc(m.name)}')">
-      <div class="m-nm">${esc(m.name)}</div>
-      <div class="m-au">by ${esc(m.author)}</div>
-      <div class="m-st"><span>${m.questionCount}문제</span><span>▶ ${m.plays}</span><span>★ ${m.rating}</span></div>
-      <div class="m-tags">${(m.tags||[]).map(t => `<span class="m-tag">${esc(t)}</span>`).join("")}</div>
-      <button class="btn btn-a btn-sm btn-full" style="margin-top:10px" onclick="event.stopPropagation();openCreateWithMap('${m.id}','${esc(m.name)}')">이 맵으로 방 만들기</button>
-    </div>
-  `).join("");
+  applyMapFilter();
 }
 
 function filterMaps(cat) {
-  renderMapGrid(allMaps, cat);
+  _mapCatFilter = cat;
+  renderMapGrid(allMaps);
+}
+
+function applyMapFilter() {
+  const query = (document.getElementById("mapSearchInput")?.value || "").trim().toLowerCase();
+  const sort  = document.getElementById("mapSortSelect")?.value || "default";
+
+  let list = _mapCatFilter && _mapCatFilter !== "all"
+    ? allMaps.filter(m => m.category === _mapCatFilter)
+    : [...allMaps];
+
+  if (query) list = list.filter(m =>
+    m.name.toLowerCase().includes(query) || (m.author||"").toLowerCase().includes(query)
+  );
+
+  if (sort === "plays")     list = [...list].sort((a, b) => b.plays - a.plays);
+  if (sort === "favorites") list = [...list].sort((a, b) => (b.favoritesCount||0) - (a.favoritesCount||0));
+
+  const grid = document.getElementById("mapGrid");
+  if (grid) grid.innerHTML = list.length
+    ? list.map(m => renderMapCard(m)).join("")
+    : '<div class="empty" style="grid-column:1/-1">검색 결과가 없습니다.</div>';
 }
 
 function renderCreateModalMaps(maps) {
@@ -1666,11 +1703,6 @@ function renderQList(arr, arrName, containerId, countId) {
       <!-- 곡 헤더 -->
       <div style="display:flex;align-items:center;gap:8px;padding:10px 14px;background:var(--bg2);border-bottom:1px solid var(--brd);flex-wrap:wrap">
         <span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--t3);min-width:28px">#${i+1}</span>
-        <select class="q-sel" style="flex:0 0 auto" onchange="${arrName}[${i}].type=this.value;if(${arrName}[${i}].subQuestions.length===1&&!${arrName}[${i}].subQuestions[0].answers){${arrName}[${i}].subQuestions=defaultQ(this.value).subQuestions;}renderQList(${arrName},'${arrName}','${containerId}','${countId}')">
-          <option value="audio"     ${q.type==='audio'    ?'selected':''}>음악</option>
-          <option value="scene"     ${q.type==='scene'    ?'selected':''}>영상</option>
-          <option value="character" ${q.type==='character'?'selected':''}>대사</option>
-        </select>
         <span style="font-size:11px;color:var(--t3)">${subs.length}개 소문제</span>
         <!-- 제한 시간 (문제 레벨) -->
         <label style="display:flex;align-items:center;gap:5px;font-size:12px;font-weight:600;color:var(--t2);margin-left:8px">
@@ -1899,7 +1931,7 @@ async function submitMap() {
         icon: cat === "kpop" ? "🎤" : cat === "jpop" ? "🎶" : cat === "scene" ? "🎬" : cat === "character" ? "💬" : cat === "ost" ? "🎧" : cat === "vocaloid" ? "🎹" : "🎵",
         category: cat, tags: [],
         questions: creatorQuestions.map(q => ({
-          type: q.type, mediaUrl: q.mediaUrl || "", startTime: q.startTime || 0, endTime: q.endTime || 0,
+          type: "audio", mediaUrl: q.mediaUrl || "", startTime: q.startTime || 0, endTime: q.endTime || 0,
           timeLimit: q.timeLimit || 30, volume: q.volume !== undefined ? q.volume : 100,
           subQuestions: (q.subQuestions || []).map(sq => ({
             prompt: sq.prompt || "",
@@ -1989,6 +2021,7 @@ async function doAuth() {
   errEl.style.display = "none";
   if (!username || !password) { errEl.textContent = "아이디와 비밀번호를 입력해주세요"; errEl.style.display = "block"; return; }
   if (_authTab === "register") {
+    if (password.length < 8) { errEl.textContent = "비밀번호는 8자 이상이어야 합니다"; errEl.style.display = "block"; return; }
     const confirm = document.getElementById("authPasswordConfirm").value;
     if (!confirm) { errEl.textContent = "비밀번호 확인을 입력해주세요"; errEl.style.display = "block"; return; }
     if (password !== confirm) { errEl.textContent = "비밀번호가 일치하지 않습니다"; errEl.style.display = "block"; return; }
@@ -1997,7 +2030,8 @@ async function doAuth() {
     const body = { username, password };
     if (_authTab === "register") body.avatar = document.getElementById("authAvatar").value || "🦊";
     const { ok, data } = await fetchJSON(`/api/auth/${_authTab}`, {
-      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body),
+      method: "POST", credentials: "include",
+      headers: { "Content-Type": "application/json" }, body: JSON.stringify(body),
     });
     if (!ok) { errEl.textContent = data.error || "오류가 발생했습니다"; errEl.style.display = "block"; return; }
     setAuthUser(data.token, data.user);
@@ -2011,6 +2045,7 @@ function setAuthUser(token, user) {
   localStorage.setItem("authToken", token);
   myUser.name = user.username;
   myUser.avatar = user.avatar;
+  if (user.favorites) myFavorites = new Set(user.favorites);
   const g = id => document.getElementById(id);
   g("nameModal")?.classList.add("hide");
   if (g("sideName"))          g("sideName").textContent          = user.username;
@@ -2019,16 +2054,25 @@ function setAuthUser(token, user) {
   if (g("sideAuthLoggedIn"))  g("sideAuthLoggedIn").style.display  = "block";
   if (g("sideAuthName"))      g("sideAuthName").textContent      = `${user.avatar} ${user.username}`;
   if (g("topAuthBtn"))        g("topAuthBtn").textContent        = `${user.avatar} ${user.username}`;
-  socket.emit("register", { name: user.username, avatar: user.avatar, userId: user.id || user._id || user.username });
+  // 토큰 갱신 후 소켓 재연결 (JWT 미들웨어가 새 토큰으로 인증)
+  socket.auth.token = token;
+  socket.disconnect().connect();
+  // register는 reconnect 후 "connect" 이벤트에서 자동 호출됨
   // 현재 페이지가 없으면 홈으로
   const anyVisible = [...document.querySelectorAll(".page")].some(p => !p.classList.contains("hide"));
   if (!anyVisible) navigateTo("home");
 }
 
 function logout() {
+  // 15. 서버에서 HttpOnly 쿠키 삭제
+  fetch("/api/auth/logout", { method: "POST", credentials: "include" }).catch(() => {});
   authToken = null; authUser = null;
   myUser = { name: "", avatar: "🦊" };
+  myFavorites = new Set();
   localStorage.removeItem("authToken");
+  // 소켓 토큰 초기화 및 재연결 끊기
+  socket.auth.token = "";
+  socket.disconnect();
   // 사이드바 UI 초기화
   document.getElementById("sideAuthLoggedOut").style.display = "block";
   document.getElementById("sideAuthLoggedIn").style.display = "none";
@@ -2050,12 +2094,16 @@ function logout() {
   setTimeout(() => document.getElementById("authUsername").focus(), 50);
 }
 
-// 페이지 로드 시 저장된 토큰 확인
+// 페이지 로드 시 저장된 토큰으로 자동 로그인
+// 15. HttpOnly 쿠키(서버측) + localStorage 토큰(소켓용) 병행
 (async function initAuth() {
   const saved = localStorage.getItem("authToken");
   if (!saved) return; // nameModal 그대로 표시
   try {
-    const { ok, data } = await fetchJSON("/api/auth/me", { headers: { "Authorization": `Bearer ${saved}` } });
+    const { ok, data } = await fetchJSON("/api/auth/me", {
+      credentials: "include",
+      headers: { "Authorization": `Bearer ${saved}` },
+    });
     if (ok) {
       setAuthUser(saved, data);
       document.getElementById("nameModal").classList.add("hide");
@@ -2070,6 +2118,66 @@ function esc(s) { return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").re
 // ═══════════════════════════════════════════
 // Dashboard — 내 맵 관리
 // ═══════════════════════════════════════════
+
+async function loadFavorites() {
+  const el = document.getElementById("favMapList");
+  if (!authToken) {
+    el.innerHTML = '<div class="empty">즐겨찾기를 사용하려면 <a href="#" onclick="openAuthModal(\'login\')" style="color:var(--acc)">로그인</a>이 필요합니다.</div>';
+    return;
+  }
+  el.innerHTML = '<div class="empty">로딩 중...</div>';
+  try {
+    const { ok, data } = await fetchJSON("/api/favorites", { headers: { "Authorization": `Bearer ${authToken}` } });
+    if (!ok) { el.innerHTML = `<div class="empty">${data.error||'불러오기 실패'}</div>`; return; }
+    if (!data.length) { el.innerHTML = '<div class="empty">즐겨찾기한 맵이 없습니다. 맵 탐색에서 하트를 눌러 추가해보세요.</div>'; return; }
+    el.innerHTML = `<div class="m-grid">${data.map(m => renderMapCard(m)).join("")}</div>`;
+  } catch(e) { el.innerHTML = '<div class="empty">불러오기 실패.</div>'; }
+}
+
+async function toggleFavorite(mapId, e) {
+  e && e.stopPropagation();
+  if (!authToken) { openAuthModal('login'); return; }
+  const { ok, data } = await fetchJSON(`/api/favorites/${mapId}`, {
+    method: "POST",
+    headers: { "Authorization": `Bearer ${authToken}` }
+  });
+  if (!ok) return;
+  if (data.favorited) myFavorites.add(mapId);
+  else myFavorites.delete(mapId);
+  // 버튼 상태 업데이트
+  document.querySelectorAll(`.fav-btn[data-id="${mapId}"]`).forEach(btn => {
+    btn.innerHTML = getFavSvg(myFavorites.has(mapId));
+    btn.style.color = myFavorites.has(mapId) ? "var(--acc)" : "var(--t3)";
+  });
+}
+
+function getFavSvg(filled) {
+  return `<svg width="15" height="15" viewBox="0 0 24 24" fill="${filled ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>`;
+}
+
+const svgHeart = `<svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--acc)"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>`;
+const svgPlay2 = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>`;
+
+function renderMapCard(m) {
+  const faved = myFavorites.has(m.id);
+  return `
+    <div class="m-card" onclick="openCreateWithMap('${m.id}','${esc(m.name)}')">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:6px">
+        <div class="m-nm" style="margin-bottom:0">${esc(m.name)}</div>
+        <button class="fav-btn" data-id="${m.id}" onclick="toggleFavorite('${m.id}',event)"
+          style="background:none;border:none;cursor:pointer;padding:2px;color:${faved ? 'var(--acc)' : 'var(--t3)'};flex-shrink:0;display:flex;align-items:center"
+          title="${faved ? '즐겨찾기 해제' : '즐겨찾기 추가'}">${getFavSvg(faved)}</button>
+      </div>
+      <div class="m-au">by ${esc(m.author||'')}</div>
+      <div class="m-st">
+        <span>${m.questionCount}문제</span>
+        <span style="display:inline-flex;align-items:center;gap:3px">${svgPlay2} ${m.plays}</span>
+        <span style="display:inline-flex;align-items:center;gap:3px">${svgHeart} ${m.favoritesCount||0}</span>
+      </div>
+      <div class="m-tags">${(m.tags||[]).map(t => `<span class="m-tag">${esc(t)}</span>`).join("")}</div>
+      <button class="btn btn-a btn-sm btn-full" style="margin-top:10px" onclick="event.stopPropagation();openCreateWithMap('${m.id}','${esc(m.name)}')">이 맵으로 방 만들기</button>
+    </div>`;
+}
 
 async function loadDashboard() {
   const el = document.getElementById("dashMapList");
@@ -2189,7 +2297,7 @@ async function saveEditMap() {
         name, category: cat,
         icon: cat==="kpop"?"🎤":cat==="jpop"?"🎶":cat==="scene"?"🎬":cat==="character"?"💬":cat==="ost"?"🎧":cat==="vocaloid"?"🎹":"🎵",
         questions: editQuestions.map(q => ({
-          type: q.type, mediaUrl: q.mediaUrl||"", startTime: q.startTime||0, endTime: q.endTime||0, timeLimit: q.timeLimit||30, volume: q.volume !== undefined ? q.volume : 100,
+          type: "audio", mediaUrl: q.mediaUrl||"", startTime: q.startTime||0, endTime: q.endTime||0, timeLimit: q.timeLimit||30, volume: q.volume !== undefined ? q.volume : 100,
           subQuestions: (q.subQuestions||[]).map(sq => ({
             prompt: sq.prompt||"",
             answers: typeof sq.answers === 'string' ? sq.answers.split(",").map(a=>a.trim()).filter(Boolean) : (sq.answers||[]),

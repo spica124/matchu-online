@@ -3,32 +3,76 @@
 // ═══════════════════════════════════════════════════════════════
 
 require("dotenv").config();
-const express   = require("express");
-const http      = require("http");
+const express    = require("express");
+const http       = require("http");
 const { Server } = require("socket.io");
-const path      = require("path");
+const path       = require("path");
+const cookieParser = require("cookie-parser");
 const { v4: uuidv4 } = require("uuid");
 const mongoose  = require("mongoose");
 const bcrypt    = require("bcryptjs");
 const jwt       = require("jsonwebtoken");
+const helmet    = require("helmet");
 
 const app    = express();
 const server = http.createServer(app);
-const io     = new Server(server, { cors: { origin: "*" }, pingTimeout: 60000, pingInterval: 25000 });
 
+// ── 환경 변수 검증 (서버 시작 시) ──
+const JWT_SECRET     = process.env.JWT_SECRET;
+const MONGODB_URI    = process.env.MONGODB_URI || "mongodb://localhost:27017/matchu-online";
+const ALLOWED_ORIGIN = process.env.ALLOWED_ORIGIN || "http://localhost:3000";
+const IS_PROD        = process.env.NODE_ENV === "production";
+
+if (!JWT_SECRET || JWT_SECRET.length < 32) {
+  console.error("❌ JWT_SECRET이 설정되지 않았거나 너무 짧습니다 (32자 이상 필요). .env 파일을 확인하세요.");
+  process.exit(1);
+}
+
+// ── 7. Helmet — XSS·Clickjacking 등 보안 헤더 ──
+app.use(helmet({
+  contentSecurityPolicy: false, // CSP는 인라인 스크립트가 많아 별도 설정 필요 시 활성화
+  crossOriginEmbedderPolicy: false, // YouTube iframe 허용
+}));
+
+const io = new Server(server, {
+  cors: { origin: ALLOWED_ORIGIN, methods: ["GET", "POST"], credentials: true },
+  pingTimeout: 60000, pingInterval: 25000,
+});
+
+// ── 11. express.json() payload 크기 제한 1MB ──
 app.use(express.static(path.join(__dirname, "../public")));
-app.use(express.json());
+app.use(express.json({ limit: "1mb" }));
+// ── 15. 쿠키 파서 (HttpOnly JWT 쿠키용) ──
+app.use(cookieParser());
 
-const JWT_SECRET   = process.env.JWT_SECRET || "matchu-secret";
-const MONGODB_URI  = process.env.MONGODB_URI || "mongodb://localhost:27017/matchu-online";
+// ── 방 생성 레이트 리밋 (in-memory) ──
+const _roomCreateLog = new Map(); // userId → timestamp[]
+
+// ── 8. 로그인 브루트포스 방지 (IP당 1분 10회) ──
+const _loginAttempts = new Map(); // ip → { count, resetAt }
+
+function checkLoginRateLimit(ip) {
+  const now = Date.now();
+  let entry = _loginAttempts.get(ip);
+  if (!entry || now > entry.resetAt) {
+    entry = { count: 0, resetAt: now + 60_000 };
+    _loginAttempts.set(ip, entry);
+  }
+  entry.count++;
+  return entry.count <= 10; // 10회 초과 시 false
+}
+
+// ── 채팅 레이트 리밋 ──
+// user 객체에 _lastChat 필드 사용
 
 // ═══════════════════════════════════════════
 // MongoDB
 // ═══════════════════════════════════════════
 
+// ── 12. MongoDB 연결 실패 시 서버 종료 ──
 mongoose.connect(MONGODB_URI)
   .then(() => console.log("✅ MongoDB 연결 성공"))
-  .catch(e  => console.error("❌ MongoDB 연결 실패:", e.message));
+  .catch(e  => { console.error("❌ MongoDB 연결 실패:", e.message); process.exit(1); });
 
 // ── Schemas ──
 
@@ -36,6 +80,7 @@ const userSchema = new mongoose.Schema({
   username:  { type: String, required: true, unique: true, trim: true },
   password:  { type: String, required: true },
   avatar:    { type: String, default: "🦊" },
+  favorites: { type: [String], default: [] },  // mapId[]
   createdAt: { type: Date, default: Date.now },
 });
 const UserModel = mongoose.model("User", userSchema);
@@ -73,8 +118,9 @@ const mapSchema = new mongoose.Schema({
   icon:      { type: String, default: "🎵" },
   category:  { type: String, default: "anime-song" },
   tags:      { type: [String], default: [] },
-  plays:     { type: Number, default: 0 },
-  rating:    { type: Number, default: 0 },
+  plays:          { type: Number, default: 0 },
+  rating:         { type: Number, default: 0 },
+  favoritesCount: { type: Number, default: 0 },
   questions: { type: [questionSchema], default: [] },
   createdAt: { type: Date, default: Date.now },
 });
@@ -154,9 +200,25 @@ function normalizeQuestions(questions) {
   });
 }
 
-// ── Auth Middleware ──
+// ── 15. HttpOnly 쿠키 설정 헬퍼 ──
+const COOKIE_OPTS = {
+  httpOnly: true,         // JS에서 접근 불가 (XSS 방어)
+  secure: IS_PROD,        // 프로덕션에서만 HTTPS 필수
+  sameSite: "lax",
+  maxAge: 7 * 24 * 60 * 60 * 1000, // 7일
+};
+
+function setTokenCookie(res, token) {
+  res.cookie("authToken", token, COOKIE_OPTS);
+}
+
+function clearTokenCookie(res) {
+  res.clearCookie("authToken", { httpOnly: true, secure: IS_PROD, sameSite: "lax" });
+}
+
+// ── Auth Middleware — 쿠키 우선, Authorization 헤더 fallback ──
 function authMiddleware(req, res, next) {
-  const token = req.headers.authorization?.split(" ")[1];
+  const token = req.cookies?.authToken || req.headers.authorization?.split(" ")[1];
   if (!token) return res.status(401).json({ error: "로그인이 필요합니다" });
   try {
     req.user = jwt.verify(token, JWT_SECRET);
@@ -172,36 +234,52 @@ app.post("/api/auth/register", async (req, res) => {
   try {
     const { username, password, avatar } = req.body;
     if (!username || !password) return res.status(400).json({ error: "아이디와 비밀번호를 입력해주세요" });
-    if (username.length < 2) return res.status(400).json({ error: "아이디는 2자 이상이어야 합니다" });
-    if (password.length < 4) return res.status(400).json({ error: "비밀번호는 4자 이상이어야 합니다" });
+    if (username.length < 2 || username.length > 20) return res.status(400).json({ error: "아이디는 2~20자이어야 합니다" });
+    // 9. 비밀번호 최소 8자
+    if (password.length < 8) return res.status(400).json({ error: "비밀번호는 8자 이상이어야 합니다" });
     const existing = await UserModel.findOne({ username });
     if (existing) return res.status(400).json({ error: "이미 사용 중인 아이디입니다" });
     const hashed = await bcrypt.hash(password, 10);
     const user = await UserModel.create({ username, password: hashed, avatar: avatar || "🦊" });
-    const token = jwt.sign({ id: user._id.toString(), username: user.username, avatar: user.avatar }, JWT_SECRET, { expiresIn: "30d" });
-    res.json({ token, user: { id: user._id.toString(), username: user.username, avatar: user.avatar } });
+    // 10. JWT 만료 7일
+    const token = jwt.sign({ id: user._id.toString(), username: user.username, avatar: user.avatar }, JWT_SECRET, { expiresIn: "7d" });
+    // 15. HttpOnly 쿠키 설정
+    setTokenCookie(res, token);
+    res.json({ token, user: { id: user._id.toString(), username: user.username, avatar: user.avatar, favorites: user.favorites || [] } });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
 app.post("/api/auth/login", async (req, res) => {
   try {
+    // 8. 로그인 브루트포스 방지
+    const ip = req.ip || req.socket.remoteAddress;
+    if (!checkLoginRateLimit(ip)) return res.status(429).json({ error: "로그인 시도가 너무 많습니다. 1분 후 다시 시도해주세요" });
     const { username, password } = req.body;
     if (!username || !password) return res.status(400).json({ error: "아이디와 비밀번호를 입력해주세요" });
     const user = await UserModel.findOne({ username });
     if (!user) return res.status(400).json({ error: "아이디 또는 비밀번호가 틀렸습니다" });
     const ok = await bcrypt.compare(password, user.password);
     if (!ok) return res.status(400).json({ error: "아이디 또는 비밀번호가 틀렸습니다" });
-    const token = jwt.sign({ id: user._id.toString(), username: user.username, avatar: user.avatar }, JWT_SECRET, { expiresIn: "30d" });
-    res.json({ token, user: { id: user._id.toString(), username: user.username, avatar: user.avatar } });
+    // 10. JWT 만료 7일
+    const token = jwt.sign({ id: user._id.toString(), username: user.username, avatar: user.avatar }, JWT_SECRET, { expiresIn: "7d" });
+    // 15. HttpOnly 쿠키 설정
+    setTokenCookie(res, token);
+    res.json({ token, user: { id: user._id.toString(), username: user.username, avatar: user.avatar, favorites: user.favorites || [] } });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
 app.get("/api/auth/me", authMiddleware, async (req, res) => {
   try {
-    const user = await UserModel.findById(req.user.id, "username avatar createdAt");
+    const user = await UserModel.findById(req.user.id, "username avatar createdAt favorites");
     if (!user) return res.status(404).json({ error: "사용자를 찾을 수 없습니다" });
-    res.json({ id: user._id.toString(), username: user.username, avatar: user.avatar });
+    res.json({ id: user._id.toString(), username: user.username, avatar: user.avatar, favorites: user.favorites || [] });
   } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// 15. 로그아웃 — HttpOnly 쿠키 삭제
+app.post("/api/auth/logout", (req, res) => {
+  clearTokenCookie(res);
+  res.json({ ok: true });
 });
 
 // ═══════════════════════════════════════════
@@ -210,8 +288,8 @@ app.get("/api/auth/me", authMiddleware, async (req, res) => {
 
 app.get("/api/maps", async (req, res) => {
   try {
-    const list = await MapModel.find({}, "mapId name author icon category tags plays rating questions").lean();
-    res.json(list.map(m => ({ id: m.mapId, name: m.name, author: m.author, icon: m.icon, category: m.category, tags: m.tags, questionCount: m.questions.length, plays: m.plays, rating: m.rating })));
+    const list = await MapModel.find({}, "mapId name author icon category tags plays rating favoritesCount questions").lean();
+    res.json(list.map(m => ({ id: m.mapId, name: m.name, author: m.author, icon: m.icon, category: m.category, tags: m.tags, questionCount: m.questions.length, plays: m.plays, rating: m.rating, favoritesCount: m.favoritesCount || 0 })));
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
@@ -222,6 +300,33 @@ app.get("/api/maps/mine", authMiddleware, async (req, res) => {
       "mapId name icon category tags plays rating author authorId createdAt questions"
     ).lean();
     res.json(list.map(m => ({ id: m.mapId, name: m.name, icon: m.icon, category: m.category, tags: m.tags, questionCount: m.questions.length, plays: m.plays, rating: m.rating, author: m.author, createdAt: m.createdAt })));
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// 즐겨찾기 목록 조회
+app.get("/api/favorites", authMiddleware, async (req, res) => {
+  try {
+    const user = await UserModel.findById(req.user.id).lean();
+    const favIds = user.favorites || [];
+    if (!favIds.length) return res.json([]);
+    const list = await MapModel.find({ mapId: { $in: favIds } }, "mapId name author icon category tags plays rating favoritesCount questions").lean();
+    res.json(list.map(m => ({ id: m.mapId, name: m.name, author: m.author, icon: m.icon, category: m.category, tags: m.tags, questionCount: m.questions.length, plays: m.plays, rating: m.rating, favoritesCount: m.favoritesCount || 0 })));
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// 즐겨찾기 토글
+app.post("/api/favorites/:mapId", authMiddleware, async (req, res) => {
+  try {
+    const user = await UserModel.findById(req.user.id);
+    const mapId = req.params.mapId;
+    const idx = user.favorites.indexOf(mapId);
+    const favorited = idx === -1;
+    if (favorited) user.favorites.push(mapId);
+    else user.favorites.splice(idx, 1);
+    await user.save();
+    // 맵 즐겨찾기 카운트 업데이트
+    await MapModel.updateOne({ mapId }, { $inc: { favoritesCount: favorited ? 1 : -1 } });
+    res.json({ favorited, favorites: user.favorites });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
@@ -243,12 +348,22 @@ app.get("/api/maps/:id", async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
+// 14. 맵 입력값 검증 헬퍼
+function validateMapInput(name, questions) {
+  if (!name || typeof name !== "string") return "맵 이름을 입력해주세요";
+  if (name.trim().length < 1 || name.trim().length > 50) return "맵 이름은 1~50자이어야 합니다";
+  if (!Array.isArray(questions) || questions.length === 0) return "최소 1개의 문제가 필요합니다";
+  if (questions.length > 100) return "문제는 최대 100개까지 가능합니다";
+  return null;
+}
+
 app.post("/api/maps", authMiddleware, async (req, res) => {
   try {
     const { name, icon, category, tags, questions } = req.body;
-    if (!name || !questions || questions.length === 0) return res.status(400).json({ error: "맵 이름과 최소 1개의 문제가 필요합니다" });
+    const err = validateMapInput(name, questions);
+    if (err) return res.status(400).json({ error: err });
     const mapId = "map-" + uuidv4().slice(0, 8);
-    const map = await MapModel.create({ mapId, name, author: req.user.username, authorId: req.user.id, icon: icon || "🎵", category: category || "anime-song", tags: tags || [], questions: normalizeQuestions(questions) });
+    await MapModel.create({ mapId, name: name.trim(), author: req.user.username, authorId: req.user.id, icon: icon || "🎵", category: category || "anime-song", tags: Array.isArray(tags) ? tags.slice(0, 10) : [], questions: normalizeQuestions(questions) });
     res.json({ id: mapId, message: "맵이 생성되었습니다!" });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
@@ -260,10 +375,14 @@ app.put("/api/maps/:id", authMiddleware, async (req, res) => {
     const isOwner = (m.authorId && m.authorId === req.user.id) || m.author === req.user.username;
     if (!isOwner) return res.status(403).json({ error: "수정 권한이 없습니다" });
     const { name, icon, category, tags, questions } = req.body;
-    if (name) m.name = name;
+    if (questions) {
+      const err = validateMapInput(name || m.name, questions);
+      if (err) return res.status(400).json({ error: err });
+    }
+    if (name) m.name = name.trim().slice(0, 50);
     if (icon) m.icon = icon;
     if (category) m.category = category;
-    if (tags) m.tags = tags;
+    if (Array.isArray(tags)) m.tags = tags.slice(0, 10);
     if (questions && questions.length > 0) m.questions = normalizeQuestions(questions);
     await m.save();
     res.json({ message: "맵이 수정되었습니다!" });
@@ -332,13 +451,27 @@ function createRoom(id, name, hostId, hostName, hostAvatar, mapId, maxPlayers, p
 // Socket.IO
 // ═══════════════════════════════════════════
 
+// JWT 인증 미들웨어 — 토큰 없으면 연결 거부
+io.use((socket, next) => {
+  const token = socket.handshake.auth?.token;
+  if (!token) return next(new Error("인증 토큰이 필요합니다"));
+  try {
+    socket.jwtUser = jwt.verify(token, JWT_SECRET);
+    next();
+  } catch {
+    next(new Error("유효하지 않은 토큰입니다"));
+  }
+});
+
 io.on("connection", (socket) => {
   onlineCount++;
   io.emit("onlineCount", onlineCount);
   console.log(`[+] ${socket.id} (온라인: ${onlineCount})`);
 
-  socket.on("register", ({ name, avatar, userId }) => {
-    users.set(socket.id, { id: socket.id, name: name || "Player_" + Math.floor(Math.random() * 9999), avatar: avatar || "🦊", score: 0, userId: userId || name });
+  // register: JWT에서 사용자 정보를 가져옴 (클라이언트가 임의 이름 주입 불가)
+  socket.on("register", () => {
+    const u = socket.jwtUser;
+    users.set(socket.id, { id: socket.id, name: u.username, avatar: u.avatar || "🦊", score: 0, userId: u.id });
     socket.emit("registered", users.get(socket.id));
   });
 
@@ -361,11 +494,20 @@ io.on("connection", (socket) => {
   socket.on("createRoom", async ({ name, mapId, maxPlayers, password }) => {
     const user = users.get(socket.id);
     if (!user) return socket.emit("error", "먼저 등록해주세요");
+    // 방 생성 레이트 리밋: 1분에 최대 5개
+    const uid = user.userId;
+    const now = Date.now();
+    const recentCreates = (_roomCreateLog.get(uid) || []).filter(t => now - t < 60000);
+    if (recentCreates.length >= 5) return socket.emit("error", "방 생성은 1분에 5개까지만 가능합니다");
+    recentCreates.push(now);
+    _roomCreateLog.set(uid, recentCreates);
     try {
       const map = await MapModel.findOne({ mapId }).lean();
       if (!map) return socket.emit("error", "맵을 찾을 수 없습니다");
       const roomId = "room-" + uuidv4().slice(0, 8);
-      const room = createRoom(roomId, name, socket.id, user.name, user.avatar, mapId, maxPlayers, password);
+      // 13. 방 비밀번호 해시화
+      const hashedPw = password ? await bcrypt.hash(password, 6) : "";
+      const room = createRoom(roomId, name, socket.id, user.name, user.avatar, mapId, maxPlayers, hashedPw);
       room.map = map;
       room.players.set(socket.id, { ...user, score: 0, answeredSubQs: new Set() });
       rooms.set(roomId, room);
@@ -375,14 +517,18 @@ io.on("connection", (socket) => {
     } catch (e) { socket.emit("error", "방 생성 실패: " + e.message); }
   });
 
-  socket.on("joinRoom", ({ roomId, password }) => {
+  socket.on("joinRoom", async ({ roomId, password }) => {
     const user = users.get(socket.id);
     if (!user) return socket.emit("error", "먼저 등록해주세요");
     const room = rooms.get(roomId);
     if (!room) return socket.emit("error", "방을 찾을 수 없습니다");
     if (room.status !== "waiting") return socket.emit("error", "이미 게임이 진행 중입니다");
     if (room.players.size >= room.maxPlayers) return socket.emit("error", "방이 가득 찼습니다");
-    if (room.password && room.password !== (password || "")) return socket.emit("error", "비밀번호가 틀렸습니다", { roomId });
+    // 13. 해시된 비밀번호 비교
+    if (room.password) {
+      const pwMatch = await bcrypt.compare(password || "", room.password);
+      if (!pwMatch) return socket.emit("error", "비밀번호가 틀렸습니다", { roomId });
+    }
     room.players.set(socket.id, { ...user, score: 0, answeredSubQs: new Set() });
     socket.join(roomId);
     socket.emit("roomJoined", getRoomState(room));
@@ -510,8 +656,13 @@ io.on("connection", (socket) => {
 
   socket.on("chat", ({ roomId, message }) => {
     const user = users.get(socket.id);
-    if (!user || !message.trim()) return;
+    if (!user || !message?.trim()) return;
     const msg = message.trim();
+    if (msg.length > 300) return; // 메시지 최대 길이 제한
+    // 채팅 레이트 리밋: 0.5초에 1개
+    const now2 = Date.now();
+    if (now2 - (user._lastChat || 0) < 500) return;
+    user._lastChat = now2;
     const room = rooms.get(roomId);
 
     // 게임 중이면 정답 체크 먼저
