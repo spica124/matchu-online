@@ -608,8 +608,8 @@ io.on("connection", (socket) => {
 
   socket.on("getMaps", async () => {
     try {
-      const list = await MapModel.find({ status: "approved" }, "mapId name author icon category tags plays rating questions").lean();
-      socket.emit("mapList", list.map(m => ({ id: m.mapId, name: m.name, author: m.author, icon: m.icon, category: m.category, tags: m.tags, questionCount: m.questions.length, plays: m.plays, rating: m.rating })));
+      const list = await MapModel.find({ status: "approved" }, "mapId name author icon category tags plays rating favoritesCount questions").lean();
+      socket.emit("mapList", list.map(m => ({ id: m.mapId, name: m.name, author: m.author, icon: m.icon, category: m.category, tags: m.tags, questionCount: m.questions.length, plays: m.plays, rating: m.rating, favoritesCount: m.favoritesCount || 0 })));
     } catch { socket.emit("mapList", []); }
   });
 

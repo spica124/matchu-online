@@ -761,7 +761,7 @@ body{font-family:'Nanum Gothic Rounded',sans-serif;background:var(--bg);color:va
           <div id="finalScores"></div>
         </div>
         <div class="res-btns">
-          <button class="btn btn-a btn-lg" onclick="backToLobby()">🏠 로비로 돌아가기</button>
+          <button class="btn btn-a btn-lg" onclick="backToLobby()">로비로 돌아가기</button>
         </div>
       </div>
     </div>
@@ -1679,8 +1679,7 @@ function showResults(scores) {
 
   // 내 등수 배너
   const myRank = sorted.findIndex(s => s.name === myUser.name);
-  const rankEmoji = myRank === 0 ? "🥇" : myRank === 1 ? "🥈" : myRank === 2 ? "🥉" : "🎮";
-  const rankLabel = myRank >= 0 ? `${rankEmoji} 내 등수: ${myRank + 1}등` : null;
+  const rankLabel = myRank >= 0 ? `내 등수: ${myRank + 1}등` : null;
   document.getElementById("resMyRank").innerHTML = rankLabel
     ? `<div class="res-my-rank">${rankLabel}</div>` : "";
 
