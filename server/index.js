@@ -59,6 +59,7 @@ const questionSchema = new mongoose.Schema({
   mediaUrl:       { type: String, default: "" },
   startTime:      { type: Number, default: 0 },
   endTime:        { type: Number, default: 0 },
+  volume:         { type: Number, default: 100 },
   chosungHint:    { type: Boolean, default: false },
   hintRevealTime: { type: Number, default: 0 },
   subQuestions:   { type: [subQSchema], default: [] },
@@ -133,6 +134,7 @@ function normalizeQuestions(questions) {
       id: i + 1, type: q.type || "audio", hint: q.hint || "", answers, anime: q.anime || "",
       timeLimit: q.timeLimit || 30, mediaUrl: q.mediaUrl || "",
       startTime: parseInt(q.startTime) || 0, endTime: parseInt(q.endTime) || 0,
+      volume: (q.volume !== undefined && q.volume !== null) ? Math.min(100, Math.max(0, parseInt(q.volume))) : 100,
       chosungHint: !!q.chosungHint, hintRevealTime: parseInt(q.hintRevealTime) || 0, subQuestions,
     };
   });
@@ -555,6 +557,7 @@ function sendQuestion(room) {
     mediaUrl: q.mediaUrl || "",
     startTime: q.startTime || 0,
     endTime: q.endTime || 0,
+    volume: (q.volume !== undefined && q.volume !== null) ? q.volume : 100,
     songIndex: room.currentQuestion,
     totalSongs: room.map.questions.length,
     // 모든 서브퀴즈 한 번에 전송 (정답 제외)

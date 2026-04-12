@@ -389,12 +389,13 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--t1);
       <button class="nav-i" data-nav="dashboard" onclick="navigateTo('dashboard')"><span class="nav-ic">📋</span> 내 맵 대시보드</button>
     </div>
     <div style="padding:12px 16px;border-top:1px solid var(--brd);margin-top:auto">
-      <div id="sideAuthLoggedOut">
-        <button class="btn btn-a btn-full btn-sm" onclick="openAuthModal('login')">🔐 로그인 / 회원가입</button>
+
+      <div id="sideAuthLoggedOut" style="display:block">
+        <button class="btn btn-g btn-full btn-sm" onclick="closeSidebar();openAuthModal('login')">🔐 로그인 / 회원가입</button>
       </div>
       <div id="sideAuthLoggedIn" style="display:none">
         <div style="font-size:13px;font-weight:700;color:var(--t1);margin-bottom:6px" id="sideAuthName"></div>
-        <button class="btn btn-g btn-full btn-sm" onclick="logout()">로그아웃</button>
+        <button class="btn btn-g btn-full btn-sm" onclick="logout()" style="color:var(--acc)">🚪 로그아웃</button>
       </div>
     </div>
   </div>
@@ -410,9 +411,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--t1);
         <input placeholder="맵 또는 아티스트로 검색..." />
         <span class="srch-key">/</span>
       </div>
-      <div class="top-r">
-        <button class="top-btn" onclick="openAuthModal('login')" id="topAuthBtn" title="로그인">👤 로그인</button>
-      </div>
+      
     </div>
 
     <!-- ════ HOME ════ -->
@@ -527,11 +526,18 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--t1);
             <!-- 소문제 목록 + 정답자 -->
             <div class="gv-subq-list" id="subqList"></div>
 
-            <!-- 스킵 -->
-            <div style="text-align:center;margin-top:4px">
+            <!-- 스킵 + 볼륨 -->
+            <div style="display:flex;align-items:center;justify-content:center;gap:16px;margin-top:4px;flex-wrap:wrap">
               <button class="btn btn-g btn-sm" id="skipBtn" onclick="voteSkip()">
                 ⏭ 스킵 <span id="skipCount" style="font-family:'JetBrains Mono',monospace;font-size:11px">0/0</span>
               </button>
+              <div style="display:flex;align-items:center;gap:6px">
+                <span id="volIcon2" style="font-size:15px;cursor:pointer;user-select:none" onclick="toggleMute()" title="음소거">🔊</span>
+                <input type="range" id="volSlider2" min="0" max="100" value="100" step="1"
+                  style="width:80px;accent-color:var(--acc);cursor:pointer"
+                  oninput="setVolume(+this.value)">
+                <span id="volPct" style="font-size:11px;color:var(--t3);font-family:'JetBrains Mono',monospace;min-width:32px">100%</span>
+              </div>
             </div>
             <!-- 숨김 (하위 호환) -->
             <input id="answerInput" style="display:none">
@@ -806,7 +812,7 @@ socket.on("gameStarted", ({ totalQuestions, players }) => {
   navigateTo("game");
 });
 
-socket.on("question", ({ index, total, type, hint, timeLimit, mediaUrl, startTime, endTime, songIndex, totalSongs, subQuestions }) => {
+socket.on("question", ({ index, total, type, hint, timeLimit, mediaUrl, startTime, endTime, volume, songIndex, totalSongs, subQuestions }) => {
   gameState.currentQ = index;
   gameState.totalQ = total;
   gameState.answered = false;
@@ -861,10 +867,11 @@ socket.on("question", ({ index, total, type, hint, timeLimit, mediaUrl, startTim
 
   renderSubQList();
 
-  // YouTube 오디오 재생 (IFrame API)
+  // YouTube 오디오 재생 (IFrame API) — 맵 제작자가 설정한 볼륨 적용
   if (mediaUrl !== null && mediaUrl !== undefined) {
     const ytId = getYouTubeId(mediaUrl || "");
-    playYouTube(ytId, startTime || 0, endTime || 0, timeLimit || gameState.timeLimit || 30);
+    const mapVol = (volume !== undefined && volume !== null) ? volume : 100;
+    playYouTube(ytId, startTime || 0, endTime || 0, timeLimit || gameState.timeLimit || 30, mapVol);
   }
 });
 
@@ -1341,7 +1348,16 @@ function renderQList(arr, arrName, containerId, countId) {
       </div>
       <!-- YouTube 영역 -->
       <div style="display:flex;gap:0;border-bottom:1px solid var(--brd);flex-wrap:wrap">
-        ${hasYt ? `<div style="flex:0 0 280px;background:#000;aspect-ratio:16/9;max-width:280px"><iframe id="yt-prev-${arrName}-${i}" src="https://www.youtube-nocookie.com/embed/${ytId}?start=${startSec}&rel=0&modestbranding=1" style="width:100%;height:100%;border:none" allow="autoplay;encrypted-media" allowfullscreen></iframe></div>` : ''}
+        ${hasYt ? `<div style="flex:0 0 280px;background:#000;max-width:280px;position:relative;display:flex;flex-direction:column">
+          <div style="aspect-ratio:16/9"><div id="yt-prev-${arrName}-${i}" style="width:100%;height:100%"></div></div>
+          <div style="display:flex;align-items:center;gap:6px;padding:6px 8px;background:#111">
+            <span style="font-size:13px;cursor:pointer;user-select:none" onclick="togglePrevVol('${arrName}',${i})" id="pv-icon-${arrName}-${i}">${(q.volume===0)?'🔇':(q.volume<40)?'🔈':(q.volume<70)?'🔉':'🔊'}</span>
+            <input type="range" min="0" max="100" value="${q.volume !== undefined ? q.volume : 100}" step="1" style="flex:1;accent-color:#fff;height:3px;cursor:pointer"
+              id="pv-vol-${arrName}-${i}"
+              oninput="setPrevVol('${arrName}',${i},+this.value)">
+            <span style="font-size:10px;color:#aaa;font-family:'JetBrains Mono',monospace;min-width:30px" id="pv-pct-${arrName}-${i}">${q.volume !== undefined ? q.volume : 100}%</span>
+          </div>
+        </div>` : ''}
         <div style="flex:1;min-width:240px;padding:12px 14px;display:flex;flex-direction:column;gap:10px">
           <div>
             <div style="font-size:11px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px">YouTube URL</div>
@@ -1350,23 +1366,24 @@ function renderQList(arr, arrName, containerId, countId) {
           </div>
           ${hasYt ? `
           <div style="display:flex;flex-direction:column;gap:6px">
+            <div style="font-size:11px;color:var(--t3)" id="yt-dur-${arrName}-${i}">${q.ytDuration ? '영상 길이: ' + fmtTime(q.ytDuration) : '⏳ 영상 길이 감지 중...'}</div>
             <div style="display:flex;align-items:center;gap:6px;font-size:12px">
               <span style="color:var(--t3);min-width:28px">시작</span>
-              <input type="range" min="0" max="600" step="1" value="${startSec}" style="flex:1;accent-color:var(--acc)"
-                oninput="${arrName}[${i}].startTime=+this.value;this.nextElementSibling.textContent=fmtT(+this.value);updateYtPreview('yt-prev-${arrName}-${i}','${ytId}',+this.value)">
-              <span style="font-family:'JetBrains Mono',monospace;color:var(--ylw);min-width:40px;font-size:12px">${fmtTime(startSec)}</span>
-              <input type="number" min="0" max="600" class="inp" style="width:60px;padding:4px 6px;font-family:'JetBrains Mono',monospace;font-size:12px"
-                value="${startSec}" oninput="${arrName}[${i}].startTime=+this.value;this.closest('div').querySelector('input[type=range]').value=this.value;updateYtPreview('yt-prev-${arrName}-${i}','${ytId}',+this.value)">
+              <input type="range" id="yt-sr-${arrName}-${i}" min="0" max="${q.ytDuration||600}" step="1" value="${startSec}" style="flex:1;accent-color:var(--acc)"
+                oninput="setPrevStart('${arrName}',${i},'${ytId}',+this.value)">
+              <span id="yt-st-${arrName}-${i}" style="font-family:'JetBrains Mono',monospace;color:var(--ylw);min-width:40px;font-size:12px">${fmtTime(startSec)}</span>
+              <input type="number" id="yt-sn-${arrName}-${i}" min="0" max="${q.ytDuration||600}" class="inp" style="width:60px;padding:4px 6px;font-family:'JetBrains Mono',monospace;font-size:12px"
+                value="${startSec}" oninput="setPrevStart('${arrName}',${i},'${ytId}',+this.value)">
             </div>
             <div style="display:flex;align-items:center;gap:6px;font-size:12px">
               <span style="color:var(--t3);min-width:28px">끝</span>
-              <input type="range" min="0" max="600" step="1" value="${endSec}" style="flex:1;accent-color:var(--grn)"
-                oninput="${arrName}[${i}].endTime=+this.value;this.nextElementSibling.textContent=fmtT(+this.value)">
-              <span style="font-family:'JetBrains Mono',monospace;color:var(--grn);min-width:40px;font-size:12px">${endSec ? fmtTime(endSec) : '∞'}</span>
-              <input type="number" min="0" max="600" class="inp" style="width:60px;padding:4px 6px;font-family:'JetBrains Mono',monospace;font-size:12px"
-                value="${endSec}" oninput="${arrName}[${i}].endTime=+this.value;this.closest('div').querySelector('input[type=range]').value=this.value">
+              <input type="range" id="yt-er-${arrName}-${i}" min="0" max="${q.ytDuration||600}" step="1" value="${endSec||q.ytDuration||600}" style="flex:1;accent-color:var(--grn)"
+                oninput="setPrevEnd('${arrName}',${i},+this.value)">
+              <span id="yt-et-${arrName}-${i}" style="font-family:'JetBrains Mono',monospace;color:var(--grn);min-width:40px;font-size:12px">${endSec ? fmtTime(endSec) : (q.ytDuration ? fmtTime(q.ytDuration) : '∞')}</span>
+              <input type="number" id="yt-en-${arrName}-${i}" min="0" max="${q.ytDuration||600}" class="inp" style="width:60px;padding:4px 6px;font-family:'JetBrains Mono',monospace;font-size:12px"
+                value="${endSec||q.ytDuration||''}" oninput="setPrevEnd('${arrName}',${i},+this.value)">
             </div>
-            ${startSec < endSec ? `<div style="font-size:11px;color:var(--t3)">구간: ${fmtTime(startSec)} → ${fmtTime(endSec)} (${endSec-startSec}초)${willLoop?' 🔁 반복':''}</div>` : ''}
+            ${startSec < (endSec||9999) ? `<div style="font-size:11px;color:var(--t3)">구간: ${fmtTime(startSec)} → ${endSec ? fmtTime(endSec) : '끝'}${endSec ? ' (' + (endSec-startSec) + '초)' : ''}${willLoop?' 🔁 반복':''}</div>` : ''}
           </div>` : `<div style="font-size:12px;color:var(--t3);padding:8px 0">URL을 입력하면 미리보기와 슬라이더가 표시됩니다</div>`}
         </div>
       </div>
@@ -1380,14 +1397,131 @@ function renderQList(arr, arrName, containerId, countId) {
       </div>
     </div>`;
   }).join("");
+
+  // 미리보기 플레이어 초기화 (비동기)
+  setTimeout(() => initPreviewPlayers(arr, arrName), 0);
 }
 
 // 슬라이더 미리보기 helper (전역)
 function fmtT(s) { const m=Math.floor(s/60); return `${m}:${String(s%60).padStart(2,'0')}`; }
-function updateYtPreview(frameId, ytId, startSec) {
-  const fr = document.getElementById(frameId);
-  if (!fr) return;
-  fr.src = `https://www.youtube-nocookie.com/embed/${ytId}?autoplay=1&start=${Math.floor(startSec)}&rel=0&modestbranding=1`;
+
+// 미리보기 플레이어 관리
+window._prevPlayers = {}; // key: `${arrName}-${i}`
+
+function getQArr(arrName) {
+  if (arrName === 'creatorQuestions') return creatorQuestions;
+  if (arrName === 'editQuestions') return editQuestions;
+  return null;
+}
+
+function setPrevStart(arrName, i, ytId, val) {
+  const arr = getQArr(arrName);
+  if (!arr) return;
+  const maxEnd = arr[i].ytDuration || 36000;
+  val = Math.max(0, Math.min(val, maxEnd - 1));
+  arr[i].startTime = val;
+  // end는 반드시 start보다 커야 함
+  if (arr[i].endTime > 0 && arr[i].endTime <= val) {
+    arr[i].endTime = Math.min(val + 1, maxEnd);
+    const er = document.getElementById(`yt-er-${arrName}-${i}`);
+    const en = document.getElementById(`yt-en-${arrName}-${i}`);
+    const et = document.getElementById(`yt-et-${arrName}-${i}`);
+    if (er) er.value = arr[i].endTime;
+    if (en) en.value = arr[i].endTime;
+    if (et) et.textContent = fmtT(arr[i].endTime);
+  }
+  const sr = document.getElementById(`yt-sr-${arrName}-${i}`);
+  const sn = document.getElementById(`yt-sn-${arrName}-${i}`);
+  const st = document.getElementById(`yt-st-${arrName}-${i}`);
+  if (sr) sr.value = val;
+  if (sn) sn.value = val;
+  if (st) st.textContent = fmtT(val);
+  // 미리보기 시크
+  const p = window._prevPlayers[`${arrName}-${i}`];
+  if (p && p.seekTo) p.seekTo(val, true);
+}
+
+function setPrevEnd(arrName, i, val) {
+  const arr = getQArr(arrName);
+  if (!arr) return;
+  const maxEnd = arr[i].ytDuration || 36000;
+  const minEnd = (arr[i].startTime || 0) + 1;
+  val = Math.max(minEnd, Math.min(val, maxEnd));
+  arr[i].endTime = val;
+  const er = document.getElementById(`yt-er-${arrName}-${i}`);
+  const en = document.getElementById(`yt-en-${arrName}-${i}`);
+  const et = document.getElementById(`yt-et-${arrName}-${i}`);
+  if (er) er.value = val;
+  if (en) en.value = val;
+  if (et) et.textContent = fmtT(val);
+}
+
+function initPreviewPlayers(arr, arrName) {
+  // 기존 플레이어 제거
+  Object.keys(window._prevPlayers).filter(k => k.startsWith(arrName + '-')).forEach(k => {
+    try { window._prevPlayers[k].destroy(); } catch(e) {}
+    delete window._prevPlayers[k];
+  });
+  if (typeof YT === 'undefined' || !YT.Player) return;
+  arr.forEach((q, i) => {
+    const ytId = getYouTubeId(q.mediaUrl || '');
+    if (!ytId) return;
+    const divId = `yt-prev-${arrName}-${i}`;
+    if (!document.getElementById(divId)) return;
+    const player = new YT.Player(divId, {
+      videoId: ytId,
+      playerVars: { rel: 0, modestbranding: 1, controls: 1, start: q.startTime || 0 },
+      events: {
+        onReady: (e) => {
+          const dur = Math.floor(e.target.getDuration());
+          if (dur > 0) {
+            arr[i].ytDuration = dur;
+            // 슬라이더 max 업데이트
+            ['yt-sr-','yt-er-','yt-sn-','yt-en-'].forEach(prefix => {
+              const el = document.getElementById(prefix + arrName + '-' + i);
+              if (el) el.max = dur;
+            });
+            const durEl = document.getElementById(`yt-dur-${arrName}-${i}`);
+            if (durEl) durEl.textContent = '영상 길이: ' + fmtT(dur);
+            // endTime이 0이면 영상 끝으로 설정
+            if (!arr[i].endTime) {
+              arr[i].endTime = dur;
+              const er = document.getElementById(`yt-er-${arrName}-${i}`);
+              const en = document.getElementById(`yt-en-${arrName}-${i}`);
+              const et = document.getElementById(`yt-et-${arrName}-${i}`);
+              if (er) er.value = dur;
+              if (en) en.value = dur;
+              if (et) et.textContent = fmtT(dur);
+            }
+          }
+        }
+      }
+    });
+    window._prevPlayers[`${arrName}-${i}`] = player;
+  });
+}
+
+function setPrevVol(arrName, i, val) {
+  // 배열에 저장 (맵 저장 시 포함됨)
+  const arr = getQArr(arrName);
+  if (arr && arr[i]) arr[i].volume = val;
+  // 플레이어 볼륨 설정
+  const p = window._prevPlayers[`${arrName}-${i}`];
+  if (p && p.setVolume) { p.setVolume(val); if (val > 0) p.unMute(); else p.mute(); }
+  // UI 업데이트
+  const icon = document.getElementById(`pv-icon-${arrName}-${i}`);
+  const pct  = document.getElementById(`pv-pct-${arrName}-${i}`);
+  if (icon) icon.textContent = val === 0 ? "🔇" : val < 40 ? "🔈" : val < 70 ? "🔉" : "🔊";
+  if (pct)  pct.textContent  = val + "%";
+}
+
+function togglePrevVol(arrName, i) {
+  const sl = document.getElementById(`pv-vol-${arrName}-${i}`);
+  if (!sl) return;
+  const cur = +sl.value;
+  const next = cur > 0 ? 0 : 100;
+  sl.value = next;
+  setPrevVol(arrName, i, next);
 }
 
 function renderCreatorQuestions() { renderQList(creatorQuestions,'creatorQuestions','cmQuestions','cmQCount'); }
@@ -1412,7 +1546,7 @@ async function submitMap() {
         category: cat, tags: [],
         questions: creatorQuestions.map(q => ({
           type: q.type, mediaUrl: q.mediaUrl || "", startTime: q.startTime || 0, endTime: q.endTime || 0,
-          timeLimit: q.timeLimit || 30,
+          timeLimit: q.timeLimit || 30, volume: q.volume !== undefined ? q.volume : 100,
           subQuestions: (q.subQuestions || []).map(sq => ({
             prompt: sq.prompt || "",
             answers: (sq.answers || "").split(",").map(a => a.trim()).filter(Boolean),
@@ -1516,10 +1650,14 @@ function setAuthUser(token, user) {
 
 function logout() {
   authToken = null; authUser = null;
+  myUser = { name: "", avatar: "🦊" };
   localStorage.removeItem("authToken");
   document.getElementById("sideAuthLoggedOut").style.display = "block";
   document.getElementById("sideAuthLoggedIn").style.display = "none";
-  document.getElementById("topAuthBtn").textContent = "👤 로그인";
+  const btn = document.getElementById("topAuthBtn");
+  btn.textContent = "👤 로그인";
+  btn.onclick = () => openAuthModal('login');
+  navigateTo("home");
 }
 
 // 페이지 로드 시 저장된 토큰 확인
@@ -1626,6 +1764,7 @@ async function openEditMap(mapId) {
         startTime: q.startTime || 0,
         endTime: q.endTime || 0,
         timeLimit: q.timeLimit || 30,
+        volume: q.volume !== undefined ? q.volume : 100,
         subQuestions: subs,
       };
     });
@@ -1659,7 +1798,7 @@ async function saveEditMap() {
         name, category: cat,
         icon: cat==="kpop"?"🎤":cat==="jpop"?"🎶":cat==="scene"?"🎬":cat==="character"?"💬":cat==="ost"?"🎧":"🎵",
         questions: editQuestions.map(q => ({
-          type: q.type, mediaUrl: q.mediaUrl||"", startTime: q.startTime||0, endTime: q.endTime||0, timeLimit: q.timeLimit||30,
+          type: q.type, mediaUrl: q.mediaUrl||"", startTime: q.startTime||0, endTime: q.endTime||0, timeLimit: q.timeLimit||30, volume: q.volume !== undefined ? q.volume : 100,
           subQuestions: (q.subQuestions||[]).map(sq => ({
             prompt: sq.prompt||"",
             answers: typeof sq.answers === 'string' ? sq.answers.split(",").map(a=>a.trim()).filter(Boolean) : (sq.answers||[]),
@@ -1797,6 +1936,10 @@ let _muted = false;
 let _prevVol = _volLevel;
 
 function onYouTubeIframeAPIReady() {
+  // 맵 제작/수정 미리보기 플레이어 초기화 (API 로드 시점)
+  initPreviewPlayers(creatorQuestions, 'creatorQuestions');
+  if (editQuestions.length) initPreviewPlayers(editQuestions, 'editQuestions');
+
   ytPlayer = new YT.Player("ytPlayer", {
     width: "1",
     height: "1",
@@ -1808,7 +1951,7 @@ function onYouTubeIframeAPIReady() {
         if (_muted) e.target.mute();
         if (ytPendingPlay) {
           const p = ytPendingPlay; ytPendingPlay = null;
-          _doPlay(p.ytId, p.startTime, p.endTime, p.timeLimit);
+          _doPlay(p.ytId, p.startTime, p.endTime, p.timeLimit, p.mapVol);
         }
       },
       onStateChange: (e) => {
@@ -1822,7 +1965,7 @@ function onYouTubeIframeAPIReady() {
   });
 }
 
-function playYouTube(ytId, startTime, endTime, timeLimit) {
+function playYouTube(ytId, startTime, endTime, timeLimit, mapVol) {
   clearInterval(_ytLoopInterval === "loop" ? null : _ytLoopInterval);
   _ytLoopInterval = null;
   if (ytPlayer) delete ytPlayer._loopInfo;
@@ -1832,18 +1975,20 @@ function playYouTube(ytId, startTime, endTime, timeLimit) {
     return;
   }
   if (!ytPlayerReady) {
-    ytPendingPlay = { ytId, startTime, endTime, timeLimit };
+    ytPendingPlay = { ytId, startTime, endTime, timeLimit, mapVol };
     return;
   }
-  _doPlay(ytId, startTime, endTime, timeLimit);
+  _doPlay(ytId, startTime, endTime, timeLimit, mapVol);
 }
 
-function _doPlay(ytId, startTime, endTime, timeLimit) {
+function _doPlay(ytId, startTime, endTime, timeLimit, mapVol) {
   const clipLen = (endTime > 0 && endTime > startTime) ? (endTime - startTime) : 0;
   const needsLoop = clipLen > 0 && clipLen < timeLimit;
 
   ytPlayer.loadVideoById({ videoId: ytId, startSeconds: startTime || 0, endSeconds: endTime || undefined });
-  ytPlayer.setVolume(_volLevel);
+  // 맵 제작자 설정 볼륨 × 사용자 볼륨 슬라이더 (두 볼륨의 곱)
+  const effectiveVol = _muted ? 0 : Math.round((mapVol !== undefined ? mapVol : 100) * _volLevel / 100);
+  ytPlayer.setVolume(effectiveVol);
   if (_muted) ytPlayer.mute(); else ytPlayer.unMute();
 
   if (needsLoop) {
@@ -1868,38 +2013,36 @@ function setVolume(val) {
     ytPlayer.setVolume(val);
     if (val === 0) ytPlayer.mute(); else ytPlayer.unMute();
   }
-  updateVolIcon();
+  syncVolUI();
 }
 
 function toggleMute() {
   if (_muted) {
-    // 음소거 해제
     const restoreVol = _prevVol > 0 ? _prevVol : 80;
     _muted = false;
     _volLevel = restoreVol;
-    document.getElementById("volSlider").value = restoreVol;
     if (ytPlayer && ytPlayerReady) { ytPlayer.unMute(); ytPlayer.setVolume(restoreVol); }
     localStorage.setItem("vol", restoreVol);
   } else {
-    // 음소거
     _prevVol = _volLevel;
     _muted = true;
     _volLevel = 0;
-    document.getElementById("volSlider").value = 0;
     if (ytPlayer && ytPlayerReady) ytPlayer.mute();
     localStorage.setItem("vol", 0);
   }
-  updateVolIcon();
+  syncVolUI();
 }
 
-function updateVolIcon() {
-  const icon = document.getElementById("volIcon");
-  if (!icon) return;
-  if (_volLevel === 0 || _muted) icon.textContent = "🔇";
-  else if (_volLevel < 40)       icon.textContent = "🔈";
-  else if (_volLevel < 70)       icon.textContent = "🔉";
-  else                            icon.textContent = "🔊";
+function syncVolUI() {
+  const v = _muted ? 0 : _volLevel;
+  ["volSlider","volSlider2"].forEach(id => { const el = document.getElementById(id); if (el) el.value = v; });
+  const pct = document.getElementById("volPct");
+  if (pct) pct.textContent = v + "%";
+  const icon = _volLevel === 0 || _muted ? "🔇" : _volLevel < 40 ? "🔈" : _volLevel < 70 ? "🔉" : "🔊";
+  ["volIcon","volIcon2"].forEach(id => { const el = document.getElementById(id); if (el) el.textContent = icon; });
 }
+
+function updateVolIcon() { syncVolUI(); }
 </script>
 <script src="https://www.youtube.com/iframe_api"></script>
 </body>
