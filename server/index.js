@@ -22,6 +22,7 @@ const JWT_SECRET     = process.env.JWT_SECRET;
 const MONGODB_URI    = process.env.MONGODB_URI || "mongodb://localhost:27017/matchu-online";
 const ALLOWED_ORIGIN = process.env.ALLOWED_ORIGIN || "http://localhost:3000";
 const IS_PROD        = process.env.NODE_ENV === "production";
+const ADMIN_USERNAME = process.env.ADMIN_USERNAME || "";
 
 if (!JWT_SECRET || JWT_SECRET.length < 32) {
   console.error("❌ JWT_SECRET이 설정되지 않았거나 너무 짧습니다 (32자 이상 필요). .env 파일을 확인하세요.");
@@ -121,6 +122,10 @@ const mapSchema = new mongoose.Schema({
   plays:          { type: Number, default: 0 },
   rating:         { type: Number, default: 0 },
   favoritesCount: { type: Number, default: 0 },
+  status:         { type: String, enum: ["draft","pending","approved","rejected"], default: "draft", index: true },
+  rejectReason:   { type: String, default: "" },
+  submittedAt:    { type: Date },
+  approvedAt:     { type: Date },
   questions: { type: [questionSchema], default: [] },
   createdAt: { type: Date, default: Date.now },
 });
@@ -226,6 +231,17 @@ function authMiddleware(req, res, next) {
   } catch { res.status(401).json({ error: "토큰이 유효하지 않습니다" }); }
 }
 
+function adminMiddleware(req, res, next) {
+  const token = req.cookies?.authToken || req.headers.authorization?.split(" ")[1];
+  if (!token) return res.status(401).json({ error: "로그인이 필요합니다" });
+  try {
+    req.user = jwt.verify(token, JWT_SECRET);
+    if (!ADMIN_USERNAME || req.user.username !== ADMIN_USERNAME)
+      return res.status(403).json({ error: "관리자 권한이 필요합니다" });
+    next();
+  } catch { res.status(401).json({ error: "토큰이 유효하지 않습니다" }); }
+}
+
 // ═══════════════════════════════════════════
 // REST API — Auth
 // ═══════════════════════════════════════════
@@ -245,7 +261,7 @@ app.post("/api/auth/register", async (req, res) => {
     const token = jwt.sign({ id: user._id.toString(), username: user.username, avatar: user.avatar }, JWT_SECRET, { expiresIn: "7d" });
     // 15. HttpOnly 쿠키 설정
     setTokenCookie(res, token);
-    res.json({ token, user: { id: user._id.toString(), username: user.username, avatar: user.avatar, favorites: user.favorites || [] } });
+    res.json({ token, user: { id: user._id.toString(), username: user.username, avatar: user.avatar, favorites: user.favorites || [], _isAdmin: ADMIN_USERNAME && user.username === ADMIN_USERNAME } });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
@@ -264,7 +280,7 @@ app.post("/api/auth/login", async (req, res) => {
     const token = jwt.sign({ id: user._id.toString(), username: user.username, avatar: user.avatar }, JWT_SECRET, { expiresIn: "7d" });
     // 15. HttpOnly 쿠키 설정
     setTokenCookie(res, token);
-    res.json({ token, user: { id: user._id.toString(), username: user.username, avatar: user.avatar, favorites: user.favorites || [] } });
+    res.json({ token, user: { id: user._id.toString(), username: user.username, avatar: user.avatar, favorites: user.favorites || [], _isAdmin: ADMIN_USERNAME && user.username === ADMIN_USERNAME } });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
@@ -272,7 +288,7 @@ app.get("/api/auth/me", authMiddleware, async (req, res) => {
   try {
     const user = await UserModel.findById(req.user.id, "username avatar createdAt favorites");
     if (!user) return res.status(404).json({ error: "사용자를 찾을 수 없습니다" });
-    res.json({ id: user._id.toString(), username: user.username, avatar: user.avatar, favorites: user.favorites || [] });
+    res.json({ id: user._id.toString(), username: user.username, avatar: user.avatar, favorites: user.favorites || [], _isAdmin: ADMIN_USERNAME && user.username === ADMIN_USERNAME });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
@@ -288,7 +304,7 @@ app.post("/api/auth/logout", (req, res) => {
 
 app.get("/api/maps", async (req, res) => {
   try {
-    const list = await MapModel.find({}, "mapId name author icon category tags plays rating favoritesCount questions").lean();
+    const list = await MapModel.find({ status: "approved" }, "mapId name author icon category tags plays rating favoritesCount questions").lean();
     res.json(list.map(m => ({ id: m.mapId, name: m.name, author: m.author, icon: m.icon, category: m.category, tags: m.tags, questionCount: m.questions.length, plays: m.plays, rating: m.rating, favoritesCount: m.favoritesCount || 0 })));
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
@@ -297,9 +313,9 @@ app.get("/api/maps/mine", authMiddleware, async (req, res) => {
   try {
     const list = await MapModel.find(
       { $or: [{ authorId: req.user.id }, { author: req.user.username }] },
-      "mapId name icon category tags plays rating author authorId createdAt questions"
+      "mapId name icon category tags plays rating author authorId createdAt questions status rejectReason submittedAt approvedAt"
     ).lean();
-    res.json(list.map(m => ({ id: m.mapId, name: m.name, icon: m.icon, category: m.category, tags: m.tags, questionCount: m.questions.length, plays: m.plays, rating: m.rating, author: m.author, createdAt: m.createdAt })));
+    res.json(list.map(m => ({ id: m.mapId, name: m.name, icon: m.icon, category: m.category, tags: m.tags, questionCount: m.questions.length, plays: m.plays, rating: m.rating, author: m.author, createdAt: m.createdAt, status: m.status || "draft", rejectReason: m.rejectReason || "", submittedAt: m.submittedAt, approvedAt: m.approvedAt })));
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
@@ -397,6 +413,85 @@ app.delete("/api/maps/:id", authMiddleware, async (req, res) => {
     if (!isOwner2) return res.status(403).json({ error: "삭제 권한이 없습니다" });
     await MapModel.deleteOne({ mapId: req.params.id });
     res.json({ message: "맵이 삭제되었습니다!" });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// ── 배포 신청 (draft / rejected → pending) ──
+app.post("/api/maps/:id/submit", authMiddleware, async (req, res) => {
+  try {
+    const m = await MapModel.findOne({ mapId: req.params.id });
+    if (!m) return res.status(404).json({ error: "맵을 찾을 수 없습니다" });
+    const isOwner = (m.authorId && m.authorId === req.user.id) || m.author === req.user.username;
+    if (!isOwner) return res.status(403).json({ error: "권한이 없습니다" });
+    if (m.status === "pending") return res.status(400).json({ error: "이미 검토 중입니다" });
+    if (m.status === "approved") return res.status(400).json({ error: "이미 배포된 맵입니다" });
+    if (m.questions.length === 0) return res.status(400).json({ error: "문제가 없습니다" });
+    m.status = "pending";
+    m.rejectReason = "";
+    m.submittedAt = new Date();
+    await m.save();
+    res.json({ ok: true, status: "pending" });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// ── 배포 신청 취소 (pending → draft) ──
+app.post("/api/maps/:id/cancel-submit", authMiddleware, async (req, res) => {
+  try {
+    const m = await MapModel.findOne({ mapId: req.params.id });
+    if (!m) return res.status(404).json({ error: "맵을 찾을 수 없습니다" });
+    const isOwner = (m.authorId && m.authorId === req.user.id) || m.author === req.user.username;
+    if (!isOwner) return res.status(403).json({ error: "권한이 없습니다" });
+    if (m.status !== "pending") return res.status(400).json({ error: "검토 중인 맵이 아닙니다" });
+    m.status = "draft";
+    await m.save();
+    res.json({ ok: true, status: "draft" });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// ═══════════════════════════════════════════
+// REST API — 관리자
+// ═══════════════════════════════════════════
+
+// 대기 중인 맵 목록
+app.get("/api/admin/maps", adminMiddleware, async (req, res) => {
+  try {
+    const list = await MapModel.find({ status: "pending" }, "mapId name author icon category tags plays questions submittedAt createdAt").lean();
+    res.json(list.map(m => ({ id: m.mapId, name: m.name, author: m.author, icon: m.icon, category: m.category, tags: m.tags, questionCount: m.questions.length, submittedAt: m.submittedAt, createdAt: m.createdAt })));
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// 맵 상세 조회 (관리자용 — 전체 문제 포함)
+app.get("/api/admin/maps/:id", adminMiddleware, async (req, res) => {
+  try {
+    const m = await MapModel.findOne({ mapId: req.params.id }).lean();
+    if (!m) return res.status(404).json({ error: "맵을 찾을 수 없습니다" });
+    res.json({ ...m, id: m.mapId });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// 승인
+app.post("/api/admin/maps/:id/approve", adminMiddleware, async (req, res) => {
+  try {
+    const m = await MapModel.findOne({ mapId: req.params.id });
+    if (!m) return res.status(404).json({ error: "맵을 찾을 수 없습니다" });
+    m.status = "approved";
+    m.rejectReason = "";
+    m.approvedAt = new Date();
+    await m.save();
+    res.json({ ok: true });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// 거절
+app.post("/api/admin/maps/:id/reject", adminMiddleware, async (req, res) => {
+  try {
+    const { reason } = req.body;
+    const m = await MapModel.findOne({ mapId: req.params.id });
+    if (!m) return res.status(404).json({ error: "맵을 찾을 수 없습니다" });
+    m.status = "rejected";
+    m.rejectReason = reason || "";
+    await m.save();
+    res.json({ ok: true });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 

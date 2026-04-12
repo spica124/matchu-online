@@ -429,7 +429,9 @@ body{font-family:'Nanum Gothic Rounded',sans-serif;background:var(--bg);color:va
         <button class="btn btn-g btn-full btn-sm" onclick="closeSidebar();openAuthModal('login')">로그인 / 회원가입</button>
       </div>
       <div id="sideAuthLoggedIn" style="display:none">
-    
+        <div id="sideAdminBtn" style="display:none;margin-bottom:6px">
+          <button class="btn btn-g btn-full btn-sm" onclick="navigateTo('admin');closeSidebar()" style="color:#f59e0b">관리자 패널</button>
+        </div>
         <button class="btn btn-g btn-full btn-sm" onclick="logout()" style="color:var(--acc)">로그아웃</button>
       </div>
     </div>
@@ -698,6 +700,16 @@ body{font-family:'Nanum Gothic Rounded',sans-serif;background:var(--bg);color:va
         <button class="btn btn-a btn-sm" onclick="navigateTo('create-map')">+ 새 맵 만들기</button>
       </div>
       <div id="dashMapList"><div class="empty">로딩 중...</div></div>
+    </div>
+
+    <!-- ════ ADMIN ════ -->
+    <div class="page hide" id="page-admin">
+      <div class="sec-h"><span class="sec-t">관리자 — 배포 심사</span></div>
+      <div style="margin-bottom:12px;display:flex;align-items:center;gap:10px">
+        <span style="font-size:13px;color:var(--t3)" id="adminSubtitle">검토 대기 중인 맵</span>
+        <button class="btn btn-g btn-sm" onclick="loadAdminPanel()">새로고침</button>
+      </div>
+      <div id="adminMapList"><div class="empty">로딩 중...</div></div>
     </div>
 
     <!-- ════ RANKING ════ -->
@@ -1237,6 +1249,7 @@ function navigateTo(page) {
   if (page === "home") { socket.emit("getRooms"); socket.emit("getMaps"); }
   if (page === "ranking") { loadRanking(); }
   if (page === "dashboard") { loadDashboard(); }
+  if (page === "admin") { loadAdminPanel(); }
   if (page === "browse" || page === "popular") {
     document.getElementById("page-browse").classList.remove("hide");
     socket.emit("getMaps");
@@ -2054,6 +2067,8 @@ function setAuthUser(token, user) {
   if (g("sideAuthLoggedIn"))  g("sideAuthLoggedIn").style.display  = "block";
   if (g("sideAuthName"))      g("sideAuthName").textContent      = `${user.avatar} ${user.username}`;
   if (g("topAuthBtn"))        g("topAuthBtn").textContent        = `${user.avatar} ${user.username}`;
+  // 관리자 버튼 표시 여부 — 서버에서 ADMIN_USERNAME과 일치하면 표시
+  if (g("sideAdminBtn")) g("sideAdminBtn").style.display = user._isAdmin ? "block" : "none";
   // 토큰 갱신 후 소켓 재연결 (JWT 미들웨어가 새 토큰으로 인증)
   socket.auth.token = token;
   socket.disconnect().connect();
@@ -2196,17 +2211,43 @@ async function loadDashboard() {
     }
     const svgPlay = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>`;
     const svgDoc  = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>`;
+
+    function statusBadge(m) {
+      const s = m.status || "draft";
+      const map = {
+        draft:    { label: "비공개",   color: "var(--t3)",  bg: "var(--bg5)" },
+        pending:  { label: "검토 중",  color: "#f59e0b",    bg: "rgba(245,158,11,.12)" },
+        approved: { label: "배포됨",   color: "var(--grn)", bg: "rgba(34,197,94,.12)" },
+        rejected: { label: "거절됨",   color: "var(--acc)", bg: "var(--acc-s)" },
+      };
+      const c = map[s] || map.draft;
+      return `<span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:99px;background:${c.bg};color:${c.color}">${c.label}</span>`;
+    }
+
+    function submitBtn(m) {
+      const s = m.status || "draft";
+      if (s === "approved") return "";
+      if (s === "pending") return `<button class="btn btn-g btn-sm" onclick="cancelSubmitMap('${m.id}')">신청 취소</button>`;
+      // draft or rejected
+      const label = s === "rejected" ? "재신청" : "배포하기";
+      return `<button class="btn btn-g btn-sm" style="color:var(--grn);border-color:rgba(34,197,94,.3)" onclick="submitMap('${m.id}')">${label}</button>`;
+    }
+
     el.innerHTML = data.map(m => `
       <div style="display:flex;align-items:center;gap:14px;padding:14px 18px;background:var(--bg3);border:1px solid var(--brd);border-radius:var(--r);margin-bottom:8px;transition:border-color .15s" onmouseover="this.style.borderColor='var(--brd2)'" onmouseout="this.style.borderColor='var(--brd)'">
         <div style="flex:1;min-width:0">
-          <div style="font-weight:700;font-size:14px;margin-bottom:3px">${esc(m.name)}</div>
-          <div style="font-size:12px;color:var(--t3);display:flex;gap:12px;align-items:center">
+          <div style="font-weight:700;font-size:14px;margin-bottom:4px;display:flex;align-items:center;gap:8px">
+            ${esc(m.name)} ${statusBadge(m)}
+          </div>
+          <div style="font-size:12px;color:var(--t3);display:flex;gap:12px;align-items:center;flex-wrap:wrap">
             <span style="display:flex;align-items:center;gap:4px">${svgDoc} ${m.questionCount}문제</span>
             <span style="display:flex;align-items:center;gap:4px">${svgPlay} ${m.plays}회</span>
             <span>${new Date(m.createdAt).toLocaleDateString('ko-KR')}</span>
           </div>
+          ${m.status === "rejected" && m.rejectReason ? `<div style="font-size:11px;color:var(--acc);margin-top:4px">거절 사유: ${esc(m.rejectReason)}</div>` : ""}
         </div>
-        <div style="display:flex;gap:8px;flex-shrink:0">
+        <div style="display:flex;gap:8px;flex-shrink:0;flex-wrap:wrap;justify-content:flex-end">
+          ${submitBtn(m)}
           <button class="btn btn-g btn-sm" onclick="openCreateWithMap('${m.id}','${esc(m.name)}')">방 만들기</button>
           <button class="btn btn-g btn-sm" onclick="openEditMap('${m.id}')">수정</button>
           <button class="btn btn-sm" style="background:var(--acc-s);color:var(--acc);border:1px solid rgba(232,64,94,.3)" onclick="deleteMap('${m.id}','${esc(m.name)}')">삭제</button>
@@ -2228,6 +2269,84 @@ async function deleteMap(mapId, mapName) {
     if (ok) { socket.emit("getMaps"); loadDashboard(); }
     else alert(data.error || "삭제 실패");
   } catch(e) { alert("삭제 실패: " + e.message); }
+}
+
+async function submitMap(mapId) {
+  if (!confirm("이 맵을 배포 신청하시겠습니까?\n관리자가 검토 후 승인하면 맵 찾기에 공개됩니다.")) return;
+  try {
+    const { ok, data } = await fetchJSON(`/api/maps/${mapId}/submit`, {
+      method: "POST", headers: { "Authorization": `Bearer ${authToken}` },
+    });
+    if (ok) { showToast("배포 신청이 완료되었습니다!"); loadDashboard(); }
+    else alert(data.error || "신청 실패");
+  } catch(e) { alert("신청 실패: " + e.message); }
+}
+
+async function cancelSubmitMap(mapId) {
+  if (!confirm("배포 신청을 취소하시겠습니까?")) return;
+  try {
+    const { ok, data } = await fetchJSON(`/api/maps/${mapId}/cancel-submit`, {
+      method: "POST", headers: { "Authorization": `Bearer ${authToken}` },
+    });
+    if (ok) { showToast("신청이 취소되었습니다."); loadDashboard(); }
+    else alert(data.error || "취소 실패");
+  } catch(e) { alert("취소 실패: " + e.message); }
+}
+
+// ── 관리자 패널 ──
+async function loadAdminPanel() {
+  const el = document.getElementById("adminMapList");
+  const sub = document.getElementById("adminSubtitle");
+  if (!authToken) return;
+  el.innerHTML = '<div class="empty">로딩 중...</div>';
+  try {
+    const { ok, data } = await fetchJSON("/api/admin/maps", { headers: { "Authorization": `Bearer ${authToken}` } });
+    if (!ok) { el.innerHTML = `<div class="empty">${data.error || '권한 없음'}</div>`; return; }
+    sub.textContent = `검토 대기 중인 맵 ${data.length}개`;
+    if (!data.length) { el.innerHTML = '<div class="empty">검토 대기 중인 맵이 없습니다.</div>'; return; }
+    el.innerHTML = data.map(m => `
+      <div style="background:var(--bg3);border:1px solid var(--brd);border-radius:var(--r);margin-bottom:12px;overflow:hidden">
+        <div style="padding:14px 18px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+          <div style="flex:1;min-width:0">
+            <div style="font-weight:700;font-size:14px;margin-bottom:3px">${esc(m.name)}</div>
+            <div style="font-size:12px;color:var(--t3);display:flex;gap:12px;flex-wrap:wrap">
+              <span>제작자: ${esc(m.author)}</span>
+              <span>${m.questionCount}문제</span>
+              <span>신청: ${m.submittedAt ? new Date(m.submittedAt).toLocaleDateString('ko-KR') : '-'}</span>
+            </div>
+          </div>
+          <div style="display:flex;gap:8px;flex-shrink:0">
+            <button class="btn btn-sm" style="background:rgba(34,197,94,.12);color:var(--grn);border:1px solid rgba(34,197,94,.3)" onclick="adminApprove('${m.id}','${esc(m.name)}')">승인</button>
+            <button class="btn btn-sm" style="background:var(--acc-s);color:var(--acc);border:1px solid rgba(232,64,94,.3)" onclick="adminReject('${m.id}','${esc(m.name)}')">거절</button>
+          </div>
+        </div>
+        <div style="padding:0 18px 12px;font-size:12px;color:var(--t3)">
+          카테고리: ${esc(m.category)} · 태그: ${m.tags?.join(', ') || '없음'}
+        </div>
+      </div>
+    `).join("");
+  } catch(e) { el.innerHTML = '<div class="empty">불러오기 실패.</div>'; }
+}
+
+async function adminApprove(mapId, mapName) {
+  if (!confirm(`"${mapName}" 맵을 승인하시겠습니까?\n맵 찾기에 공개됩니다.`)) return;
+  const { ok, data } = await fetchJSON(`/api/admin/maps/${mapId}/approve`, {
+    method: "POST", headers: { "Authorization": `Bearer ${authToken}` },
+  });
+  if (ok) { showToast("승인되었습니다!"); loadAdminPanel(); }
+  else alert(data.error || "승인 실패");
+}
+
+async function adminReject(mapId, mapName) {
+  const reason = prompt(`"${mapName}" 맵을 거절하시겠습니까?\n거절 사유를 입력하세요 (선택):`);
+  if (reason === null) return; // 취소
+  const { ok, data } = await fetchJSON(`/api/admin/maps/${mapId}/reject`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "Authorization": `Bearer ${authToken}` },
+    body: JSON.stringify({ reason }),
+  });
+  if (ok) { showToast("거절되었습니다."); loadAdminPanel(); }
+  else alert(data.error || "거절 실패");
 }
 
 // ── 맵 수정 ──
@@ -2258,7 +2377,7 @@ async function openEditMap(mapId) {
           }))
         : [{ prompt: q.hint || "", answers: (q.answers || []).join(", "), chosungHint: !!q.chosungHint, hintRevealTime: q.hintRevealTime || 0, showAnswer: true }];
       return {
-        type: q.type || "audio",
+        type: "audio",
         mediaUrl: q.mediaUrl || "",
         startTime: q.startTime || 0,
         endTime: q.endTime || 0,
