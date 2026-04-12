@@ -433,7 +433,12 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--t1);
         </div>
         <button class="btn btn-a" onclick="navigateTo('create-map')">맵 제작하기 ✏️</button>
       </div>
-      <div class="sec-h"><span>🎮</span><span class="sec-t">열린 배틀룸</span></div>
+      <div class="sec-h" style="flex-wrap:wrap;gap:8px">
+        <div style="display:flex;align-items:center;gap:6px"><span>🎮</span><span class="sec-t">열린 배틀룸</span></div>
+        <input id="roomSearch" class="inp" placeholder="🔍 방 제목 검색..." autocomplete="off"
+          style="flex:1;min-width:140px;max-width:240px;padding:5px 10px;font-size:13px"
+          oninput="filterRoomList(this.value)">
+      </div>
       <div class="r-list" id="roomList">
         <div class="empty">아직 열린 방이 없습니다. 첫 번째 방을 만들어보세요!</div>
       </div>
@@ -505,13 +510,6 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--t1);
           <div class="gv-topbar">
             <span class="gv-songcount" id="gameQC">남은 곡 ( 1 / 1 )</span>
             <div class="t-track" style="flex:1;margin:0 16px"><div class="t-fill" id="timerFill" style="width:100%;background:var(--grn)"></div></div>
-            <!-- 볼륨 컨트롤 -->
-            <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
-              <span id="volIcon" style="font-size:15px;cursor:pointer;user-select:none" onclick="toggleMute()" title="음소거">🔊</span>
-              <input type="range" id="volSlider" min="0" max="100" value="100" step="1"
-                style="width:72px;accent-color:var(--acc);cursor:pointer"
-                oninput="setVolume(+this.value)">
-            </div>
             <button class="btn btn-g btn-sm" onclick="leaveGameConfirm()" style="color:var(--acc);border-color:var(--acc);flex-shrink:0">🚪 나가기</button>
           </div>
 
@@ -521,7 +519,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--t1);
             <div class="gv-instruction" id="gamePrompt">음악을 듣고 답을 입력하세요</div>
             <div class="gv-timer" id="gameTimer">- 30초 -</div>
             <div class="gv-hint" id="gameHint" style="display:none"></div>
-            <div id="chosungHintArea" style="display:none;font-size:18px;font-weight:800;font-family:'JetBrains Mono',monospace;color:var(--ylw);letter-spacing:6px"></div>
+            <div id="chosungHintArea" style="display:none;font-size:18px;font-weight:800;font-family:'Noto Sans KR',sans-serif;color:var(--ylw);letter-spacing:4px"></div>
 
             <!-- 소문제 목록 + 정답자 -->
             <div class="gv-subq-list" id="subqList"></div>
@@ -531,6 +529,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--t1);
               <button class="btn btn-g btn-sm" id="skipBtn" onclick="voteSkip()">
                 ⏭ 스킵 <span id="skipCount" style="font-family:'JetBrains Mono',monospace;font-size:11px">0/0</span>
               </button>
+              <span style="font-size:11px;color:var(--t3)">K키로 스킵</span>
               <div style="display:flex;align-items:center;gap:6px">
                 <span id="volIcon2" style="font-size:15px;cursor:pointer;user-select:none" onclick="toggleMute()" title="음소거">🔊</span>
                 <input type="range" id="volSlider2" min="0" max="100" value="100" step="1"
@@ -723,13 +722,38 @@ const COLORS = ["#FF6B6B","#4ECDC4","#45B7D1","#96CEB4","#FFEAA7","#DDA0DD","#98
 
 window.addEventListener("DOMContentLoaded", () => {
   // 볼륨 슬라이더 초기값
-  const sl = document.getElementById("volSlider");
-  if (sl) { sl.value = _volLevel; }
+  const sl2 = document.getElementById("volSlider2");
+  if (sl2) { sl2.value = _volLevel; }
   updateVolIcon();
 
-  document.getElementById("chatInput").addEventListener("keydown", e => { if (e.key === "Enter") sendChatOrAnswer(); });
-  // K키 스킵 단축키 (채팅 입력 중 제외)
+  document.getElementById("chatInput").addEventListener("keydown", e => {
+    if (e.key === "Enter") {
+      const val = document.getElementById("chatInput").value.trim();
+      if (val) {
+        sendChatOrAnswer();
+      } else {
+        // 입력창이 비어있으면 엔터로 포커스 해제 (K키 스킵 사용 가능)
+        e.stopPropagation();
+        document.getElementById("chatInput").blur();
+      }
+    }
+  });
+  // K키 스킵 단축키 / 엔터키로 채팅창 포커스
   document.addEventListener("keydown", e => {
+    // 엔터: 게임 중이고 채팅 입력창이 포커스가 아닐 때 → 채팅창으로 포커스
+    if (e.key === "Enter") {
+      const focused = document.activeElement;
+      const chatInput = document.getElementById("chatInput");
+      if (focused !== chatInput && currentRoomId) {
+        const gamePage = document.getElementById("page-game");
+        if (gamePage && !gamePage.classList.contains("hide")) {
+          e.preventDefault();
+          chatInput.focus();
+        }
+      }
+      return;
+    }
+    // K키: 채팅 입력 중 제외
     if (e.key === "k" || e.key === "K") {
       const focused = document.activeElement;
       if (focused && (focused.tagName === "INPUT" || focused.tagName === "TEXTAREA")) return;
@@ -826,6 +850,7 @@ socket.on("question", ({ index, total, type, hint, timeLimit, mediaUrl, startTim
   gameState.subQPrompts = {};
   gameState.myAnsweredSubQs = {};
   gameState.chosungHints = {};
+  gameState.revealAnswers = {};
   gameState.subQCounts = {};
   gameState.subQuestions = subQuestions || [];
   gameState.totalSubQ = (subQuestions || []).length || 1;
@@ -912,24 +937,18 @@ socket.on("wrongAnswer", ({ text }) => {
 });
 
 socket.on("timeUp", ({ answer, revealList, scores }) => {
-  // revealList: [{ prompt, answer, answered }] — 새 포맷
-  // answer: 하위 호환
+  // revealList: [{ prompt, answer, answered }]
+  gameState.revealAnswers = {};
   if (revealList) {
-    const unanswered = revealList.filter(r => !r.answered);
-    if (unanswered.length > 0) {
-      const feedbackParts = unanswered.map(r => r.answer != null ? `${r.prompt}: ${r.answer}` : `${r.prompt}: 비공개`);
-      showFeedback("no", `시간 초과! ${feedbackParts.join(" / ")}`);
-      // 미정답 서브퀴즈 정답자 표시에 반영
-      unanswered.forEach(r => {
-        const idx = revealList.indexOf(r);
-        if (!gameState.subQAnswerers) gameState.subQAnswerers = {};
-        const label = r.answer != null ? `정답: ${r.answer}` : "비공개";
-        if (!gameState.subQAnswerers[idx]) gameState.subQAnswerers[idx] = [{ name: label, avatar: "⏰" }];
-      });
-      renderSubQList();
-    }
+    revealList.forEach((r, idx) => {
+      if (!r.answered && r.answer != null) {
+        gameState.revealAnswers[idx] = r.answer;
+      }
+    });
+    renderSubQList();
   } else if (answer) {
-    showFeedback("no", `시간 초과! 정답: ${answer}`);
+    gameState.revealAnswers[0] = answer;
+    renderSubQList();
   }
   renderScoreboard(scores);
 });
@@ -1087,10 +1106,22 @@ function sendChatOrAnswer() {
 // Render Functions
 // ═══════════════════════════════════════════
 
+let _allRooms = [];
+
 function renderRoomList(rooms) {
+  _allRooms = rooms;
+  const q = (document.getElementById("roomSearch")?.value || "").trim();
+  filterRoomList(q);
+}
+
+function filterRoomList(query) {
   const el = document.getElementById("roomList");
+  const q = query.trim().toLowerCase();
+  const rooms = q ? _allRooms.filter(r => r.name.toLowerCase().includes(q)) : _allRooms;
   if (!rooms.length) {
-    el.innerHTML = '<div class="empty">아직 열린 방이 없습니다. 첫 번째 방을 만들어보세요!</div>';
+    el.innerHTML = q
+      ? `<div class="empty">"${esc(query)}"에 해당하는 방이 없습니다.</div>`
+      : '<div class="empty">아직 열린 방이 없습니다. 첫 번째 방을 만들어보세요!</div>';
     return;
   }
   el.innerHTML = rooms.map(r => `
@@ -1192,6 +1223,7 @@ function renderSubQList() {
   const answerers = gameState.subQAnswerers || {};
   const hints = gameState.chosungHints || {};
   const counts = gameState.subQCounts || {};
+  const reveals = gameState.revealAnswers || {};
   const totalSubQ = gameState.totalSubQ || 1;
   const totalPlayers = gameState.playerCount || 1;
 
@@ -1203,13 +1235,16 @@ function renderSubQList() {
     const doneCount = cnt ? cnt.count : ans.length;
     const allDone = doneCount >= totalPlayers;
     const names = ans.map(p => `<span class="name">${p.avatar} ${p.name}</span>`).join(", ");
-    const chHint = hints[i] ? `<span style="font-size:14px;color:var(--ylw);font-family:'JetBrains Mono',monospace;letter-spacing:4px;margin-left:8px">${hints[i]}</span>` : "";
+    const chHint = hints[i] ? `<span style="font-size:14px;color:var(--ylw);font-family:'Noto Sans KR',sans-serif;letter-spacing:2px;margin-left:8px">${hints[i]}</span>` : "";
+    // 시간초과 정답 인라인 표시
+    const revealAns = reveals[i] != null
+      ? `<span style="color:var(--ylw);font-weight:700;margin-left:8px">${esc(reveals[i])}</span>` : "";
     const countBadge = totalPlayers > 1
       ? `<span style="font-size:11px;font-family:'JetBrains Mono',monospace;color:${allDone?'var(--grn)':'var(--t3)'};margin-left:auto;white-space:nowrap">${doneCount}/${totalPlayers}명</span>`
       : "";
     html += `<div class="gv-subq-row${allDone ? " done-row" : ""}">
       <span class="gv-subq-label${allDone ? " done" : ""}">${allDone ? "✅" : "▶"} ${label} :</span>
-      <span class="gv-subq-answerers">${names}${chHint}</span>
+      <span class="gv-subq-answerers">${names}${chHint}${revealAns}</span>
       ${countBadge}
     </div>`;
   }
@@ -1241,29 +1276,42 @@ function addChat(type, text, name) {
 
 function showResults(scores) {
   const sorted = [...scores].sort((a,b) => b.score - a.score);
-  const medals = ["🥈","🥇","🥉"];
-  const podiumOrder = [sorted[1], sorted[0], sorted[2]].filter(Boolean);
-  const podiumClasses = ["pod-2", "pod-1", "pod-3"];
+  // 포디움: 실제 등수(rank)를 각 플레이어에 붙인 후 [2등, 1등, 3등] 순으로 배치
+  const rankMedals = ["🥇","🥈","🥉"];
+  const rankClasses = ["pod-1","pod-2","pod-3"];
+  const withRank = sorted.map((p, i) => ({ ...p, rank: i }));
+  // 1명일 때: 1등만 중앙에, 2명일 때: 2등 왼쪽 / 1등 오른쪽
+  const podiumOrder = sorted.length === 1
+    ? [withRank[0]]
+    : [withRank[1], withRank[0], withRank[2]].filter(Boolean);
 
-  document.getElementById("podiumArea").innerHTML = podiumOrder.map((p, i) => `
+  document.getElementById("podiumArea").innerHTML = podiumOrder.map(p => `
     <div class="pod-col">
       <div class="pod-emoji">${p.avatar}</div>
       <div class="pod-nm">${esc(p.name)}</div>
       <div class="pod-pts">${p.score.toLocaleString()}</div>
-      <div class="pod-bar ${podiumClasses[i]}"><span style="font-size:22px">${medals[i]}</span></div>
+      <div class="pod-bar ${rankClasses[p.rank]}"><span style="font-size:22px">${rankMedals[p.rank]}</span></div>
     </div>
   `).join("");
 
+  const myRank = sorted.findIndex(s => s.name === myUser.name);
+  const rankLabel = myRank === 0 ? "🥇 1등!" : myRank === 1 ? "🥈 2등!" : myRank === 2 ? "🥉 3등!" : myRank >= 0 ? `${myRank+1}등` : null;
+  const rankBanner = rankLabel ? `<div style="text-align:center;font-size:20px;font-weight:800;color:var(--ylw);margin-bottom:12px">내 등수: ${rankLabel}</div>` : "";
+
   document.getElementById("finalScores").innerHTML = `
     <div class="sc-title">최종 순위</div>
-    ${sorted.map((s, i) => `
-      <div class="sc-row ${s.name === myUser.name ? 'me' : ''}">
-        <span class="sc-rank ${i===0?'sc-r1':i===1?'sc-r2':i===2?'sc-r3':''}">#${i+1}</span>
+    ${rankBanner}
+    ${sorted.map((s, i) => {
+      const rankIcon = i===0?'👑':i===1?'🥈':i===2?'🥉':`${i+1}`;
+      const isMe = s.name === myUser.name;
+      return `
+      <div class="sc-row ${isMe ? 'me' : ''}">
+        <span class="sc-rank ${i===0?'sc-r1':i===1?'sc-r2':i===2?'sc-r3':''}" style="min-width:32px;text-align:center">${rankIcon}</span>
         <div class="sc-av" style="background:${COLORS[i%COLORS.length]}22">${s.avatar}</div>
-        <span class="sc-nm">${esc(s.name)}</span>
-        <span class="sc-pts">${s.score.toLocaleString()}</span>
-      </div>
-    `).join("")}
+        <span class="sc-nm">${esc(s.name)}${isMe ? ' <span style="font-size:11px;color:var(--acc)">(나)</span>' : ''}</span>
+        <span class="sc-pts">${s.score.toLocaleString()}점</span>
+      </div>`;
+    }).join("")}
   `;
 }
 
@@ -1665,16 +1713,25 @@ function logout() {
   authToken = null; authUser = null;
   myUser = { name: "", avatar: "🦊" };
   localStorage.removeItem("authToken");
+  // 사이드바 UI 초기화
   document.getElementById("sideAuthLoggedOut").style.display = "block";
   document.getElementById("sideAuthLoggedIn").style.display = "none";
+  document.getElementById("sideName").textContent = "Player";
+  document.getElementById("sideAvatar").textContent = "🦊";
   const btn = document.getElementById("topAuthBtn");
-  btn.textContent = "👤 로그인";
-  btn.onclick = () => openAuthModal('login');
-  // 모든 모달 닫기
-  document.querySelectorAll(".modal-bg").forEach(m => { if (m.id !== "nameModal") m.classList.add("hide"); });
-  // 로그인 화면으로 즉시 이동
-  document.getElementById("nameModal").classList.remove("hide");
-  closeSidebar();
+  if (btn) { btn.textContent = "👤 로그인"; btn.onclick = () => openAuthModal('login'); }
+  // 사이드바 닫고 로그인 모달 표시
+  document.getElementById("sidebar").classList.remove("open");
+  document.getElementById("sideOverlay").classList.remove("show");
+  // 모든 모달 숨기고 authModal만 표시
+  document.querySelectorAll(".modal-bg").forEach(m => m.classList.add("hide"));
+  _authTab = "login";
+  switchAuthTab("login");
+  document.getElementById("authUsername").value = "";
+  document.getElementById("authPassword").value = "";
+  document.getElementById("authError").style.display = "none";
+  document.getElementById("authModal").classList.remove("hide");
+  setTimeout(() => document.getElementById("authUsername").focus(), 50);
 }
 
 // 페이지 로드 시 저장된 토큰 확인
