@@ -313,10 +313,26 @@ app.get("/api/maps/mine", authMiddleware, async (req, res) => {
   try {
     const list = await MapModel.find(
       { $or: [{ authorId: req.user.id }, { author: req.user.username }] }
-      // 프로젝션 제거 — 전체 필드 조회로 mapId 누락 방지
     ).lean();
-    console.log(`[mine] user=${req.user.username} maps=${list.length} firstMapId=${list[0]?.mapId}`);
-    res.json(list.map(m => ({ id: m.mapId, mapId: m.mapId, name: m.name, icon: m.icon, category: m.category, tags: m.tags, questionCount: (m.questions||[]).length, plays: m.plays, rating: m.rating, author: m.author, createdAt: m.createdAt, status: m.status || "draft", rejectReason: m.rejectReason || "", submittedAt: m.submittedAt, approvedAt: m.approvedAt })));
+    res.set("Cache-Control", "no-store");
+    res.json(list.map(m => ({
+      id:           m.mapId || m._id.toString(),
+      mapId:        m.mapId || m._id.toString(),
+      _id:          m._id.toString(),
+      name:         m.name,
+      icon:         m.icon,
+      category:     m.category,
+      tags:         m.tags,
+      questionCount: (m.questions || []).length,
+      plays:        m.plays,
+      rating:       m.rating,
+      author:       m.author,
+      createdAt:    m.createdAt,
+      status:       m.status || "draft",
+      rejectReason: m.rejectReason || "",
+      submittedAt:  m.submittedAt,
+      approvedAt:   m.approvedAt,
+    })));
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
@@ -420,12 +436,13 @@ app.delete("/api/maps/:id", authMiddleware, async (req, res) => {
 // ── 배포 신청 (draft / rejected → pending) ──
 app.post("/api/maps/:id/submit", authMiddleware, async (req, res) => {
   try {
-    console.log(`[배포신청] mapId="${req.params.id}" user="${req.user?.username}"`);
-    const m = await MapModel.findOne({ mapId: req.params.id });
-    if (!m) {
-      console.log(`[배포신청] 맵 없음: mapId="${req.params.id}"`);
-      return res.status(404).json({ error: "맵을 찾을 수 없습니다" });
-    }
+    const rid = req.params.id;
+    const m = await MapModel.findOne(
+      mongoose.Types.ObjectId.isValid(rid)
+        ? { $or: [{ mapId: rid }, { _id: rid }] }
+        : { mapId: rid }
+    );
+    if (!m) return res.status(404).json({ error: "맵을 찾을 수 없습니다" });
     const isOwner = (m.authorId && m.authorId === req.user.id) || m.author === req.user.username;
     if (!isOwner) return res.status(403).json({ error: "권한이 없습니다" });
     if (m.status === "pending") return res.status(400).json({ error: "이미 검토 중입니다" });
@@ -442,7 +459,12 @@ app.post("/api/maps/:id/submit", authMiddleware, async (req, res) => {
 // ── 배포 신청 취소 (pending → draft) ──
 app.post("/api/maps/:id/cancel-submit", authMiddleware, async (req, res) => {
   try {
-    const m = await MapModel.findOne({ mapId: req.params.id });
+    const rid = req.params.id;
+    const m = await MapModel.findOne(
+      mongoose.Types.ObjectId.isValid(rid)
+        ? { $or: [{ mapId: rid }, { _id: rid }] }
+        : { mapId: rid }
+    );
     if (!m) return res.status(404).json({ error: "맵을 찾을 수 없습니다" });
     const isOwner = (m.authorId && m.authorId === req.user.id) || m.author === req.user.username;
     if (!isOwner) return res.status(403).json({ error: "권한이 없습니다" });

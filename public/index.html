@@ -840,6 +840,12 @@ body{font-family:'Nanum Gothic Rounded',sans-serif;background:var(--bg);color:va
 </div>
 
 <script>
+// 서비스 워커 캐시 전체 삭제 (API 응답 캐싱 방지)
+if ("serviceWorker" in navigator) {
+  caches.keys().then(keys => keys.forEach(k => caches.delete(k)));
+  navigator.serviceWorker.getRegistrations().then(regs => regs.forEach(r => r.unregister()));
+}
+
 // ═══════════════════════════════════════════
 // Client State & Socket
 // ═══════════════════════════════════════════
@@ -2207,10 +2213,10 @@ async function loadDashboard() {
   }
   el.innerHTML = '<div class="empty">로딩 중...</div>';
   try {
-    const { ok, data } = await fetchJSON(`/api/maps/mine`, { headers: { "Authorization": `Bearer ${authToken}` } });
+    const { ok, data } = await fetchJSON(`/api/maps/mine?_=${Date.now()}`, {
+      headers: { "Authorization": `Bearer ${authToken}`, "Cache-Control": "no-cache" },
+    });
     if (!ok) { el.innerHTML = `<div class="empty">${data.error||'불러오기 실패'}</div>`; return; }
-    // 디버그: 실제 서버 응답 구조 확인
-    if (data.length > 0) console.log("[Dashboard] 첫 번째 맵 데이터:", JSON.stringify(data[0]));
     document.getElementById("dashSubtitle").textContent = `총 ${data.length}개의 맵을 만들었습니다`;
     if (!data.length) {
       el.innerHTML = '<div class="empty">아직 만든 맵이 없습니다. 맵 제작 메뉴에서 첫 맵을 만들어보세요!</div>';
@@ -2227,7 +2233,7 @@ async function loadDashboard() {
     };
 
     el.innerHTML = data.map(mapItem => {
-      const mid   = mapItem.id || mapItem.mapId || "";
+      const mid   = mapItem.id || mapItem.mapId || mapItem._id || "";
       const mname = esc(mapItem.name || "");
       const st    = mapItem.status || "draft";
       const bc    = STATUS_BADGE[st] || STATUS_BADGE.draft;
