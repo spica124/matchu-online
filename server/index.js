@@ -312,10 +312,11 @@ app.get("/api/maps", async (req, res) => {
 app.get("/api/maps/mine", authMiddleware, async (req, res) => {
   try {
     const list = await MapModel.find(
-      { $or: [{ authorId: req.user.id }, { author: req.user.username }] },
-      "mapId name icon category tags plays rating author authorId createdAt questions status rejectReason submittedAt approvedAt"
+      { $or: [{ authorId: req.user.id }, { author: req.user.username }] }
+      // 프로젝션 제거 — 전체 필드 조회로 mapId 누락 방지
     ).lean();
-    res.json(list.map(m => ({ id: m.mapId, mapId: m.mapId, name: m.name, icon: m.icon, category: m.category, tags: m.tags, questionCount: m.questions.length, plays: m.plays, rating: m.rating, author: m.author, createdAt: m.createdAt, status: m.status || "draft", rejectReason: m.rejectReason || "", submittedAt: m.submittedAt, approvedAt: m.approvedAt })));
+    console.log(`[mine] user=${req.user.username} maps=${list.length} firstMapId=${list[0]?.mapId}`);
+    res.json(list.map(m => ({ id: m.mapId, mapId: m.mapId, name: m.name, icon: m.icon, category: m.category, tags: m.tags, questionCount: (m.questions||[]).length, plays: m.plays, rating: m.rating, author: m.author, createdAt: m.createdAt, status: m.status || "draft", rejectReason: m.rejectReason || "", submittedAt: m.submittedAt, approvedAt: m.approvedAt })));
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 

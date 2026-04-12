@@ -2209,6 +2209,8 @@ async function loadDashboard() {
   try {
     const { ok, data } = await fetchJSON(`/api/maps/mine`, { headers: { "Authorization": `Bearer ${authToken}` } });
     if (!ok) { el.innerHTML = `<div class="empty">${data.error||'불러오기 실패'}</div>`; return; }
+    // 디버그: 실제 서버 응답 구조 확인
+    if (data.length > 0) console.log("[Dashboard] 첫 번째 맵 데이터:", JSON.stringify(data[0]));
     document.getElementById("dashSubtitle").textContent = `총 ${data.length}개의 맵을 만들었습니다`;
     if (!data.length) {
       el.innerHTML = '<div class="empty">아직 만든 맵이 없습니다. 맵 제작 메뉴에서 첫 맵을 만들어보세요!</div>';
