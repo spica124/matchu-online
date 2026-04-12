@@ -483,13 +483,21 @@ io.on("connection", (socket) => {
     room.skipVoters.add(socket.id);
     const question = room.map.questions[room.currentQuestion];
     const subQs = getSubQuestions(question);
-    const votes = room.skipVoters.size;
-    const total = room.players.size;
-    // 1~2명: 전원 스킵, 3명 이상: 과반수 (4명→3명, 5명→3명, 6명→4명...)
+
+    // 아직 완료 못한 플레이어만 스킵 대상으로 계산
+    const pendingPlayers = [...room.players.entries()].filter(([sid, p]) =>
+      !subQs.every((_, i) => p.answeredSubQs.has(i))
+    );
+    const votes = [...room.skipVoters].filter(sid =>
+      pendingPlayers.some(([s]) => s === sid)
+    ).length;
+    const total = pendingPlayers.length || room.players.size;
+    // 1~2명: 전원 스킵, 3명 이상: 과반수
     const needed = total >= 3 ? Math.floor(total / 2) + 1 : total;
     io.to(roomId).emit("skipVoteUpdate", { votes, total, needed });
 
-    if (votes >= needed) {
+    // 완료한 플레이어 제외하고 나머지가 모두 스킵 눌렀으면 진행
+    if (votes >= needed || allPlayersDoneOrSkipped(room, subQs)) {
       clearInterval(room.timer);
       // 미답 서브퀴즈 정답 공개
       const revealList = subQs.map((sq, i) => ({ prompt: sq.prompt || `문제${i+1}`, answer: sq.showAnswer !== false ? ((sq.answers || [])[0] || "?") : null, answered: room.answeredSubQs.has(i) }));
