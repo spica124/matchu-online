@@ -102,6 +102,16 @@ let onlineCount = 0;
 // Helpers
 // ═══════════════════════════════════════════
 
+// 모든 플레이어가 스킵 투표 OR 모든 소문제 완료 → 다음 문제
+function allPlayersDoneOrSkipped(room, subQs) {
+  for (const [sid, p] of room.players) {
+    if (room.skipVoters.has(sid)) continue;
+    if (subQs.every((_, i) => p.answeredSubQs.has(i))) continue;
+    return false;
+  }
+  return true;
+}
+
 function hasKorean(str) { return /[가-힣ㄱ-ㅎㅏ-ㅣ]/.test(str); }
 
 function getChosung(str) {
@@ -429,7 +439,13 @@ io.on("connection", (socket) => {
       const points = Math.max(1, room.players.size - (orderInSubQ - 1));
       player.score += points;
 
-      io.to(roomId).emit("correctAnswer", {
+      const revealedAnswer = subQs[matchedIdx].answers[0] || answer;
+      socket.emit("correctAnswer", {
+        playerId: socket.id, playerName: player.name, playerAvatar: player.avatar,
+        points, order: orderInSubQ, subQIndex: matchedIdx, scores: getScoresArray(room),
+        subQTotal: room.players.size, subQCount: orderInSubQ, answer: revealedAnswer,
+      });
+      socket.to(roomId).emit("correctAnswer", {
         playerId: socket.id, playerName: player.name, playerAvatar: player.avatar,
         points, order: orderInSubQ, subQIndex: matchedIdx, scores: getScoresArray(room),
         subQTotal: room.players.size, subQCount: orderInSubQ,
@@ -437,9 +453,9 @@ io.on("connection", (socket) => {
       io.to(roomId).emit("chatMessage", { type: "correct", text: `${player.name}님이 [${subQs[matchedIdx].prompt || `문제${matchedIdx+1}`}] 정답! (+${points}점)` });
 
       const allDone = subQs.every((_, i) => (room.answeredSubQs.get(i)?.size ?? 0) >= room.players.size);
-      if (allDone) {
+      if (allDone || allPlayersDoneOrSkipped(room, subQs)) {
         clearInterval(room.timer);
-        io.to(roomId).emit("chatMessage", { type: "system", text: "✅ 모든 플레이어가 모든 문제 완료!" });
+        io.to(roomId).emit("chatMessage", { type: "system", text: "✅ 모든 플레이어가 완료!" });
         setTimeout(() => nextQuestion(room), 1500);
       }
     } else {
@@ -504,18 +520,24 @@ io.on("connection", (socket) => {
           const points = Math.max(1, room.players.size - (orderInSubQ - 1));
           player.score += points;
 
-          io.to(roomId).emit("correctAnswer", {
+          const revealedAnswer2 = subQs[matchedIdx].answers[0] || msg;
+          socket.emit("correctAnswer", {
+            playerId: socket.id, playerName: player.name, playerAvatar: player.avatar,
+            points, order: orderInSubQ, subQIndex: matchedIdx, scores: getScoresArray(room),
+            subQTotal: room.players.size, subQCount: orderInSubQ, answer: revealedAnswer2,
+          });
+          socket.to(roomId).emit("correctAnswer", {
             playerId: socket.id, playerName: player.name, playerAvatar: player.avatar,
             points, order: orderInSubQ, subQIndex: matchedIdx, scores: getScoresArray(room),
             subQTotal: room.players.size, subQCount: orderInSubQ,
           });
           io.to(roomId).emit("chatMessage", { type: "correct", text: `${player.name}님이 [${subQs[matchedIdx].prompt || `문제${matchedIdx+1}`}] 정답! (+${points}점)` });
 
-          // 모든 플레이어가 모든 소문제를 맞췄는지 확인
+          // 모든 플레이어가 모든 소문제를 맞췄는지 (또는 스킵+완료 조합)
           const allDone = subQs.every((_, i) => (room.answeredSubQs.get(i)?.size ?? 0) >= room.players.size);
-          if (allDone) {
+          if (allDone || allPlayersDoneOrSkipped(room, subQs)) {
             clearInterval(room.timer);
-            io.to(roomId).emit("chatMessage", { type: "system", text: "✅ 모든 플레이어가 모든 문제 완료!" });
+            io.to(roomId).emit("chatMessage", { type: "system", text: "✅ 모든 플레이어가 완료!" });
             setTimeout(() => nextQuestion(room), 1500);
           }
           return; // 정답이면 채팅으로 안 보냄
@@ -575,16 +597,20 @@ function sendQuestion(room) {
     room.timeLeft--;
     io.to(room.id).emit("timeUpdate", room.timeLeft);
 
-    // 초성 힌트 공개 (각 서브퀴즈별)
+    // 초성 힌트 공개 (각 서브퀴즈별, 플레이어별 개별 적용)
     subQs.forEach((sq, i) => {
-      if (room.answeredSubQs.has(i)) return;
       if (!sq.chosungHint || !sq.hintRevealTime) return;
       const firstAnswer = (sq.answers || [])[0] || "";
-      if (!hasKorean(firstAnswer)) return; // 한국어만
+      if (!hasKorean(firstAnswer)) return;
       const revealAt = timeLimit - sq.hintRevealTime;
       if (room.timeLeft === revealAt) {
         const hint = getChosung(firstAnswer);
-        io.to(room.id).emit("hintReveal", { subQIndex: i, hint });
+        // 아직 이 소문제 못 맞춘 플레이어에게만 전송
+        room.players.forEach((p, sid) => {
+          if (!p.answeredSubQs.has(i)) {
+            io.to(sid).emit("hintReveal", { subQIndex: i, hint });
+          }
+        });
         io.to(room.id).emit("chatMessage", { type: "system", text: `💡 [${sq.prompt || `문제${i+1}`}] 초성 힌트: ${hint}` });
       }
     });

@@ -6,7 +6,7 @@
 <title>마추기온라인.io — 애니·노래·장면 퀴즈 배틀</title>
 <meta name="description" content="온라인 실시간 멀티플레이어 애니/노래/장면 퀴즈 게임">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎯</text></svg>">
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&family=Nanum+Gothic+Rounded:wght@400;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="/socket.io/socket.io.js"></script>
 <style>
 :root {
@@ -22,7 +22,7 @@
   --side:240px;--th:56px;
 }
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--t1);-webkit-font-smoothing:antialiased}
+body{font-family:'Nanum Gothic Rounded',sans-serif;background:var(--bg);color:var(--t1);-webkit-font-smoothing:antialiased}
 ::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--brd2);border-radius:3px}
 
 .layout{display:flex;min-height:100vh}
@@ -56,7 +56,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--t1);
 /* Nav */
 .s-nav{padding:8px 12px;flex:1}
 .nav-sec{font-size:11px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:1px;padding:12px 8px 6px}
-.nav-i{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:var(--rs);cursor:pointer;font-size:14px;font-weight:500;color:var(--t2);transition:all .15s;border:none;background:none;width:100%;text-align:left;font-family:'Noto Sans KR',sans-serif}
+.nav-i{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:var(--rs);cursor:pointer;font-size:14px;font-weight:500;color:var(--t2);transition:all .15s;border:none;background:none;width:100%;text-align:left;font-family:'Nanum Gothic Rounded',sans-serif}
 .nav-i:hover{background:var(--bg4);color:var(--t1)}
 .nav-i.active{color:var(--acc);background:var(--acc-s)}
 .nav-ic{font-size:16px;width:22px;text-align:center}
@@ -67,14 +67,14 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--t1);
 /* Top bar */
 .top{height:56px;border-bottom:1px solid var(--brd);display:flex;align-items:center;padding:0 24px;gap:16px;background:var(--bg2);position:sticky;top:0;z-index:40}
 .srch{flex:1;max-width:560px;position:relative}
-.srch input{width:100%;height:38px;padding:0 16px 0 40px;background:var(--bg5);border:1px solid var(--brd);border-radius:8px;color:var(--t1);font-family:'Noto Sans KR',sans-serif;font-size:14px;outline:none;transition:border-color .2s}
+.srch input{width:100%;height:38px;padding:0 16px 0 40px;background:var(--bg5);border:1px solid var(--brd);border-radius:8px;color:var(--t1);font-family:'Nanum Gothic Rounded',sans-serif;font-size:14px;outline:none;transition:border-color .2s}
 .srch input:focus{border-color:var(--acc)}
 .srch input::placeholder{color:var(--t3)}
 .srch-ic{position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:15px;color:var(--t3)}
 .srch-key{position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:11px;color:var(--t3);background:var(--bg);padding:2px 6px;border-radius:4px;border:1px solid var(--brd);font-family:'JetBrains Mono',monospace}
 .top-r{display:flex;align-items:center;gap:12px;margin-left:auto}
 .top-btn{width:36px;height:36px;border-radius:50%;background:var(--bg5);border:1px solid var(--brd);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px}
-.top-lang{font-size:13px;color:var(--t2);display:flex;align-items:center;gap:4px;cursor:pointer;padding:6px 10px;border-radius:var(--rs);border:1px solid var(--brd);background:none;font-family:'Noto Sans KR',sans-serif}
+.top-lang{font-size:13px;color:var(--t2);display:flex;align-items:center;gap:4px;cursor:pointer;padding:6px 10px;border-radius:var(--rs);border:1px solid var(--brd);background:none;font-family:'Nanum Gothic Rounded',sans-serif}
 
 /* ── Page ── */
 .page{flex:1;padding:28px 32px;max-width:960px}
@@ -87,7 +87,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--t1);
 
 /* Quick actions */
 .qactions{display:flex;justify-content:center;gap:24px;margin-bottom:28px;flex-wrap:wrap}
-.qact{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--t2);cursor:pointer;padding:8px 0;border:none;background:none;font-family:'Noto Sans KR',sans-serif;transition:color .15s}
+.qact{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--t2);cursor:pointer;padding:8px 0;border:none;background:none;font-family:'Nanum Gothic Rounded',sans-serif;transition:color .15s}
 .qact:hover{color:var(--t1)}
 
 /* CTA */
@@ -98,7 +98,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--t1);
 .cta-ts{font-size:13px;color:var(--t2)}
 
 /* Buttons */
-.btn{padding:10px 20px;border:none;border-radius:8px;font-family:'Noto Sans KR',sans-serif;font-weight:700;font-size:14px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:all .15s}
+.btn{padding:10px 20px;border:none;border-radius:8px;font-family:'Nanum Gothic Rounded',sans-serif;font-weight:700;font-size:14px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:all .15s}
 .btn-a{background:var(--acc);color:#fff}.btn-a:hover{background:var(--acc2)}
 .btn-g{background:transparent;color:var(--t2);border:1px solid var(--brd)}.btn-g:hover{background:var(--bg4);color:var(--t1)}
 .btn-sm{padding:6px 14px;font-size:13px}
@@ -134,7 +134,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--t1);
 .promo-ic{font-size:36px;margin-bottom:12px}
 .promo-t{font-size:16px;font-weight:800;margin-bottom:6px}
 .promo-s{font-size:13px;color:var(--t2);margin-bottom:14px}
-.promo-l{color:var(--ylw);font-size:14px;font-weight:700;border:none;background:none;cursor:pointer;font-family:'Noto Sans KR',sans-serif}
+.promo-l{color:var(--ylw);font-size:14px;font-weight:700;border:none;background:none;cursor:pointer;font-family:'Nanum Gothic Rounded',sans-serif}
 
 /* Room list */
 .r-list{display:flex;flex-direction:column;gap:8px;margin-bottom:32px}
@@ -167,7 +167,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--t1);
 
 /* Filters */
 .filters{display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap}
-.fchip{padding:6px 14px;border-radius:20px;font-size:13px;font-weight:600;border:1px solid var(--brd);background:var(--bg3);color:var(--t2);cursor:pointer;transition:all .15s;font-family:'Noto Sans KR',sans-serif}
+.fchip{padding:6px 14px;border-radius:20px;font-size:13px;font-weight:600;border:1px solid var(--brd);background:var(--bg3);color:var(--t2);cursor:pointer;transition:all .15s;font-family:'Nanum Gothic Rounded',sans-serif}
 .fchip:hover{border-color:var(--brd2);color:var(--t1)}
 .fchip.act{background:var(--acc);color:#fff;border-color:var(--acc)}
 
@@ -178,7 +178,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--t1);
 .modal h2{font-size:20px;font-weight:800;margin-bottom:20px}
 .inp-g{margin-bottom:14px}
 .inp-l{display:block;font-size:12px;font-weight:700;color:var(--t3);margin-bottom:5px;text-transform:uppercase;letter-spacing:.5px}
-.inp{width:100%;padding:10px 14px;background:var(--bg5);border:1px solid var(--brd);border-radius:var(--rs);color:var(--t1);font-family:'Noto Sans KR',sans-serif;font-size:14px;outline:none;transition:border-color .15s}
+.inp{width:100%;padding:10px 14px;background:var(--bg5);border:1px solid var(--brd);border-radius:var(--rs);color:var(--t1);font-family:'Nanum Gothic Rounded',sans-serif;font-size:14px;outline:none;transition:border-color .15s}
 .inp:focus{border-color:var(--acc)}
 .inp::placeholder{color:var(--t3)}
 
@@ -195,73 +195,81 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--t1);
 .host-b{font-size:10px;background:var(--acc);color:#fff;padding:2px 8px;border-radius:10px;font-weight:800}
 .w-acts{display:flex;gap:12px;justify-content:center;margin-top:20px}
 
-/* ── Game ── */
-@keyframes tp{to{opacity:.4}}
-.t-track{height:3px;background:var(--bg5);border-radius:2px;overflow:hidden}
-.t-fill{height:100%;border-radius:2px;transition:width 1s linear}
-
-/* Game viewport */
-.gv-wrap{display:grid;grid-template-columns:1fr 260px;gap:0;height:calc(100vh - var(--th));max-height:calc(100vh - var(--th));overflow:hidden}
-.gv-main{display:flex;flex-direction:column;padding:12px;gap:8px;overflow:hidden;height:100%}
-.gv-sidebar{background:var(--bg3);border-left:1px solid var(--brd);padding:16px;overflow-y:auto;height:100%}
-
-/* Top bar */
-.gv-topbar{display:flex;align-items:center;gap:10px}
-.gv-songcount{font-size:13px;font-weight:700;color:var(--t2);white-space:nowrap;font-family:'JetBrains Mono',monospace}
-
-/* Main info card */
-.gv-card{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;background:var(--bg3);border:1px solid var(--brd);border-radius:var(--rl);padding:20px 24px;text-align:center;position:relative;overflow-y:auto;gap:10px;min-height:0}
-.gv-instruction{font-size:20px;font-weight:700;color:var(--t1);line-height:1.4}
-.gv-timer{font-size:28px;font-weight:800;font-family:'JetBrains Mono',monospace;color:var(--t2);letter-spacing:2px}
-.gv-timer.urg{color:var(--acc);animation:tp .6s ease infinite alternate}
-
-/* Sub-question answerer list */
-.gv-subq-list{display:flex;flex-direction:column;gap:8px;width:100%;max-width:480px}
-.gv-subq-row{display:flex;align-items:center;gap:10px;font-size:16px;background:var(--bg4);border-radius:var(--rs);padding:10px 14px;border:1px solid var(--brd)}
-.gv-subq-row.done-row{border-color:var(--grn);background:var(--grn-s)}
-.gv-subq-label{color:var(--ylw);font-weight:700;white-space:nowrap;font-size:15px}
-.gv-subq-label.done{color:var(--grn)}
-.gv-subq-answerers{color:var(--t2);font-size:13px;flex:1;text-align:left}
-.gv-subq-answerers .name{color:var(--blu);font-weight:600}
-.gv-subq-hint{font-size:13px;color:var(--t3);margin-left:4px;font-style:italic}
-
-.gv-hint{font-size:14px;color:var(--t3);margin-bottom:12px;font-style:italic}
-.gv-input-area{width:100%;max-width:440px;margin-bottom:8px}
-.gv-skip-hint{font-size:12px;color:var(--t3);margin-top:8px}
-
-.g-ans-row{display:flex;gap:8px;width:100%}
-.g-ans-inp{flex:1;padding:12px 16px;background:var(--bg5);border:2px solid var(--brd);border-radius:8px;color:var(--t1);font-family:'Noto Sans KR',sans-serif;font-size:15px;font-weight:600;outline:none;transition:border-color .2s}
-.g-ans-inp:focus{border-color:var(--acc)}
-
-/* Chat */
-.gv-chat{background:var(--bg3);border:1px solid var(--brd);border-radius:var(--rl);padding:10px 14px;height:340px;display:flex;flex-direction:column;flex-shrink:0}
-
-.fb-toast{position:absolute;top:14px;right:14px;padding:6px 14px;border-radius:var(--rs);font-weight:700;font-size:13px;animation:tin .25s ease;z-index:10}
-@keyframes tin{from{transform:translateX(12px);opacity:0}}
-.fb-ok{background:var(--grn-s);color:var(--grn);border:1px solid rgba(0,200,83,.3)}
-.fb-no{background:var(--acc-s);color:var(--acc);border:1px solid rgba(232,64,94,.3)}
-
-.fb-toast{position:absolute;top:14px;right:14px;padding:6px 14px;border-radius:var(--rs);font-weight:700;font-size:13px;animation:tin .25s ease}
-@keyframes tin{from{transform:translateX(12px);opacity:0}}
-.fb-ok{background:var(--grn-s);color:var(--grn);border:1px solid rgba(0,200,83,.3)}
-.fb-no{background:var(--acc-s);color:var(--acc);border:1px solid rgba(232,64,94,.3)}
-
-.sc-panel{background:var(--bg3);border:1px solid var(--brd);border-radius:var(--rl);padding:14px}
-.sc-title{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--t3);margin-bottom:10px;font-family:'JetBrains Mono',monospace}
-.sc-row{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:var(--rs);margin-bottom:4px;background:var(--bg5);transition:all .2s}
-.sc-row.me{border:1px solid var(--blu);background:var(--blu-s)}
-.sc-rank{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;width:22px;text-align:center}
-.sc-r1{color:#ffd700}.sc-r2{color:#c0c0c0}.sc-r3{color:#cd7f32}
-.sc-av{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px}
-.sc-nm{flex:1;font-weight:600;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.sc-pts{font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:700;color:var(--ylw)}
-.sc-delta{font-size:11px;font-weight:700;color:var(--grn);animation:pu .3s ease}
+/* ══════════════════════════════════════
+   GAME — 터미널 스타일
+══════════════════════════════════════ */
+@keyframes tp{to{opacity:.3}}
+@keyframes tin{from{transform:translateY(-6px);opacity:0}}
 @keyframes pu{from{transform:scale(0)}50%{transform:scale(1.2)}}
+@keyframes gcursor{0%,100%{opacity:1}50%{opacity:0}}
 
-.g-chat{background:var(--bg3);border:1px solid var(--brd);border-radius:var(--rl);padding:12px;margin-top:8px;max-height:180px;display:flex;flex-direction:column}
-.chat-log{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:5px;font-size:16px}
-.ch-sys{color:var(--org);font-style:italic}
-.ch-ok{color:var(--grn);font-weight:600}
+/* 게임 내 전용 폰트 — Nanum Gothic Rounded, 숫자/코드는 JetBrains Mono */
+#page-game, #page-game *{font-family:'Nanum Gothic Rounded',sans-serif !important}
+#page-game .gv-timer,
+#page-game .gv-songcount,
+#page-game .sc-pts,
+#page-game .sc-rank,
+#page-game #skipCount,
+#page-game #volPct{font-family:'Inter','JetBrains Mono',monospace !important}
+
+/* 타이머 바 */
+.t-track{height:2px;background:#1a1a1a;overflow:hidden}
+.t-fill{height:100%;transition:width 1s linear}
+
+/* 레이아웃 */
+.gv-wrap{display:grid;grid-template-columns:1fr 220px;gap:0;height:calc(100vh - var(--th));max-height:calc(100vh - var(--th));overflow:hidden;background:#000}
+.gv-main{display:flex;flex-direction:column;overflow:hidden;height:100%;background:#000;position:relative}
+.gv-sidebar{background:#0a0a0a;border-left:1px solid #1e1e1e;padding:12px;overflow-y:auto;height:100%}
+
+/* 상단 바 */
+.gv-topbar{display:flex;align-items:center;gap:0;padding:6px 12px;background:#000;border-bottom:1px solid #1a1a1a;flex-shrink:0}
+.gv-songcount{font-size:13px;font-weight:700;color:#4ade80;white-space:nowrap}
+
+/* 중앙 카드 */
+.gv-card{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#000;padding:20px 32px 18% 32px;text-align:center;position:relative;overflow-y:auto;gap:12px;min-height:0}
+.gv-instruction{font-size:13px;font-weight:400;color:#555;letter-spacing:.5px}
+.gv-timer{font-size:64px;font-weight:800;color:#fff;line-height:1}
+.gv-timer.urg{color:#ef4444;animation:tp .5s ease infinite alternate}
+
+/* 소문제 목록 */
+.gv-subq-list{display:flex;flex-direction:column;gap:0;width:100%;max-width:540px;margin-top:20px}
+.gv-subq-row{display:flex;align-items:center;justify-content:center;gap:12px;font-size:22px;padding:6px 0 4px;border-bottom:1px solid #111}
+.gv-subq-row.done-row{border-bottom-color:#1a3a2a}
+.gv-subq-label{color:#fff;font-weight:700;white-space:nowrap;font-size:22px}
+.gv-subq-label.done{color:#4ade80}
+.gv-subq-answerers{color:#555;font-size:20px;flex:1;text-align:left}
+.gv-subq-answerers .name{color:#60a5fa;font-weight:700}
+.gv-subq-hint{font-size:14px;color:#444;margin-left:4px}
+
+.gv-hint{font-size:13px;color:#fff;font-style:normal}
+.g-ans-inp{flex:1;padding:10px 14px;background:#000;border:1px solid #333;border-radius:4px;color:#fff;font-size:15px;font-weight:600;outline:none;transition:border-color .15s}
+.g-ans-inp:focus{border-color:#4ade80}
+.g-ans-inp::placeholder{color:#333}
+
+/* 채팅 */
+.gv-chat{background:#000;border-top:1px solid #111;padding:10px 14px;height:220px;display:flex;flex-direction:column;flex-shrink:0}
+
+/* 피드백 토스트 */
+.fb-toast{position:absolute;top:10px;right:10px;padding:4px 14px;border-radius:3px;font-weight:700;font-size:13px;animation:tin .2s ease;z-index:10}
+.fb-ok{background:transparent;color:#4ade80;border:1px solid #4ade80}
+.fb-no{background:transparent;color:#ef4444;border:1px solid #ef4444}
+
+/* 순위판 */
+.sc-panel{background:#0a0a0a;border:1px solid #1a1a1a;border-radius:2px;padding:10px}
+.sc-title{font-size:11px;font-weight:700;letter-spacing:2px;color:#333;margin-bottom:8px;text-transform:uppercase}
+.sc-row{display:flex;align-items:center;gap:6px;padding:6px 4px;margin-bottom:2px;border-bottom:1px solid #0f0f0f}
+.sc-row.me .sc-nm{color:#4ade80}
+.sc-rank{font-size:12px;font-weight:700;width:22px;text-align:center;color:#555}
+.sc-r1{color:#facc15}.sc-r2{color:#9ca3af}.sc-r3{color:#a16207}
+.sc-av{width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+.sc-nm{flex:1;font-size:13px;color:#aaa;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sc-pts{font-size:13px;font-weight:700;color:#facc15}
+.sc-delta{font-size:11px;font-weight:700;color:#4ade80;animation:pu .3s ease}
+
+.g-chat{background:#000;border:1px solid #111;padding:8px;margin-top:6px;max-height:160px;display:flex;flex-direction:column}
+.chat-log{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:4px;font-size:14px}
+.ch-sys{color:#f97316;font-style:italic}
+.ch-ok{color:#4ade80;font-weight:600}
 .ch-nm{font-weight:700}
 
 /* ── Results ── */
@@ -282,7 +290,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--t1);
 /* Creator */
 .q-row{display:flex;gap:8px;align-items:center;padding:10px;background:var(--bg5);border:1px solid var(--brd);border-radius:var(--rs);margin-bottom:8px}
 .q-num{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--t3);min-width:28px}
-.q-sel{padding:6px 10px;background:var(--bg3);border:1px solid var(--brd);border-radius:var(--rs);color:var(--t1);font-family:'Noto Sans KR',sans-serif;font-size:13px;outline:none}
+.q-sel{padding:6px 10px;background:var(--bg3);border:1px solid var(--brd);border-radius:var(--rs);color:var(--t1);font-family:'Nanum Gothic Rounded',sans-serif;font-size:13px;outline:none}
 
 /* Empty state */
 .empty{text-align:center;padding:40px;color:var(--t3);font-size:14px}
@@ -394,7 +402,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--t1);
         <button class="btn btn-g btn-full btn-sm" onclick="closeSidebar();openAuthModal('login')">🔐 로그인 / 회원가입</button>
       </div>
       <div id="sideAuthLoggedIn" style="display:none">
-        <div style="font-size:13px;font-weight:700;color:var(--t1);margin-bottom:6px" id="sideAuthName"></div>
+    
         <button class="btn btn-g btn-full btn-sm" onclick="logout()" style="color:var(--acc)">🚪 로그아웃</button>
       </div>
     </div>
@@ -422,8 +430,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--t1);
       </div>
       <div class="qactions">
         <button class="qact" onclick="navigateTo('ranking')">🏆 글로벌 랭킹</button>
-        <button class="qact" onclick="showCreateModal()">🎮 배틀 룸 생성</button>
-        <button class="qact" onclick="startSolo()">🎯 혼자 하기</button>
+        <button class="qact" onclick="showCreateModal()">🎮 방 만들기</button>
         <button class="qact" onclick="navigateTo('create-map')">✏️ 맵 제작</button>
       </div>
       <div class="cta">
@@ -434,7 +441,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--t1);
         <button class="btn btn-a" onclick="navigateTo('create-map')">맵 제작하기 ✏️</button>
       </div>
       <div class="sec-h" style="flex-wrap:wrap;gap:8px">
-        <div style="display:flex;align-items:center;gap:6px"><span>🎮</span><span class="sec-t">열린 배틀룸</span></div>
+        <div style="display:flex;align-items:center;gap:6px"><span>🎮</span><span class="sec-t">열린 방</span></div>
         <input id="roomSearch" class="inp" placeholder="🔍 방 제목 검색..." autocomplete="off"
           style="flex:1;min-width:140px;max-width:240px;padding:5px 10px;font-size:13px"
           oninput="filterRoomList(this.value)">
@@ -505,58 +512,54 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--t1);
       </div>
 
       <div class="gv-wrap" style="flex:1;min-height:0">
-        <!-- 왼쪽: 메인 게임 영역 -->
-        <div class="gv-main">
+        <!-- 메인 게임 영역 -->
+        <div class="gv-main" style="position:relative">
           <!-- 상단 바 -->
           <div class="gv-topbar">
             <span class="gv-songcount" id="gameQC">남은 곡 ( 1 / 1 )</span>
-            <div class="t-track" style="flex:1;margin:0 16px"><div class="t-fill" id="timerFill" style="width:100%;background:var(--grn)"></div></div>
-            <button class="btn btn-g btn-sm" onclick="leaveGameConfirm()" style="color:var(--acc);border-color:var(--acc);flex-shrink:0">🚪 나가기</button>
+            <div class="t-track" style="flex:1;margin:0 12px"><div class="t-fill" id="timerFill" style="width:100%;background:#4ade80"></div></div>
+            <button onclick="leaveGameConfirm()" style="background:none;border:1px solid #ef4444;color:#ef4444;font-size:11px;padding:3px 10px;border-radius:2px;cursor:pointer;letter-spacing:1px">EXIT</button>
           </div>
 
-          <!-- 중앙 정보 카드 -->
-          <div class="gv-card">
-            <div id="gameFeedback"></div>
-            <div class="gv-instruction" id="gamePrompt">음악을 듣고 답을 입력하세요</div>
-            <div class="gv-timer" id="gameTimer">- 30초 -</div>
-            <div class="gv-hint" id="gameHint" style="display:none"></div>
-            <div id="chosungHintArea" style="display:none;font-size:18px;font-weight:800;font-family:'Noto Sans KR',sans-serif;color:var(--ylw);letter-spacing:4px"></div>
+          <!-- 컨텐츠 영역 -->
+          <div style="flex:1;position:relative;min-height:0;overflow:hidden">
 
-            <!-- 소문제 목록 + 정답자 -->
-            <div class="gv-subq-list" id="subqList"></div>
-
-            <!-- 스킵 + 볼륨 -->
-            <div style="display:flex;align-items:center;justify-content:center;gap:16px;margin-top:4px;flex-wrap:wrap">
-              <button class="btn btn-g btn-sm" id="skipBtn" onclick="voteSkip()">
-                ⏭ 스킵 <span id="skipCount" style="font-family:'JetBrains Mono',monospace;font-size:11px">0/0</span>
-              </button>
-              <span style="font-size:11px;color:var(--t3)">K키로 스킵</span>
-              <div style="display:flex;align-items:center;gap:6px">
-                <span id="volIcon2" style="font-size:15px;cursor:pointer;user-select:none" onclick="toggleMute()" title="음소거">🔊</span>
-                <input type="range" id="volSlider2" min="0" max="100" value="100" step="1"
-                  style="width:80px;accent-color:var(--acc);cursor:pointer"
-                  oninput="setVolume(+this.value)">
-                <span id="volPct" style="font-size:11px;color:var(--t3);font-family:'JetBrains Mono',monospace;min-width:32px">100%</span>
-              </div>
+            <!-- 게임 정보: 전체 너비 기준, 위 1/4 지점 -->
+            <div class="gv-card" style="position:absolute;inset:0;justify-content:flex-start;padding-top:12%">
+              <div id="gameFeedback"></div>
+              <div class="gv-instruction" id="gamePrompt">음악을 듣고 답을 입력하세요</div>
+              <div class="gv-timer" id="gameTimer">30</div>
+              <div class="gv-hint" id="gameHint" style="display:none"></div>
+              <div class="gv-subq-list" id="subqList"></div>
+              <input id="answerInput" style="display:none">
+              <button id="answerBtn" style="display:none"></button>
             </div>
-            <!-- 숨김 (하위 호환) -->
-            <input id="answerInput" style="display:none">
-            <button id="answerBtn" style="display:none"></button>
-          </div>
 
-          <!-- 채팅 (입력창이 정답창 겸용) -->
-          <div class="gv-chat">
-            <div class="chat-log" id="chatLog"></div>
-            <div style="display:flex;gap:6px;margin-top:8px">
-              <input class="g-ans-inp" id="chatInput" placeholder="채팅 / 정답 입력..." autocomplete="off" style="flex:1;padding:8px 12px;font-size:13px">
-              <button class="btn btn-a btn-sm" onclick="sendChatOrAnswer()">전송</button>
+            <!-- 채팅 입력창: 화면 하단 중앙 고정 -->
+            <div style="position:absolute;bottom:60px;left:50%;transform:translateX(-50%);width:480px;z-index:3;pointer-events:auto">
+              <!-- 스킵 + 볼륨: 입력창 위 -->
+              <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;justify-content:center">
+                <button onclick="voteSkip()" id="skipBtn" style="background:none;border:1px solid #333;color:#888;font-size:14px;padding:6px 16px;border-radius:3px;cursor:pointer;white-space:nowrap;font-weight:600">SKIP <span id="skipCount">0/0</span></button>
+                <span id="volIcon2" onclick="toggleMute()" style="cursor:pointer;color:#444;font-size:13px;user-select:none">🔊</span>
+                <input type="range" id="volSlider2" min="0" max="100" value="100" step="1"
+                  style="width:60px;accent-color:#4ade80;cursor:pointer" oninput="setVolume(+this.value)">
+                <span id="volPct" style="font-size:10px;color:#333;min-width:28px">100%</span>
+                <span style="font-size:10px;color:#222">K: 스킵 &nbsp;=: 채팅</span>
+              </div>
+              <!-- 채팅 입력창 -->
+              <input class="g-ans-inp" id="chatInput" placeholder="정답 / 채팅 입력..." autocomplete="off" style="width:100%;box-sizing:border-box;padding:10px 16px;font-size:15px">
+            </div>
+
+            <!-- 왼쪽: 채팅 로그 오버레이 (화면 세로 중간) -->
+            <div style="position:absolute;left:0;top:50%;transform:translateY(-50%);width:300px;padding:12px 16px;pointer-events:none;z-index:2">
+              <div class="chat-log" id="chatLog" style="font-size:15px;color:#fff;line-height:1.8;overflow-y:auto;max-height:calc(1.8em * 8);pointer-events:auto"></div>
             </div>
           </div>
         </div>
 
         <!-- 오른쪽: 순위판 -->
         <div class="gv-sidebar">
-          <div class="sc-title">🏆 순위</div>
+          <div class="sc-title">RANK</div>
           <div id="scoreBoard"></div>
         </div>
       </div>
@@ -802,6 +805,12 @@ window.addEventListener("DOMContentLoaded", () => {
       const skipBtn = document.getElementById("skipBtn");
       if (skipBtn && !skipBtn.disabled) voteSkip();
     }
+    // =키: 채팅 로그 펼치기/접기
+    if (e.key === "=") {
+      const focused = document.activeElement;
+      if (focused && (focused.tagName === "INPUT" || focused.tagName === "TEXTAREA")) return;
+      toggleChatLog();
+    }
   });
   renderCreatorQuestions();
   // 자동 로그인 시도 — 실패하면 nameModal 표시
@@ -902,10 +911,10 @@ socket.on("question", ({ index, total, type, hint, timeLimit, mediaUrl, startTim
 
   document.getElementById("gameQC").textContent = `남은 곡 ( ${sTot - sIdx} / ${sTot} )`;
   document.getElementById("gamePrompt").textContent = "음악을 듣고 답을 입력하세요";
-  document.getElementById("gameTimer").textContent = `- ${timeLimit}초 -`;
+  document.getElementById("gameTimer").textContent = timeLimit;
   document.getElementById("gameTimer").classList.remove("urg");
   document.getElementById("timerFill").style.width = "100%";
-  document.getElementById("timerFill").style.background = "var(--grn)";
+  document.getElementById("timerFill").style.background = "#4ade80";
   document.getElementById("gameFeedback").innerHTML = "";
   document.getElementById("chatInput").value = "";
   document.getElementById("chatInput").focus();
@@ -920,10 +929,10 @@ socket.on("question", ({ index, total, type, hint, timeLimit, mediaUrl, startTim
     hintEl.textContent = "";
   }
 
-  // 초성 힌트 영역 리셋
-  const chArea = document.getElementById("chosungHintArea");
-  chArea.style.display = "none";
-  chArea.textContent = "";
+  // 초성 힌트 영역 리셋 (inline hints used now)
+  gameState.chosungHints = {};
+  gameState.myAnswers = {};
+  gameState._lastTyped = "";
 
   // 스킵 버튼 초기화
   document.getElementById("skipBtn").disabled = false;
@@ -944,16 +953,16 @@ socket.on("question", ({ index, total, type, hint, timeLimit, mediaUrl, startTim
 socket.on("timeUpdate", t => {
   gameState.timeLeft = t;
   const el = document.getElementById("gameTimer");
-  el.textContent = `- ${t}초 -`;
+  el.textContent = t;
   if (t <= 5) el.classList.add("urg"); else el.classList.remove("urg");
 
   const pct = (t / (gameState.timeLimit || 30)) * 100;
   const fill = document.getElementById("timerFill");
   fill.style.width = pct + "%";
-  fill.style.background = pct > 50 ? "var(--grn)" : pct > 25 ? "var(--org)" : "var(--acc)";
+  fill.style.background = pct > 50 ? "#4ade80" : pct > 25 ? "#f97316" : "#ef4444";
 });
 
-socket.on("correctAnswer", ({ playerName, playerAvatar, points, order, subQIndex, scores, subQCount, subQTotal }) => {
+socket.on("correctAnswer", ({ playerName, playerAvatar, points, order, subQIndex, scores, subQCount, subQTotal, answer }) => {
   renderScoreboard(scores);
   playCorrectSound();
   const qi = subQIndex !== undefined ? subQIndex : 0;
@@ -962,10 +971,13 @@ socket.on("correctAnswer", ({ playerName, playerAvatar, points, order, subQIndex
   if (!gameState.subQAnswerers[qi].find(p => p.name === playerName)) {
     gameState.subQAnswerers[qi].push({ name: playerName, avatar: playerAvatar || "" });
   }
-  // 소문제별 "x/n명" 카운트 저장
-  if (!gameState.subQCounts) gameState.subQCounts = {};
-  gameState.subQCounts[qi] = { count: subQCount ?? gameState.subQAnswerers[qi].length, total: subQTotal ?? gameState.playerCount };
-
+  // 정답자 본인 — 서버 answer 또는 마지막 입력값으로 표시
+  if (playerName === myUser.name) {
+    if (!gameState.myAnswers) gameState.myAnswers = {};
+    const display = (answer && answer.trim()) || (gameState._lastTyped && gameState._lastTyped.trim()) || "";
+    if (display) gameState.myAnswers[qi] = display;
+    gameState._lastTyped = ""; // 사용 후 초기화
+  }
   if (playerName === myUser.name) {
     showFeedback("ok", `[${gameState.subQPrompts?.[qi] || `문제${qi+1}`}] 정답! +${points}점`);
   }
@@ -974,18 +986,19 @@ socket.on("correctAnswer", ({ playerName, playerAvatar, points, order, subQIndex
 });
 
 socket.on("wrongAnswer", ({ text }) => {
+  gameState._lastTyped = ""; // 오답이면 폴백 초기화
   showFeedback("no", text);
   setTimeout(() => document.getElementById("gameFeedback").innerHTML = "", 1000);
 });
 
 socket.on("timeUp", ({ answer, revealList, scores }) => {
-  // revealList: [{ prompt, answer, answered }]
   gameState.revealAnswers = {};
+  gameState.chosungHints = {};
+  gameState.myAnswers = {};
+  gameState._lastTyped = "";
   if (revealList) {
     revealList.forEach((r, idx) => {
-      if (!r.answered && r.answer != null) {
-        gameState.revealAnswers[idx] = r.answer;
-      }
+      if (!r.answered && r.answer != null) gameState.revealAnswers[idx] = r.answer;
     });
     renderSubQList();
   } else if (answer) {
@@ -996,6 +1009,13 @@ socket.on("timeUp", ({ answer, revealList, scores }) => {
 });
 
 socket.on("chatMessage", ({ type, name, text }) => {
+  // 정답/힌트/스킵 자동 시스템 메시지는 채팅에 표시 안 함
+  if (type === "system" && (
+    text.includes("시간 초과") ||
+    text.includes("초성 힌트") ||
+    text.includes("스킵") ||
+    text.includes("정답:")
+  )) return;
   addChat(type, text, name);
 });
 
@@ -1011,10 +1031,12 @@ socket.on("skipVoteUpdate", ({ votes, total, needed }) => {
 });
 
 socket.on("hintReveal", ({ subQIndex, hint }) => {
-  // 해당 소문제 행에 초성힌트 표시
   const idx = subQIndex !== undefined ? subQIndex : 0;
   if (!gameState.chosungHints) gameState.chosungHints = {};
-  gameState.chosungHints[idx] = hint;
+  // 이미 내가 맞춘 소문제는 초성힌트로 덮지 않음
+  if (!gameState.myAnswers || !gameState.myAnswers[idx]) {
+    gameState.chosungHints[idx] = hint;
+  }
   renderSubQList();
 });
 
@@ -1137,9 +1159,9 @@ function sendChatOrAnswer() {
   const input = document.getElementById("chatInput");
   const val = input.value.trim();
   if (!val) return;
+  gameState._lastTyped = val; // correctAnswer 폴백용
   input.value = "";
   if (currentRoomId) {
-    // 게임 중이면 정답 시도 + 채팅 동시 처리 (서버에서 판별)
     socket.emit("chat", { roomId: currentRoomId, message: val });
   }
 }
@@ -1265,7 +1287,8 @@ function renderSubQList() {
   const answerers = gameState.subQAnswerers || {};
   const hints = gameState.chosungHints || {};
   const counts = gameState.subQCounts || {};
-  const reveals = gameState.revealAnswers || {};
+  const reveals = gameState.revealAnswers || {};       // 시간초과 정답 (전체 공개)
+  const myAnswers = gameState.myAnswers || {};          // 내가 맞춘 정답 (본인만)
   const totalSubQ = gameState.totalSubQ || 1;
   const totalPlayers = gameState.playerCount || 1;
 
@@ -1276,18 +1299,25 @@ function renderSubQList() {
     const cnt = counts[i];
     const doneCount = cnt ? cnt.count : ans.length;
     const allDone = doneCount >= totalPlayers;
-    const names = ans.map(p => `<span class="name">${p.avatar} ${p.name}</span>`).join(", ");
-    const chHint = hints[i] ? `<span style="font-size:14px;color:var(--ylw);font-family:'Noto Sans KR',sans-serif;letter-spacing:2px;margin-left:8px">${hints[i]}</span>` : "";
-    // 시간초과 정답 인라인 표시
-    const revealAns = reveals[i] != null
-      ? `<span style="color:var(--ylw);font-weight:700;margin-left:8px">${esc(reveals[i])}</span>` : "";
-    const countBadge = totalPlayers > 1
-      ? `<span style="font-size:11px;font-family:'JetBrains Mono',monospace;color:${allDone?'var(--grn)':'var(--t3)'};margin-left:auto;white-space:nowrap">${doneCount}/${totalPlayers}명</span>`
-      : "";
-    html += `<div class="gv-subq-row${allDone ? " done-row" : ""}">
-      <span class="gv-subq-label${allDone ? " done" : ""}">${allDone ? "✅" : "▶"} ${label} :</span>
-      <span class="gv-subq-answerers">${names}${chHint}${revealAns}</span>
-      ${countBadge}
+    const names = ans.map(p => `<span class="name">${p.name}</span>`).join(", ");
+
+    // 힌트 슬롯: 내 정답 > 시간초과 정답 > 초성힌트 순 우선순위
+    // 내 정답/시간초과 정답은 letter-spacing 없음, 초성힌트만 spacing 있음
+    const myAns = (myAnswers[i] && String(myAnswers[i]).trim()) || (reveals[i] && String(reveals[i]).trim());
+    const hintSlot = myAns
+      ? `<span style="font-size:22px;font-weight:700;color:#fff;margin-left:8px">${esc(String(myAns))}</span>`
+      : hints[i]
+        ? `<span style="font-size:22px;font-weight:700;color:#fff;letter-spacing:3px;margin-left:8px">${esc(String(hints[i]))}</span>`
+        : "";
+
+    const answererLine = names
+      ? `<div style="font-size:12px;color:#444;text-align:center"><span style="color:#333">정답자: </span>${names}</div>` : "";
+    html += `<div class="gv-subq-row${allDone ? " done-row" : ""}" style="flex-direction:column;align-items:center;gap:2px">
+      <div style="display:flex;align-items:center;justify-content:center;gap:8px">
+        <span class="gv-subq-label${allDone ? " done" : ""}">${allDone ? "✅" : ""} ${label} :</span>
+        ${hintSlot}
+      </div>
+      ${answererLine}
     </div>`;
   }
   container.innerHTML = html;
@@ -1307,6 +1337,20 @@ function renderScoreboard(scores) {
 
 function showFeedback(type, text) {
   document.getElementById("gameFeedback").innerHTML = `<div class="fb-toast ${type === 'ok' ? 'fb-ok' : 'fb-no'}">${esc(text)}</div>`;
+}
+
+let _chatLogExpanded = false;
+
+function toggleChatLog() {
+  const log = document.getElementById("chatLog");
+  if (!log) return;
+  _chatLogExpanded = !_chatLogExpanded;
+  if (_chatLogExpanded) {
+    log.style.maxHeight = "calc(1.8em * 24)";
+  } else {
+    log.style.maxHeight = "calc(1.8em * 8)";
+  }
+  log.scrollTop = log.scrollHeight;
 }
 
 function addChat(type, text, name) {
