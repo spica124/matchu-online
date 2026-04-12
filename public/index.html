@@ -508,13 +508,91 @@ body{font-family:'Nanum Gothic Rounded',sans-serif;background:var(--bg);color:va
     <!-- ════ GUIDE ════ -->
     <div class="page hide" id="page-guide">
       <div class="sec-h"><span class="sec-t">가이드</span></div>
-      <div style="background:var(--bg3);border:1px solid var(--brd);border-radius:var(--rl);padding:24px;line-height:1.8">
-        <h3 style="margin-bottom:12px">마추기온라인 사용법</h3>
-        <p style="margin-bottom:12px"><b>1. 방 만들기</b> — "배틀 룸 생성" 버튼으로 방 이름, 맵, 최대 인원을 설정하세요.</p>
-        <p style="margin-bottom:12px"><b>2. 방 참가</b> — 홈 화면의 방 목록에서 "대기중" 방을 클릭하면 참가할 수 있습니다.</p>
-        <p style="margin-bottom:12px"><b>3. 게임 플레이</b> — 호스트가 시작하면 문제가 나옵니다. 빨리 정답을 입력할수록 높은 점수!</p>
-        <p style="margin-bottom:12px"><b>4. 맵 제작</b> — "맵 제작" 메뉴에서 나만의 퀴즈를 만들어 공유하세요.</p>
-        <p><b>5. 점수 계산</b> — 맞춘 순서와 남은 시간에 따라 점수가 결정됩니다. 1등으로 맞추면 보너스!</p>
+
+      <!-- 게임 플레이 -->
+      <div style="background:var(--bg3);border:1px solid var(--brd);border-radius:var(--rl);padding:24px;margin-bottom:16px">
+        <div style="font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--t3);margin-bottom:16px">게임 플레이</div>
+
+        <div style="display:flex;flex-direction:column;gap:14px">
+          <div style="display:flex;gap:16px;align-items:flex-start">
+            <div style="width:28px;height:28px;border-radius:50%;background:var(--acc-s);border:1px solid var(--acc);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:var(--acc);flex-shrink:0">1</div>
+            <div>
+              <div style="font-weight:700;margin-bottom:3px">방 참가 또는 만들기</div>
+              <div style="font-size:13px;color:var(--t3);line-height:1.7">홈 화면의 방 목록에서 원하는 방을 클릭해 참가하거나, "방 만들기" 버튼으로 직접 방을 개설하세요. 비밀번호 방은 자물쇠 아이콘이 표시됩니다. 빈 슬롯을 클릭하면 초대 링크를 복사할 수 있습니다.</div>
+            </div>
+          </div>
+          <div style="display:flex;gap:16px;align-items:flex-start">
+            <div style="width:28px;height:28px;border-radius:50%;background:var(--acc-s);border:1px solid var(--acc);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:var(--acc);flex-shrink:0">2</div>
+            <div>
+              <div style="font-weight:700;margin-bottom:3px">게임 시작</div>
+              <div style="font-size:13px;color:var(--t3);line-height:1.7">호스트만 게임을 시작할 수 있습니다. 시작하면 맵의 문제들이 무작위 순서로 출제됩니다.</div>
+            </div>
+          </div>
+          <div style="display:flex;gap:16px;align-items:flex-start">
+            <div style="width:28px;height:28px;border-radius:50%;background:var(--acc-s);border:1px solid var(--acc);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:var(--acc);flex-shrink:0">3</div>
+            <div>
+              <div style="font-weight:700;margin-bottom:3px">정답 입력</div>
+              <div style="font-size:13px;color:var(--t3);line-height:1.7">음악을 듣고 하단 입력창에 정답을 입력한 뒤 엔터를 누르세요. 소문제가 여러 개인 경우 각각 순서대로 맞춰야 합니다. 빠르게 맞출수록 더 높은 점수를 받습니다.</div>
+            </div>
+          </div>
+          <div style="display:flex;gap:16px;align-items:flex-start">
+            <div style="width:28px;height:28px;border-radius:50%;background:var(--acc-s);border:1px solid var(--acc);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:var(--acc);flex-shrink:0">4</div>
+            <div>
+              <div style="font-weight:700;margin-bottom:3px">초성 힌트 · 스킵</div>
+              <div style="font-size:13px;color:var(--t3);line-height:1.7">맵 제작자가 설정한 경우 일정 시간 후 초성 힌트가 표시됩니다. 모르겠으면 <b style="color:var(--t2)">K</b> 키로 스킵 투표를 할 수 있습니다. 2명 이하는 전원 동의, 3명 이상은 과반수가 스킵하면 다음 문제로 넘어갑니다.</div>
+            </div>
+          </div>
+          <div style="display:flex;gap:16px;align-items:flex-start">
+            <div style="width:28px;height:28px;border-radius:50%;background:var(--acc-s);border:1px solid var(--acc);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:var(--acc);flex-shrink:0">5</div>
+            <div>
+              <div style="font-weight:700;margin-bottom:3px">점수 계산</div>
+              <div style="font-size:13px;color:var(--t3);line-height:1.7">맞춘 순서(1등 보너스)와 남은 시간 비율에 따라 점수가 결정됩니다. 모든 문제가 끝나면 최종 순위가 표시됩니다.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 맵 제작 -->
+      <div style="background:var(--bg3);border:1px solid var(--brd);border-radius:var(--rl);padding:24px">
+        <div style="font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--t3);margin-bottom:16px">맵 제작</div>
+
+        <div style="display:flex;flex-direction:column;gap:14px">
+          <div style="display:flex;gap:16px;align-items:flex-start">
+            <div style="width:28px;height:28px;border-radius:50%;background:var(--grn-s);border:1px solid var(--grn);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:var(--grn);flex-shrink:0">1</div>
+            <div>
+              <div style="font-weight:700;margin-bottom:3px">맵 기본 설정</div>
+              <div style="font-size:13px;color:var(--t3);line-height:1.7">사이드바에서 "맵 제작"을 클릭합니다. 맵 이름과 카테고리(애니 노래, K-POP, 보컬로이드 등)를 선택하면 소문제 항목이 자동으로 채워집니다.</div>
+            </div>
+          </div>
+          <div style="display:flex;gap:16px;align-items:flex-start">
+            <div style="width:28px;height:28px;border-radius:50%;background:var(--grn-s);border:1px solid var(--grn);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:var(--grn);flex-shrink:0">2</div>
+            <div>
+              <div style="font-weight:700;margin-bottom:3px">YouTube URL 입력</div>
+              <div style="font-size:13px;color:var(--t3);line-height:1.7">각 문제에 YouTube 링크를 붙여넣으면 미리보기 플레이어가 나타납니다. <b style="color:var(--t2)">시작 / 끝 슬라이더</b>로 재생 구간을 직접 잡아주세요. 구간이 제한 시간보다 짧으면 자동으로 반복 재생됩니다.</div>
+            </div>
+          </div>
+          <div style="display:flex;gap:16px;align-items:flex-start">
+            <div style="width:28px;height:28px;border-radius:50%;background:var(--grn-s);border:1px solid var(--grn);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:var(--grn);flex-shrink:0">3</div>
+            <div>
+              <div style="font-weight:700;margin-bottom:3px">소문제 · 정답 입력</div>
+              <div style="font-size:13px;color:var(--t3);line-height:1.7">각 소문제(노래 제목, 가수 등)의 정답을 입력합니다. 정답이 여러 개인 경우 <b style="color:var(--t2)">쉼표(,)</b>로 구분해 입력하면 모두 정답으로 인정됩니다.</div>
+            </div>
+          </div>
+          <div style="display:flex;gap:16px;align-items:flex-start">
+            <div style="width:28px;height:28px;border-radius:50%;background:var(--grn-s);border:1px solid var(--grn);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:var(--grn);flex-shrink:0">4</div>
+            <div>
+              <div style="font-weight:700;margin-bottom:3px">초성 힌트 설정 (선택)</div>
+              <div style="font-size:13px;color:var(--t3);line-height:1.7">소문제마다 "초성 힌트" 체크박스를 켜면 몇 초 후에 자동으로 초성이 공개될지 설정할 수 있습니다. 한국어 정답에만 적용됩니다.</div>
+            </div>
+          </div>
+          <div style="display:flex;gap:16px;align-items:flex-start">
+            <div style="width:28px;height:28px;border-radius:50%;background:var(--grn-s);border:1px solid var(--grn);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:var(--grn);flex-shrink:0">5</div>
+            <div>
+              <div style="font-weight:700;margin-bottom:3px">맵 공개하기</div>
+              <div style="font-size:13px;color:var(--t3);line-height:1.7">모든 문제를 작성한 뒤 하단의 "맵 공개하기" 버튼을 누르면 맵이 저장되고 바로 방을 만들어 플레이할 수 있습니다. 내 맵 대시보드에서 언제든지 수정하거나 삭제할 수 있습니다.</div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
