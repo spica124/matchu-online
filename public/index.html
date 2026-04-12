@@ -508,7 +508,7 @@ body{font-family:'Nanum Gothic Rounded',sans-serif;background:var(--bg);color:va
         <button class="btn btn-g btn-sm" onclick="addCreatorQ()" style="margin-left:auto">+ 문제 추가</button>
       </div>
       <div id="cmQuestions"></div>
-      <button class="btn btn-a btn-lg btn-full" style="margin-top:20px" onclick="submitMap()">맵 공개하기</button>
+      <button class="btn btn-a btn-lg btn-full" style="margin-top:20px" onclick="saveNewMap()">맵 공개하기</button>
     </div>
 
     <!-- ════ GUIDE ════ -->
@@ -1939,7 +1939,7 @@ function addCreatorQ() {
 function addSubQ(qi) { creatorQuestions[qi].subQuestions.push(defaultSubQ(creatorQuestions[qi].type)); renderCreatorQuestions(); }
 function removeSubQ(qi, si) { creatorQuestions[qi].subQuestions.splice(si, 1); renderCreatorQuestions(); }
 
-async function submitMap() {
+async function saveNewMap() {
   if (!authToken) return openAuthModal('login', '맵을 만들려면 로그인이 필요합니다');
   const name = document.getElementById("cmName").value.trim();
   const cat = document.getElementById("cmCat").value;
@@ -2232,8 +2232,8 @@ async function loadDashboard() {
       rejected: { label: "거절됨", color: "var(--acc)", bg: "var(--acc-s)" },
     };
 
-    el.innerHTML = data.map(mapItem => {
-      const mid   = mapItem.id || mapItem.mapId || mapItem._id || "";
+    window._dashMaps = data;
+    el.innerHTML = data.map((mapItem, idx) => {
       const mname = esc(mapItem.name || "");
       const st    = mapItem.status || "draft";
       const bc    = STATUS_BADGE[st] || STATUS_BADGE.draft;
@@ -2242,10 +2242,10 @@ async function loadDashboard() {
         ? `<div style="font-size:11px;color:var(--acc);margin-top:4px">거절 사유: ${esc(mapItem.rejectReason)}</div>` : "";
       let actionBtn = "";
       if (st === "pending") {
-        actionBtn = `<button class="btn btn-g btn-sm" onclick="cancelSubmitMap('${mid}')">신청 취소</button>`;
+        actionBtn = `<button class="btn btn-g btn-sm" onclick="cancelSubmitMap(${idx})">신청 취소</button>`;
       } else if (st !== "approved") {
         const lbl = st === "rejected" ? "재신청" : "배포하기";
-        actionBtn = `<button class="btn btn-g btn-sm" style="color:var(--grn);border-color:rgba(34,197,94,.3)" onclick="submitMap('${mid}')">${lbl}</button>`;
+        actionBtn = `<button class="btn btn-g btn-sm" style="color:var(--grn);border-color:rgba(34,197,94,.3)" onclick="submitMap(${idx})">${lbl}</button>`;
       }
       return `
       <div style="display:flex;align-items:center;gap:14px;padding:14px 18px;background:var(--bg3);border:1px solid var(--brd);border-radius:var(--r);margin-bottom:8px;transition:border-color .15s" onmouseover="this.style.borderColor='var(--brd2)'" onmouseout="this.style.borderColor='var(--brd)'">
@@ -2262,9 +2262,9 @@ async function loadDashboard() {
         </div>
         <div style="display:flex;gap:8px;flex-shrink:0;flex-wrap:wrap;justify-content:flex-end">
           ${actionBtn}
-          <button class="btn btn-g btn-sm" onclick="openCreateWithMap('${mid}','${mname}')">방 만들기</button>
-          <button class="btn btn-g btn-sm" onclick="openEditMap('${mid}')">수정</button>
-          <button class="btn btn-sm" style="background:var(--acc-s);color:var(--acc);border:1px solid rgba(232,64,94,.3)" onclick="deleteMap('${mid}','${mname}')">삭제</button>
+          <button class="btn btn-g btn-sm" onclick="openCreateWithMap(${idx})">방 만들기</button>
+          <button class="btn btn-g btn-sm" onclick="openEditMap(${idx})">수정</button>
+          <button class="btn btn-sm" style="background:var(--acc-s);color:var(--acc);border:1px solid rgba(232,64,94,.3)" onclick="deleteMap(${idx})">삭제</button>
         </div>
       </div>`;
     }).join("");
@@ -2273,7 +2273,11 @@ async function loadDashboard() {
   }
 }
 
-async function deleteMap(mapId, mapName) {
+async function deleteMap(idx) {
+  const mapItem = (window._dashMaps || [])[idx];
+  if (!mapItem) return alert("맵 정보를 찾을 수 없습니다. 대시보드를 새로고침해주세요.");
+  const mapId = mapItem.id || mapItem.mapId || String(mapItem._id || "");
+  const mapName = mapItem.name || "";
   if (!confirm(`"${mapName}" 맵을 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.`)) return;
   try {
     const { ok, data } = await fetchJSON(`/api/maps/${mapId}`, {
@@ -2285,8 +2289,11 @@ async function deleteMap(mapId, mapName) {
   } catch(e) { alert("삭제 실패: " + e.message); }
 }
 
-async function submitMap(mapId) {
-  if (!mapId || mapId === "undefined") return alert("맵 ID가 올바르지 않습니다. 대시보드를 새로고침해주세요.");
+async function submitMap(idx) {
+  const mapItem = (window._dashMaps || [])[idx];
+  if (!mapItem) return alert("맵 정보를 찾을 수 없습니다. 대시보드를 새로고침해주세요.");
+  const mapId = mapItem.id || mapItem.mapId || String(mapItem._id || "");
+  if (!mapId) return alert("맵 ID가 올바르지 않습니다. 대시보드를 새로고침해주세요.");
   if (!confirm("이 맵을 배포 신청하시겠습니까?\n관리자가 검토 후 승인하면 맵 찾기에 공개됩니다.")) return;
   try {
     const { ok, data } = await fetchJSON(`/api/maps/${mapId}/submit`, {
@@ -2297,7 +2304,10 @@ async function submitMap(mapId) {
   } catch(e) { alert("신청 실패: " + e.message); }
 }
 
-async function cancelSubmitMap(mapId) {
+async function cancelSubmitMap(idx) {
+  const mapItem = (window._dashMaps || [])[idx];
+  if (!mapItem) return alert("맵 정보를 찾을 수 없습니다. 대시보드를 새로고침해주세요.");
+  const mapId = mapItem.id || mapItem.mapId || String(mapItem._id || "");
   if (!confirm("배포 신청을 취소하시겠습니까?")) return;
   try {
     const { ok, data } = await fetchJSON(`/api/maps/${mapId}/cancel-submit`, {
@@ -2368,7 +2378,10 @@ async function adminReject(mapId, mapName) {
 let editMapId = null;
 let editQuestions = [];
 
-async function openEditMap(mapId) {
+async function openEditMap(idx) {
+  const mapItem = (window._dashMaps || [])[idx];
+  if (!mapItem) return alert("맵 정보를 찾을 수 없습니다. 대시보드를 새로고침해주세요.");
+  const mapId = mapItem.id || mapItem.mapId || String(mapItem._id || "");
   try {
     // 정답 포함 full 데이터 조회 (인증 토큰 포함)
     const { ok: fok, data: full } = await fetchJSON(`/api/maps/full/${mapId}`, {
@@ -2496,9 +2509,17 @@ function playCorrectSound() {
 }
 
 // 맵 탐색에서 맵 클릭 → 방 생성 모달 (해당 맵 선택된 상태)
-function openCreateWithMap(mapId, mapName) {
+// idx: integer (from dashboard) or mapId string + mapName string (from map browser)
+function openCreateWithMap(idxOrMapId, mapName) {
+  let mapId = idxOrMapId;
+  if (typeof idxOrMapId === "number") {
+    const mapItem = (window._dashMaps || [])[idxOrMapId];
+    if (!mapItem) return alert("맵 정보를 찾을 수 없습니다. 대시보드를 새로고침해주세요.");
+    mapId = mapItem.id || mapItem.mapId || String(mapItem._id || "");
+    mapName = mapItem.name || "";
+  }
   selectedMapId = mapId;
-  document.getElementById("crName").value = mapName + " 방";
+  document.getElementById("crName").value = (mapName || "") + " 방";
   document.getElementById("createModal").classList.remove("hide");
   // 내 맵 목록 요청 (승인 안 된 맵도 포함)
   socket.emit("getMyMaps");
