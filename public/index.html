@@ -494,9 +494,9 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--t1);
 
     <!-- ════ GAME ════ -->
     <div class="page hide" id="page-game" style="padding:0;max-width:none;display:flex;flex-direction:column;height:calc(100vh - var(--th));overflow:hidden">
-      <!-- YouTube 오디오 숨김 -->
-      <div id="youtubeArea" style="display:none;width:1px;height:1px;overflow:hidden;position:absolute;opacity:0">
-        <iframe id="youtubeFrame" style="width:1px;height:1px;border:none" allow="autoplay; encrypted-media"></iframe>
+      <!-- YouTube IFrame API 플레이어 (숨김) -->
+      <div id="youtubeArea" style="position:absolute;width:1px;height:1px;overflow:hidden;opacity:0;pointer-events:none">
+        <div id="ytPlayer"></div>
       </div>
 
       <div class="gv-wrap" style="flex:1;min-height:0">
@@ -506,6 +506,13 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--t1);
           <div class="gv-topbar">
             <span class="gv-songcount" id="gameQC">남은 곡 ( 1 / 1 )</span>
             <div class="t-track" style="flex:1;margin:0 16px"><div class="t-fill" id="timerFill" style="width:100%;background:var(--grn)"></div></div>
+            <!-- 볼륨 컨트롤 -->
+            <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
+              <span id="volIcon" style="font-size:15px;cursor:pointer;user-select:none" onclick="toggleMute()" title="음소거">🔊</span>
+              <input type="range" id="volSlider" min="0" max="100" value="100" step="1"
+                style="width:72px;accent-color:var(--acc);cursor:pointer"
+                oninput="setVolume(+this.value)">
+            </div>
             <button class="btn btn-g btn-sm" onclick="leaveGameConfirm()" style="color:var(--acc);border-color:var(--acc);flex-shrink:0">🚪 나가기</button>
           </div>
 
@@ -710,6 +717,11 @@ const COLORS = ["#FF6B6B","#4ECDC4","#45B7D1","#96CEB4","#FFEAA7","#DDA0DD","#98
 // ═══════════════════════════════════════════
 
 window.addEventListener("DOMContentLoaded", () => {
+  // 볼륨 슬라이더 초기값
+  const sl = document.getElementById("volSlider");
+  if (sl) { sl.value = _volLevel; }
+  updateVolIcon();
+
   document.getElementById("chatInput").addEventListener("keydown", e => { if (e.key === "Enter") sendChatOrAnswer(); });
   // K키 스킵 단축키 (채팅 입력 중 제외)
   document.addEventListener("keydown", e => {
@@ -849,34 +861,10 @@ socket.on("question", ({ index, total, type, hint, timeLimit, mediaUrl, startTim
 
   renderSubQList();
 
-  // YouTube 오디오 재생 + 클립 반복
+  // YouTube 오디오 재생 (IFrame API)
   if (mediaUrl !== null && mediaUrl !== undefined) {
-    const ytFrame = document.getElementById("youtubeFrame");
     const ytId = getYouTubeId(mediaUrl || "");
-    clearInterval(window._ytLoopTimer);
-    if (ytId) {
-      const clipLen = (endTime && startTime != null && endTime > startTime) ? (endTime - startTime) : 0;
-      const curTimeLimit = timeLimit || gameState.timeLimit || 30;
-      const needsLoop = clipLen > 0 && clipLen < curTimeLimit;
-      let src = `https://www.youtube-nocookie.com/embed/${ytId}?autoplay=1&rel=0&modestbranding=1`;
-      if (startTime) src += `&start=${startTime}`;
-      if (endTime)   src += `&end=${endTime}`;
-      if (needsLoop) src += `&loop=1&playlist=${ytId}`;
-      ytFrame.src = src;
-      document.getElementById("youtubeArea").style.display = "block";
-      // 반복: endTime 지나면 startTime으로 재로드
-      if (needsLoop) {
-        window._ytLoopTimer = setInterval(() => {
-          const f = document.getElementById("youtubeFrame");
-          if (f && f.src.includes(ytId)) {
-            let s2 = `https://www.youtube-nocookie.com/embed/${ytId}?autoplay=1&rel=0&modestbranding=1&start=${startTime}&end=${endTime}&loop=1&playlist=${ytId}`;
-            f.src = s2;
-          }
-        }, clipLen * 1000);
-      }
-    } else {
-      ytFrame.src = "";
-    }
+    playYouTube(ytId, startTime || 0, endTime || 0, timeLimit || gameState.timeLimit || 30);
   }
 });
 
@@ -1615,7 +1603,7 @@ async function openEditMap(mapId) {
     const { ok: fok, data: full } = await fetchJSON(`/api/maps/full/${mapId}`, {
       headers: { "Authorization": `Bearer ${authToken}` },
     });
-    if (!fok) return alert(full.error || "맵 데이터를 불러오지 못했습니다.");
+    if (!fok) return alert("맵 불러오기 실패: " + (full.error || "알 수 없는 오류") + "\n(로그아웃 후 다시 로그인해 보세요)");
     editMapId = mapId;
 
     document.getElementById("emName").value = full.name || "";
@@ -1709,9 +1697,11 @@ function getYouTubeId(url) {
 }
 
 function stopYoutube() {
-  clearInterval(window._ytLoopTimer);
-  const f = document.getElementById("youtubeFrame");
-  if (f) { f.src = ""; document.getElementById("youtubeArea").style.display = "none"; }
+  if (typeof _ytLoopInterval !== "string") clearInterval(_ytLoopInterval);
+  _ytLoopInterval = null;
+  if (ytPlayer && ytPlayerReady) {
+    try { ytPlayer.stopVideo(); if (ytPlayer._loopInfo) delete ytPlayer._loopInfo; } catch(e) {}
+  }
 }
 
 // Web Audio API 정답 소리
@@ -1793,6 +1783,124 @@ async function loadRanking() {
     document.getElementById("rankingList").innerHTML = '<div class="empty">랭킹을 불러오지 못했습니다.</div>';
   }
 }
+
+// ═══════════════════════════════════════════
+// YouTube IFrame API — 볼륨 제어
+// ═══════════════════════════════════════════
+
+let ytPlayer = null;
+let ytPlayerReady = false;
+let ytPendingPlay = null; // { ytId, startTime, endTime, timeLimit }
+let _ytLoopInterval = null;
+let _volLevel = parseInt(localStorage.getItem("vol") ?? "100");
+let _muted = false;
+let _prevVol = _volLevel;
+
+function onYouTubeIframeAPIReady() {
+  ytPlayer = new YT.Player("ytPlayer", {
+    width: "1",
+    height: "1",
+    playerVars: { autoplay: 1, controls: 0, rel: 0, modestbranding: 1, playsinline: 1 },
+    events: {
+      onReady: (e) => {
+        ytPlayerReady = true;
+        e.target.setVolume(_volLevel);
+        if (_muted) e.target.mute();
+        if (ytPendingPlay) {
+          const p = ytPendingPlay; ytPendingPlay = null;
+          _doPlay(p.ytId, p.startTime, p.endTime, p.timeLimit);
+        }
+      },
+      onStateChange: (e) => {
+        // 클립 반복: 영상 끝나면 시작 시간으로 seek
+        if (e.data === YT.PlayerState.ENDED && _ytLoopInterval === "loop") {
+          const info = ytPlayer._loopInfo;
+          if (info) ytPlayer.seekTo(info.startTime, true);
+        }
+      },
+    },
+  });
+}
+
+function playYouTube(ytId, startTime, endTime, timeLimit) {
+  clearInterval(_ytLoopInterval === "loop" ? null : _ytLoopInterval);
+  _ytLoopInterval = null;
+  if (ytPlayer) delete ytPlayer._loopInfo;
+
+  if (!ytId) {
+    if (ytPlayer && ytPlayerReady) ytPlayer.stopVideo();
+    return;
+  }
+  if (!ytPlayerReady) {
+    ytPendingPlay = { ytId, startTime, endTime, timeLimit };
+    return;
+  }
+  _doPlay(ytId, startTime, endTime, timeLimit);
+}
+
+function _doPlay(ytId, startTime, endTime, timeLimit) {
+  const clipLen = (endTime > 0 && endTime > startTime) ? (endTime - startTime) : 0;
+  const needsLoop = clipLen > 0 && clipLen < timeLimit;
+
+  ytPlayer.loadVideoById({ videoId: ytId, startSeconds: startTime || 0, endSeconds: endTime || undefined });
+  ytPlayer.setVolume(_volLevel);
+  if (_muted) ytPlayer.mute(); else ytPlayer.unMute();
+
+  if (needsLoop) {
+    ytPlayer._loopInfo = { ytId, startTime, endTime };
+    _ytLoopInterval = "loop"; // onStateChange handles loop via ENDED event
+    // fallback: 클립 길이마다 시작 시간으로 재생
+    const timer = setInterval(() => {
+      if (!ytPlayer || !ytPlayerReady) { clearInterval(timer); return; }
+      const info = ytPlayer._loopInfo;
+      if (!info || info.ytId !== ytId) { clearInterval(timer); return; }
+      ytPlayer.seekTo(info.startTime, true);
+    }, clipLen * 1000);
+    _ytLoopInterval = timer;
+  }
+}
+
+function setVolume(val) {
+  _volLevel = val;
+  _muted = (val === 0);
+  localStorage.setItem("vol", val);
+  if (ytPlayer && ytPlayerReady) {
+    ytPlayer.setVolume(val);
+    if (val === 0) ytPlayer.mute(); else ytPlayer.unMute();
+  }
+  updateVolIcon();
+}
+
+function toggleMute() {
+  if (_muted) {
+    // 음소거 해제
+    const restoreVol = _prevVol > 0 ? _prevVol : 80;
+    _muted = false;
+    _volLevel = restoreVol;
+    document.getElementById("volSlider").value = restoreVol;
+    if (ytPlayer && ytPlayerReady) { ytPlayer.unMute(); ytPlayer.setVolume(restoreVol); }
+    localStorage.setItem("vol", restoreVol);
+  } else {
+    // 음소거
+    _prevVol = _volLevel;
+    _muted = true;
+    _volLevel = 0;
+    document.getElementById("volSlider").value = 0;
+    if (ytPlayer && ytPlayerReady) ytPlayer.mute();
+    localStorage.setItem("vol", 0);
+  }
+  updateVolIcon();
+}
+
+function updateVolIcon() {
+  const icon = document.getElementById("volIcon");
+  if (!icon) return;
+  if (_volLevel === 0 || _muted) icon.textContent = "🔇";
+  else if (_volLevel < 40)       icon.textContent = "🔈";
+  else if (_volLevel < 70)       icon.textContent = "🔉";
+  else                            icon.textContent = "🔊";
+}
 </script>
+<script src="https://www.youtube.com/iframe_api"></script>
 </body>
 </html>

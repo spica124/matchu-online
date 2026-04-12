@@ -201,7 +201,10 @@ app.get("/api/maps", async (req, res) => {
 
 app.get("/api/maps/mine", authMiddleware, async (req, res) => {
   try {
-    const list = await MapModel.find({ authorId: req.user.id }, "mapId name icon category tags plays rating author createdAt questions").lean();
+    const list = await MapModel.find(
+      { $or: [{ authorId: req.user.id }, { author: req.user.username }] },
+      "mapId name icon category tags plays rating author authorId createdAt questions"
+    ).lean();
     res.json(list.map(m => ({ id: m.mapId, name: m.name, icon: m.icon, category: m.category, tags: m.tags, questionCount: m.questions.length, plays: m.plays, rating: m.rating, author: m.author, createdAt: m.createdAt })));
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
@@ -210,7 +213,8 @@ app.get("/api/maps/full/:id", authMiddleware, async (req, res) => {
   try {
     const m = await MapModel.findOne({ mapId: req.params.id }).lean();
     if (!m) return res.status(404).json({ error: "맵을 찾을 수 없습니다" });
-    if (m.authorId !== req.user.id) return res.status(403).json({ error: "권한 없음" });
+    const isOwner = (m.authorId && m.authorId === req.user.id) || m.author === req.user.username;
+    if (!isOwner) return res.status(403).json({ error: "이 맵의 수정 권한이 없습니다" });
     res.json({ ...m, id: m.mapId });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
@@ -237,7 +241,8 @@ app.put("/api/maps/:id", authMiddleware, async (req, res) => {
   try {
     const m = await MapModel.findOne({ mapId: req.params.id });
     if (!m) return res.status(404).json({ error: "맵을 찾을 수 없습니다" });
-    if (m.authorId !== req.user.id) return res.status(403).json({ error: "수정 권한이 없습니다" });
+    const isOwner = (m.authorId && m.authorId === req.user.id) || m.author === req.user.username;
+    if (!isOwner) return res.status(403).json({ error: "수정 권한이 없습니다" });
     const { name, icon, category, tags, questions } = req.body;
     if (name) m.name = name;
     if (icon) m.icon = icon;
@@ -253,7 +258,8 @@ app.delete("/api/maps/:id", authMiddleware, async (req, res) => {
   try {
     const m = await MapModel.findOne({ mapId: req.params.id });
     if (!m) return res.status(404).json({ error: "맵을 찾을 수 없습니다" });
-    if (m.authorId !== req.user.id) return res.status(403).json({ error: "삭제 권한이 없습니다" });
+    const isOwner2 = (m.authorId && m.authorId === req.user.id) || m.author === req.user.username;
+    if (!isOwner2) return res.status(403).json({ error: "삭제 권한이 없습니다" });
     await MapModel.deleteOne({ mapId: req.params.id });
     res.json({ message: "맵이 삭제되었습니다!" });
   } catch (e) { res.status(500).json({ error: e.message }); }
