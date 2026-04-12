@@ -81,9 +81,13 @@ const mapSchema = new mongoose.Schema({
 const MapModel = mongoose.model("Map", mapSchema);
 
 const rankingSchema = new mongoose.Schema({
+  userId: String,   // 유저 고유 ID (없으면 name 기반)
   name: String, avatar: String, score: Number,
-  mapName: String, date: { type: Date, default: Date.now },
+  mapId: String, mapName: String,
+  date: { type: Date, default: Date.now },
 });
+// 유저 + 맵 조합은 유일 (최고점수 1건만 유지)
+rankingSchema.index({ userId: 1, mapId: 1 }, { unique: true, sparse: true });
 const RankingModel = mongoose.model("Ranking", rankingSchema);
 
 // ═══════════════════════════════════════════
@@ -322,8 +326,8 @@ io.on("connection", (socket) => {
   io.emit("onlineCount", onlineCount);
   console.log(`[+] ${socket.id} (온라인: ${onlineCount})`);
 
-  socket.on("register", ({ name, avatar }) => {
-    users.set(socket.id, { id: socket.id, name: name || "Player_" + Math.floor(Math.random() * 9999), avatar: avatar || "🦊", score: 0 });
+  socket.on("register", ({ name, avatar, userId }) => {
+    users.set(socket.id, { id: socket.id, name: name || "Player_" + Math.floor(Math.random() * 9999), avatar: avatar || "🦊", score: 0, userId: userId || name });
     socket.emit("registered", users.get(socket.id));
   });
 
@@ -454,8 +458,10 @@ io.on("connection", (socket) => {
     const question = room.map.questions[room.currentQuestion];
     const subQs = getSubQuestions(question);
     const votes = room.skipVoters.size;
-    const needed = Math.max(1, Math.ceil(room.players.size / 2));
-    io.to(roomId).emit("skipVoteUpdate", { votes, total: room.players.size, needed });
+    const total = room.players.size;
+    // 1~2명: 전원 스킵, 3명 이상: 과반수 (4명→3명, 5명→3명, 6명→4명...)
+    const needed = total >= 3 ? Math.floor(total / 2) + 1 : total;
+    io.to(roomId).emit("skipVoteUpdate", { votes, total, needed });
 
     if (votes >= needed) {
       clearInterval(room.timer);
@@ -605,8 +611,23 @@ function nextQuestion(room) {
     io.to(room.id).emit("gameOver", { scores: finalScores });
     io.to(room.id).emit("chatMessage", { type: "system", text: "🏆 게임 종료!" });
     const mapName = room.map?.name || "알 수 없음";
-    const docs = finalScores.filter(p => p.score > 0).map(p => ({ name: p.name, avatar: p.avatar, score: p.score, mapName }));
-    if (docs.length) RankingModel.insertMany(docs).catch(e => console.error("랭킹 저장 실패:", e.message));
+    const mapId = String(room.map?._id || room.map?.id || room.mapId || "");
+    // 맵당 최고점수만 유지 — 현재 점수가 더 높을 때만 upsert
+    for (const p of finalScores.filter(s => s.score > 0)) {
+      const userId = p.userId || p.name; // 로그인 유저면 userId, 아니면 name
+      if (!mapId) {
+        // mapId 없으면 그냥 insert (레거시)
+        RankingModel.create({ userId, name: p.name, avatar: p.avatar, score: p.score, mapId: mapId||userId+mapName, mapName })
+          .catch(() => {});
+      } else {
+        // 기존 최고점수보다 높을 때만 score 갱신
+        RankingModel.findOneAndUpdate(
+          { userId, mapId },
+          { $max: { score: p.score }, $set: { name: p.name, avatar: p.avatar, mapName, date: new Date() } },
+          { upsert: true }
+        ).catch(e => console.error("랭킹 저장 실패:", e.message));
+      }
+    }
     setTimeout(() => { if (rooms.has(room.id)) { clearInterval(room.timer); rooms.delete(room.id); broadcastRoomList(); } }, 3000);
     broadcastRoomList();
     return;
@@ -640,7 +661,7 @@ function getPlayersArray(room) {
   return Array.from(room.players.entries()).map(([sid, p]) => ({ id: sid, name: p.name, avatar: p.avatar, score: p.score, isHost: sid === room.hostId }));
 }
 function getScoresArray(room) {
-  return Array.from(room.players.values()).map(p => ({ name: p.name, avatar: p.avatar, score: p.score })).sort((a, b) => b.score - a.score);
+  return Array.from(room.players.values()).map(p => ({ name: p.name, avatar: p.avatar, score: p.score, userId: p.userId || p.name })).sort((a, b) => b.score - a.score);
 }
 function broadcastRoomList() {
   io.emit("roomList", Array.from(rooms.values()).filter(r => r.status !== "finished").map(r => ({

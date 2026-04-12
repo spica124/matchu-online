@@ -457,7 +457,8 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--t1);
       <div style="background:var(--bg3);border:1px solid var(--brd);border-radius:var(--rl);padding:20px;margin-bottom:16px">
         <div class="inp-g"><label class="inp-l">맵 이름</label><input class="inp" id="cmName" placeholder="예: 나만의 애니 퀴즈"></div>
         <div class="inp-g"><label class="inp-l">카테고리</label>
-          <select class="inp q-sel" id="cmCat" style="width:100%;cursor:pointer">
+          <select class="inp q-sel" id="cmCat" style="width:100%;cursor:pointer"
+            onchange="applyCategorySubQs('creatorQuestions',this.value);renderCreatorQuestions()">
             <option value="anime-song">🎵 애니 노래</option><option value="scene">🎬 애니 장면</option>
             <option value="character">💬 캐릭터 대사</option><option value="kpop">🎤 K-POP</option><option value="jpop">🎶 J-POP</option><option value="ost">🎧 OST</option>
           </select>
@@ -608,8 +609,22 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--t1);
     </div>
     <div id="authError" style="display:none;background:var(--acc-s);color:var(--acc);border:1px solid rgba(232,64,94,.3);border-radius:var(--rs);padding:8px 12px;font-size:13px;margin-bottom:12px"></div>
     <div class="inp-g"><label class="inp-l" id="authUserLabel">아이디 (닉네임)</label><input class="inp" id="authUsername" placeholder="닉네임 입력 (고유)..." autocomplete="username" maxlength="20"></div>
-    <div class="inp-g"><label class="inp-l">비밀번호</label><input class="inp" id="authPassword" type="password" placeholder="비밀번호 입력..." autocomplete="current-password"
-      onkeydown="if(event.key==='Enter')doAuth()"></div>
+    <div class="inp-g"><label class="inp-l">비밀번호</label>
+      <div style="position:relative">
+        <input class="inp" id="authPassword" type="password" placeholder="비밀번호 입력..." autocomplete="current-password"
+          style="padding-right:40px" onkeydown="if(event.key==='Enter')doAuth()">
+        <button type="button" onclick="togglePwVis('authPassword','eyeBtn1')" id="eyeBtn1"
+          style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:16px;color:var(--t3);padding:0;line-height:1">👁</button>
+      </div>
+    </div>
+    <div class="inp-g" id="authPasswordConfirmRow" style="display:none"><label class="inp-l">비밀번호 확인</label>
+      <div style="position:relative">
+        <input class="inp" id="authPasswordConfirm" type="password" placeholder="비밀번호 재입력..." autocomplete="new-password"
+          style="padding-right:40px" onkeydown="if(event.key==='Enter')doAuth()">
+        <button type="button" onclick="togglePwVis('authPasswordConfirm','eyeBtn2')" id="eyeBtn2"
+          style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:16px;color:var(--t3);padding:0;line-height:1">👁</button>
+      </div>
+    </div>
     <div id="authAvatarRow" class="inp-g" style="display:none">
       <label class="inp-l">아바타</label>
       <div id="avatarBtnGroup" style="display:flex;gap:8px;flex-wrap:wrap"></div>
@@ -643,7 +658,8 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--t1);
     </div>
     <div class="inp-g"><label class="inp-l">맵 이름</label><input class="inp" id="emName" placeholder="맵 이름"></div>
     <div class="inp-g"><label class="inp-l">카테고리</label>
-      <select class="inp q-sel" id="emCat" style="width:100%;cursor:pointer">
+      <select class="inp q-sel" id="emCat" style="width:100%;cursor:pointer"
+        onchange="applyCategorySubQs('editQuestions',this.value);renderEditQuestions()">
         <option value="anime-song">🎵 애니 노래</option>
         <option value="scene">🎬 애니 장면</option>
         <option value="character">💬 캐릭터 대사</option>
@@ -704,12 +720,37 @@ let gameState = { answered: false, timeLeft: 0, totalQ: 0, currentQ: 0 };
 function defaultSubQ(prompt) {
   return { prompt: prompt || "", answers: "", chosungHint: false, hintRevealTime: 5, showAnswer: true };
 }
+
+// 카테고리별 기본 소문제 목록
+const CATEGORY_SUBQS = {
+  "anime-song": ["노래 제목", "애니 제목"],
+  "scene":      ["애니 제목"],
+  "character":  ["캐릭터 이름", "애니 이름"],
+  "kpop":       ["노래 제목", "가수"],
+  "jpop":       ["노래 제목", "가수"],
+  "ost":        ["노래 제목", "작품 제목"],
+};
+
 function defaultQ(type) {
   type = type || "audio";
   const subs = type === "audio"
-    ? [defaultSubQ("노래 제목"), defaultSubQ("가수"), defaultSubQ("작곡가")]
+    ? [defaultSubQ("노래 제목"), defaultSubQ("가수")]
     : [defaultSubQ("")];
   return { type, mediaUrl:"", startTime:0, endTime:0, timeLimit:30, subQuestions: subs };
+}
+
+// 카테고리 변경 시 소문제 자동완성
+function applyCategorySubQs(arrName, category) {
+  const arr = arrName === 'creatorQuestions' ? creatorQuestions : editQuestions;
+  const prompts = CATEGORY_SUBQS[category];
+  if (!prompts || !arr) return;
+  arr.forEach(q => {
+    // 정답이 모두 비어있을 때만 소문제 prompt 자동 적용
+    const isEmpty = q.subQuestions.every(sq => !sq.answers.trim());
+    if (isEmpty) {
+      q.subQuestions = prompts.map(p => defaultSubQ(p));
+    }
+  });
 }
 let creatorQuestions = [defaultQ("audio")];
 
@@ -886,7 +927,8 @@ socket.on("question", ({ index, total, type, hint, timeLimit, mediaUrl, startTim
 
   // 스킵 버튼 초기화
   document.getElementById("skipBtn").disabled = false;
-  const needed = Math.max(1, Math.ceil((gameState.playerCount || 1) / 2));
+  const _pc = gameState.playerCount || 1;
+  const needed = _pc >= 3 ? Math.floor(_pc / 2) + 1 : _pc;
   document.getElementById("skipCount").textContent = `0/${needed}`;
 
   renderSubQList();
@@ -1577,7 +1619,14 @@ function togglePrevVol(arrName, i) {
 }
 
 function renderCreatorQuestions() { renderQList(creatorQuestions,'creatorQuestions','cmQuestions','cmQCount'); }
-function addCreatorQ() { creatorQuestions.push(defaultQ("audio")); renderCreatorQuestions(); }
+function addCreatorQ() {
+  const cat = document.getElementById("cmCat")?.value || "";
+  const prompts = CATEGORY_SUBQS[cat];
+  const q = defaultQ("audio");
+  if (prompts) q.subQuestions = prompts.map(p => defaultSubQ(p));
+  creatorQuestions.push(q);
+  renderCreatorQuestions();
+}
 function addSubQ(qi) { creatorQuestions[qi].subQuestions.push(defaultSubQ(creatorQuestions[qi].type)); renderCreatorQuestions(); }
 function removeSubQ(qi, si) { creatorQuestions[qi].subQuestions.splice(si, 1); renderCreatorQuestions(); }
 
@@ -1650,7 +1699,9 @@ function switchAuthTab(tab) {
   document.getElementById("authTabLogin").style.color        = isLogin ? "#fff" : "";
   document.getElementById("authTabRegister").style.background = isLogin ? "" : "var(--acc)";
   document.getElementById("authTabRegister").style.color     = isLogin ? "" : "#fff";
-  document.getElementById("authAvatarRow").style.display     = isLogin ? "none" : "block";
+  document.getElementById("authAvatarRow").style.display            = isLogin ? "none" : "block";
+  document.getElementById("authPasswordConfirmRow").style.display   = isLogin ? "none" : "block";
+  document.getElementById("authPasswordConfirm").value              = "";
   document.getElementById("authSubmitBtn").textContent       = isLogin ? "로그인" : "회원가입 🚀";
   document.getElementById("authUserLabel").textContent       = isLogin ? "아이디 (닉네임)" : "닉네임 (고유, 변경 불가)";
   document.getElementById("authUsername").placeholder        = isLogin ? "닉네임 입력..." : "사용할 닉네임 입력...";
@@ -1666,6 +1717,13 @@ function switchAuthTab(tab) {
   }
 }
 
+function togglePwVis(inputId, btnId) {
+  const inp = document.getElementById(inputId);
+  const btn = document.getElementById(btnId);
+  if (inp.type === "password") { inp.type = "text"; btn.style.opacity = "1"; }
+  else { inp.type = "password"; btn.style.opacity = "0.4"; }
+}
+
 function selectAuthAvatar(a) {
   document.getElementById("authAvatar").value = a;
   document.querySelectorAll(".av-btn").forEach(b => b.style.borderColor = b.textContent === a ? "var(--acc)" : "");
@@ -1677,6 +1735,11 @@ async function doAuth() {
   const errEl = document.getElementById("authError");
   errEl.style.display = "none";
   if (!username || !password) { errEl.textContent = "아이디와 비밀번호를 입력해주세요"; errEl.style.display = "block"; return; }
+  if (_authTab === "register") {
+    const confirm = document.getElementById("authPasswordConfirm").value;
+    if (!confirm) { errEl.textContent = "비밀번호 확인을 입력해주세요"; errEl.style.display = "block"; return; }
+    if (password !== confirm) { errEl.textContent = "비밀번호가 일치하지 않습니다"; errEl.style.display = "block"; return; }
+  }
   try {
     const body = { username, password };
     if (_authTab === "register") body.avatar = document.getElementById("authAvatar").value || "🦊";
@@ -1703,7 +1766,7 @@ function setAuthUser(token, user) {
   if (g("sideAuthLoggedIn"))  g("sideAuthLoggedIn").style.display  = "block";
   if (g("sideAuthName"))      g("sideAuthName").textContent      = `${user.avatar} ${user.username}`;
   if (g("topAuthBtn"))        g("topAuthBtn").textContent        = `${user.avatar} ${user.username}`;
-  socket.emit("register", { name: user.username, avatar: user.avatar });
+  socket.emit("register", { name: user.username, avatar: user.avatar, userId: user.id || user._id || user.username });
   // 현재 페이지가 없으면 홈으로
   const anyVisible = [...document.querySelectorAll(".page")].some(p => !p.classList.contains("hide"));
   if (!anyVisible) navigateTo("home");
