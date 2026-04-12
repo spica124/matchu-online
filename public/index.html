@@ -1288,7 +1288,6 @@ function filterRoomList(query) {
   }
   el.innerHTML = rooms.map(r => `
     <div class="r-row" onclick="${r.status === 'waiting' ? `joinRoom('${r.id}',${!!r.hasPassword})` : ''}">
-      <div class="r-icon">${r.mapIcon}</div>
       <div class="r-info">
         <div class="r-nm">${esc(r.name)}${r.hasPassword ? ' <span style="font-size:12px;color:var(--t3)" title="비밀번호 방">🔒</span>' : ''}</div>
         <div class="r-meta"><span>${esc(r.mapName)}</span><span>호스트: ${esc(r.hostName)}</span></div>
@@ -1307,7 +1306,6 @@ function renderBattleMini(rooms) {
   document.getElementById("battleCount").textContent = waiting.length;
   document.getElementById("battleMini").innerHTML = waiting.map(r => `
     <div class="b-mini" onclick="joinRoom('${r.id}',${!!r.hasPassword})">
-      <div class="b-badge" style="background:var(--acc)">${r.mapIcon}</div>
       <div class="b-info"><div class="b-nm">${esc(r.name)}</div></div>
       <div class="b-cnt">${r.players}/${r.maxPlayers}</div>
     </div>
@@ -1315,15 +1313,14 @@ function renderBattleMini(rooms) {
 }
 
 function renderMapGrid(maps, filter) {
-  const cats = [{id:"all",label:"전체",icon:"🏠"},{id:"anime-song",label:"애니",icon:"🎵"},{id:"scene",label:"장면",icon:"🎬"},{id:"character",label:"캐릭터",icon:"💬"},{id:"kpop",label:"K-POP",icon:"🎤"},{id:"jpop",label:"J-POP",icon:"🎶"},{id:"ost",label:"OST",icon:"🎧"}];
+  const cats = [{id:"all",label:"전체"},{id:"anime-song",label:"애니"},{id:"scene",label:"장면"},{id:"character",label:"캐릭터"},{id:"kpop",label:"K-POP"},{id:"jpop",label:"J-POP"},{id:"ost",label:"OST"},{id:"vocaloid",label:"보컬로이드"}];
   document.getElementById("mapFilters").innerHTML = cats.map(c =>
-    `<button class="fchip ${(!filter && c.id==='all') || filter===c.id ? 'act':''}" onclick="filterMaps('${c.id}')">${c.icon} ${c.label}</button>`
+    `<button class="fchip ${(!filter && c.id==='all') || filter===c.id ? 'act':''}" onclick="filterMaps('${c.id}')">${c.label}</button>`
   ).join("");
 
   const filtered = filter && filter !== "all" ? maps.filter(m => m.category === filter) : maps;
   document.getElementById("mapGrid").innerHTML = filtered.map(m => `
     <div class="m-card" onclick="openCreateWithMap('${m.id}','${esc(m.name)}')">
-      <div class="m-ic">${m.icon}</div>
       <div class="m-nm">${esc(m.name)}</div>
       <div class="m-au">by ${esc(m.author)}</div>
       <div class="m-st"><span>${m.questionCount}문제</span><span>▶ ${m.plays}</span><span>★ ${m.rating}</span></div>
@@ -1340,7 +1337,6 @@ function filterMaps(cat) {
 function renderCreateModalMaps(maps) {
   document.getElementById("crMapGrid").innerHTML = maps.map(m => `
     <div class="m-card ${selectedMapId===m.id?'sel':''}" onclick="selectMap('${m.id}')" style="padding:12px">
-      <div style="font-size:22px">${m.icon}</div>
       <div class="m-nm" style="font-size:12px">${esc(m.name)}</div>
     </div>
   `).join("");
@@ -2012,14 +2008,15 @@ async function loadDashboard() {
       el.innerHTML = '<div class="empty">아직 만든 맵이 없습니다. 맵 제작 메뉴에서 첫 맵을 만들어보세요!</div>';
       return;
     }
+    const svgPlay = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>`;
+    const svgDoc  = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>`;
     el.innerHTML = data.map(m => `
       <div style="display:flex;align-items:center;gap:14px;padding:14px 18px;background:var(--bg3);border:1px solid var(--brd);border-radius:var(--r);margin-bottom:8px;transition:border-color .15s" onmouseover="this.style.borderColor='var(--brd2)'" onmouseout="this.style.borderColor='var(--brd)'">
-        <div style="font-size:28px;width:44px;height:44px;background:var(--bg5);border-radius:var(--rs);display:flex;align-items:center;justify-content:center">${m.icon}</div>
         <div style="flex:1;min-width:0">
           <div style="font-weight:700;font-size:14px;margin-bottom:3px">${esc(m.name)}</div>
-          <div style="font-size:12px;color:var(--t3);display:flex;gap:12px">
-            <span>📝 ${m.questionCount}문제</span>
-            <span>▶ ${m.plays}회 플레이</span>
+          <div style="font-size:12px;color:var(--t3);display:flex;gap:12px;align-items:center">
+            <span style="display:flex;align-items:center;gap:4px">${svgDoc} ${m.questionCount}문제</span>
+            <span style="display:flex;align-items:center;gap:4px">${svgPlay} ${m.plays}회</span>
             <span>${new Date(m.createdAt).toLocaleDateString('ko-KR')}</span>
           </div>
         </div>
