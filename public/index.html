@@ -59,7 +59,10 @@ body{font-family:'Nanum Gothic Rounded',sans-serif;background:var(--bg);color:va
 .nav-i{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:var(--rs);cursor:pointer;font-size:14px;font-weight:500;color:var(--t2);transition:all .15s;border:none;background:none;width:100%;text-align:left;font-family:'Nanum Gothic Rounded',sans-serif}
 .nav-i:hover{background:var(--bg4);color:var(--t1)}
 .nav-i.active{color:var(--acc);background:var(--acc-s)}
-.nav-ic{font-size:16px;width:22px;text-align:center}
+.nav-ic{width:22px;height:22px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.nav-ic svg{width:18px;height:18px;stroke:#555;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;transition:stroke .15s}
+.nav-i:hover .nav-ic svg{stroke:#aaa}
+.nav-i.active .nav-ic svg{stroke:#e8e8e8}
 
 /* ── Main ── */
 .main{flex:1;margin-left:var(--side);display:flex;flex-direction:column;min-height:100vh}
@@ -192,6 +195,16 @@ body{font-family:'Nanum Gothic Rounded',sans-serif;background:var(--bg);color:va
 .w-slot.host{border-color:var(--acc);background:var(--acc-s)}
 .w-emoji{font-size:32px}
 .w-name{font-size:13px;font-weight:600}
+
+/* 대기실 채팅 */
+.w-chat-wrap{margin-top:20px;background:var(--bg3);border:1px solid var(--brd);border-radius:var(--r);display:flex;flex-direction:column;overflow:hidden}
+.w-chat-log{padding:12px 14px;overflow-y:auto;height:180px;display:flex;flex-direction:column;gap:4px;font-size:14px;line-height:1.5}
+.w-chat-log .c-sys{color:var(--t3);font-size:12px;text-align:center}
+.w-chat-log .c-msg{color:var(--t1)}.w-chat-log .c-nm{font-weight:700;color:var(--acc);margin-right:6px}
+.w-chat-inp{display:flex;gap:8px;padding:10px 12px;border-top:1px solid var(--brd);background:var(--bg4)}
+.w-chat-inp input{flex:1;background:var(--bg5);border:1px solid var(--brd);border-radius:var(--rs);padding:8px 12px;font-size:14px;color:var(--t1);font-family:'Nanum Gothic Rounded',sans-serif;outline:none}
+.w-chat-inp input:focus{border-color:var(--acc)}
+.w-chat-inp button{background:var(--acc);color:#fff;border:none;border-radius:var(--rs);padding:8px 16px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;font-family:'Nanum Gothic Rounded',sans-serif}
 .host-b{font-size:10px;background:var(--acc);color:#fff;padding:2px 8px;border-radius:10px;font-weight:800}
 .w-acts{display:flex;gap:12px;justify-content:center;margin-top:20px}
 
@@ -344,6 +357,9 @@ body{font-family:'Nanum Gothic Rounded',sans-serif;background:var(--bg);color:va
 
   /* Waiting */
   .w-grid{grid-template-columns:repeat(2,1fr)}
+  .w-chat-log{height:140px;font-size:13px}
+  .w-chat-inp input{font-size:13px}
+  .w-chat-inp button{padding:8px 12px;font-size:12px}
 
   /* Maps */
   .m-grid{grid-template-columns:repeat(2,1fr)}
@@ -395,17 +411,17 @@ body{font-family:'Nanum Gothic Rounded',sans-serif;background:var(--bg);color:va
       <div id="battleMini"></div>
     </div>
     <div class="s-nav">
-      <button class="nav-i active" data-nav="home" onclick="navigateTo('home')"><span class="nav-ic">🏠</span> 홈</button>
-      <button class="nav-i" data-nav="guide" onclick="navigateTo('guide')"><span class="nav-ic">📖</span> 가이드</button>
+      <button class="nav-i active" data-nav="home" onclick="navigateTo('home')"><span class="nav-ic"><svg viewBox="0 0 24 24"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 01-1 1H5a1 1 0 01-1-1V9.5z"/><path d="M9 21V12h6v9"/></svg></span> 홈</button>
+      <button class="nav-i" data-nav="guide" onclick="navigateTo('guide')"><span class="nav-ic"><svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg></span> 가이드</button>
       <div class="nav-sec">맵 찾기</div>
-      <button class="nav-i" data-nav="popular" onclick="navigateTo('popular')"><span class="nav-ic">🔥</span> 인기</button>
-      <button class="nav-i" data-nav="new" onclick="navigateTo('new')"><span class="nav-ic">⭐</span> 신규</button>
-      <button class="nav-i" data-nav="browse" onclick="navigateTo('browse')"><span class="nav-ic">☰</span> 전체 보기</button>
-      <button class="nav-i" data-nav="create-map" onclick="navigateTo('create-map')"><span class="nav-ic">✏️</span> 맵 제작</button>
+      <button class="nav-i" data-nav="popular" onclick="navigateTo('popular')"><span class="nav-ic"><svg viewBox="0 0 24 24"><path d="M13 2C13 2 13 8 9 11c-1.5 1.2-3 1.5-3 4a6 6 0 0012 0c0-5-5-13-5-13z"/><path d="M9 17c0-2 1.5-3 3-4"/></svg></span> 인기</button>
+      <button class="nav-i" data-nav="new" onclick="navigateTo('new')"><span class="nav-ic"><svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></span> 신규</button>
+      <button class="nav-i" data-nav="browse" onclick="navigateTo('browse')"><span class="nav-ic"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></span> 전체 보기</button>
+      <button class="nav-i" data-nav="create-map" onclick="navigateTo('create-map')"><span class="nav-ic"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></span> 맵 제작</button>
       <div class="nav-sec">커뮤니티</div>
-      <button class="nav-i" data-nav="ranking" onclick="navigateTo('ranking')"><span class="nav-ic">🏆</span> 글로벌 랭킹</button>
+      <button class="nav-i" data-nav="ranking" onclick="navigateTo('ranking')"><span class="nav-ic"><svg viewBox="0 0 24 24"><path d="M8 21H4a1 1 0 01-1-1v-4a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1z"/><path d="M14 21h-4a1 1 0 01-1-1v-8a1 1 0 011-1h4a1 1 0 011 1v8a1 1 0 01-1 1z"/><path d="M20 21h-4a1 1 0 01-1-1V6a1 1 0 011-1h4a1 1 0 011 1v14a1 1 0 01-1 1z"/></svg></span> 글로벌 랭킹</button>
       <div class="nav-sec">내 활동</div>
-      <button class="nav-i" data-nav="dashboard" onclick="navigateTo('dashboard')"><span class="nav-ic">📋</span> 내 맵 대시보드</button>
+      <button class="nav-i" data-nav="dashboard" onclick="navigateTo('dashboard')"><span class="nav-ic"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg></span> 내 맵 대시보드</button>
     </div>
     <div style="padding:12px 16px;border-top:1px solid var(--brd);margin-top:auto">
 
@@ -476,8 +492,8 @@ body{font-family:'Nanum Gothic Rounded',sans-serif;background:var(--bg);color:va
         <div class="inp-g"><label class="inp-l">카테고리</label>
           <select class="inp q-sel" id="cmCat" style="width:100%;cursor:pointer"
             onchange="applyCategorySubQs('creatorQuestions',this.value);renderCreatorQuestions()">
-            <option value="anime-song">🎵 애니 노래</option><option value="scene">🎬 애니 장면</option>
-            <option value="character">💬 캐릭터 대사</option><option value="kpop">🎤 K-POP</option><option value="jpop">🎶 J-POP</option><option value="ost">🎧 OST</option><option value="vocaloid">🎹 보컬로이드</option>
+            <option value="anime-song">애니 노래</option><option value="scene">애니 장면</option>
+            <option value="character">캐릭터 대사</option><option value="kpop">K-POP</option><option value="jpop">J-POP</option><option value="ost">OST</option><option value="vocaloid">보컬로이드</option>
           </select>
         </div>
       </div>
@@ -512,6 +528,14 @@ body{font-family:'Nanum Gothic Rounded',sans-serif;background:var(--bg);color:va
       <div class="w-grid" id="waitGrid"></div>
       <div class="w-acts" id="waitActions"></div>
       <div id="waitHint" style="text-align:center;margin-top:10px;font-size:12px;color:var(--t3)"></div>
+      <div class="w-chat-wrap">
+        <div class="w-chat-log" id="waitChatLog"></div>
+        <div class="w-chat-inp">
+          <input id="waitChatInput" placeholder="채팅 입력..." autocomplete="off"
+            onkeydown="if(event.key==='Enter')sendWaitChat()">
+          <button onclick="sendWaitChat()">전송</button>
+        </div>
+      </div>
     </div>
 
     <!-- ════ GAME ════ -->
@@ -656,6 +680,13 @@ body{font-family:'Nanum Gothic Rounded',sans-serif;background:var(--bg);color:va
     <h2>새 배틀룸 만들기</h2>
     <div class="inp-g"><label class="inp-l">방 이름</label><input class="inp" id="crName" placeholder="방 이름을 입력하세요"></div>
     <div class="inp-g"><label class="inp-l">최대 인원</label><input class="inp" id="crMax" type="number" min="2" max="8" value="8"></div>
+    <div class="inp-g">
+      <label class="inp-l" style="display:flex;align-items:center;gap:8px">
+        비밀번호
+        <span style="font-size:11px;color:var(--t3);font-weight:400">비워두면 공개방</span>
+      </label>
+      <input class="inp" id="crPassword" type="password" placeholder="비밀번호 (선택)">
+    </div>
     <div class="inp-g"><label class="inp-l">맵 선택</label><div class="m-grid" id="crMapGrid" style="max-height:220px;overflow-y:auto"></div></div>
     <div style="display:flex;gap:8px;margin-top:20px">
       <button class="btn btn-g" style="flex:1" onclick="hideCreateModal()">취소</button>
@@ -675,13 +706,13 @@ body{font-family:'Nanum Gothic Rounded',sans-serif;background:var(--bg);color:va
     <div class="inp-g"><label class="inp-l">카테고리</label>
       <select class="inp q-sel" id="emCat" style="width:100%;cursor:pointer"
         onchange="applyCategorySubQs('editQuestions',this.value);renderEditQuestions()">
-        <option value="anime-song">🎵 애니 노래</option>
-        <option value="scene">🎬 애니 장면</option>
-        <option value="character">💬 캐릭터 대사</option>
-        <option value="kpop">🎤 K-POP</option>
-        <option value="jpop">🎶 J-POP</option>
-        <option value="ost">🎧 OST</option>
-        <option value="vocaloid">🎹 보컬로이드</option>
+        <option value="anime-song">애니 노래</option>
+        <option value="scene">애니 장면</option>
+        <option value="character">캐릭터 대사</option>
+        <option value="kpop">K-POP</option>
+        <option value="jpop">J-POP</option>
+        <option value="ost">OST</option>
+        <option value="vocaloid">보컬로이드</option>
       </select>
     </div>
     <div class="sec-h" style="margin-top:16px">
@@ -850,6 +881,12 @@ socket.on("registered", user => {
   document.getElementById("nameModal").classList.add("hide");
   socket.emit("getRooms");
   socket.emit("getMaps");
+  // 초대 링크로 들어온 경우 자동 입장
+  const joinParam = new URLSearchParams(location.search).get("join");
+  if (joinParam) {
+    history.replaceState({}, "", location.pathname);
+    joinRoom(joinParam, false); // 비밀번호는 입장 실패 시 서버에서 에러로 알림
+  }
 });
 
 socket.on("roomList", rooms => {
@@ -1029,7 +1066,13 @@ socket.on("chatMessage", ({ type, name, text }) => {
     text.includes("스킵") ||
     text.includes("정답:")
   )) return;
-  addChat(type, text, name);
+  // 대기실 채팅 vs 게임 채팅 분기
+  const waitPage = document.getElementById("page-waiting");
+  if (waitPage && !waitPage.classList.contains("hide")) {
+    addWaitChat(type, text, name);
+  } else {
+    addChat(type, text, name);
+  }
 });
 
 socket.on("gameOver", ({ scores }) => {
@@ -1053,7 +1096,12 @@ socket.on("hintReveal", ({ subQIndex, hint }) => {
   renderSubQList();
 });
 
-socket.on("error", msg => {
+socket.on("error", (msg, ctx) => {
+  if (msg === "비밀번호가 틀렸습니다" && ctx?.roomId) {
+    const pw = prompt("비밀번호가 틀렸습니다. 다시 입력하세요:");
+    if (pw !== null) socket.emit("joinRoom", { roomId: ctx.roomId, password: pw });
+    return;
+  }
   alert(msg);
 });
 
@@ -1153,14 +1201,43 @@ function hideCreateModal() {
 function createRoom() {
   const name = document.getElementById("crName").value.trim();
   const max = parseInt(document.getElementById("crMax").value) || 8;
+  const password = document.getElementById("crPassword").value;
   if (!name) return alert("방 이름을 입력해주세요!");
   if (!selectedMapId) return alert("맵을 선택해주세요!");
-  socket.emit("createRoom", { name, mapId: selectedMapId, maxPlayers: max });
+  socket.emit("createRoom", { name, mapId: selectedMapId, maxPlayers: max, password });
   hideCreateModal();
 }
 
-function joinRoom(roomId) {
-  socket.emit("joinRoom", { roomId });
+function copyInviteLink() {
+  if (!currentRoomId) return;
+  const url = `${location.origin}?join=${currentRoomId}`;
+  navigator.clipboard.writeText(url).then(() => showToast("초대 링크 복사됨!")).catch(() => {
+    prompt("아래 링크를 복사하세요:", url);
+  });
+}
+
+function showToast(msg) {
+  let t = document.getElementById("_toast");
+  if (!t) {
+    t = document.createElement("div");
+    t.id = "_toast";
+    t.style.cssText = "position:fixed;bottom:32px;left:50%;transform:translateX(-50%);background:#222;color:#fff;padding:10px 22px;border-radius:8px;font-size:14px;font-weight:700;z-index:9999;pointer-events:none;transition:opacity .3s";
+    document.body.appendChild(t);
+  }
+  t.textContent = msg;
+  t.style.opacity = "1";
+  clearTimeout(t._tid);
+  t._tid = setTimeout(() => t.style.opacity = "0", 1800);
+}
+
+function joinRoom(roomId, hasPassword) {
+  if (hasPassword) {
+    const pw = prompt("비밀번호를 입력하세요:");
+    if (pw === null) return; // 취소
+    socket.emit("joinRoom", { roomId, password: pw });
+  } else {
+    socket.emit("joinRoom", { roomId });
+  }
 }
 
 function leaveRoom() {
@@ -1210,10 +1287,10 @@ function filterRoomList(query) {
     return;
   }
   el.innerHTML = rooms.map(r => `
-    <div class="r-row" onclick="${r.status === 'waiting' ? `joinRoom('${r.id}')` : ''}">
+    <div class="r-row" onclick="${r.status === 'waiting' ? `joinRoom('${r.id}',${!!r.hasPassword})` : ''}">
       <div class="r-icon">${r.mapIcon}</div>
       <div class="r-info">
-        <div class="r-nm">${esc(r.name)}</div>
+        <div class="r-nm">${esc(r.name)}${r.hasPassword ? ' <span style="font-size:12px;color:var(--t3)" title="비밀번호 방">🔒</span>' : ''}</div>
         <div class="r-meta"><span>${esc(r.mapName)}</span><span>호스트: ${esc(r.hostName)}</span></div>
       </div>
       <span class="r-st ${r.status === 'waiting' ? 'wait' : 'play'}">${r.status === 'waiting' ? '대기중' : '게임중'}</span>
@@ -1229,7 +1306,7 @@ function renderBattleMini(rooms) {
   const waiting = rooms.filter(r => r.status === "waiting").slice(0, 3);
   document.getElementById("battleCount").textContent = waiting.length;
   document.getElementById("battleMini").innerHTML = waiting.map(r => `
-    <div class="b-mini" onclick="joinRoom('${r.id}')">
+    <div class="b-mini" onclick="joinRoom('${r.id}',${!!r.hasPassword})">
       <div class="b-badge" style="background:var(--acc)">${r.mapIcon}</div>
       <div class="b-info"><div class="b-nm">${esc(r.name)}</div></div>
       <div class="b-cnt">${r.players}/${r.maxPlayers}</div>
@@ -1277,6 +1354,8 @@ function selectMap(id) {
 function showWaiting(room) {
   document.getElementById("waitRoomName").textContent = room.name;
   document.getElementById("waitMapInfo").textContent = `${room.mapName} · ${room.questionCount}문제`;
+  const wlog = document.getElementById("waitChatLog");
+  if (wlog && !wlog._initialized) { wlog.innerHTML = ""; wlog._initialized = true; }
 
   const grid = document.getElementById("waitGrid");
   grid.innerHTML = Array.from({length: room.maxPlayers}).map((_, i) => {
@@ -1288,7 +1367,7 @@ function showWaiting(room) {
         ${p.isHost ? '<span class="host-b">HOST</span>' : ''}
       </div>`;
     }
-    return '<div class="w-slot"><span style="font-size:22px;color:var(--t3)">+</span></div>';
+    return `<div class="w-slot" onclick="copyInviteLink()" title="초대 링크 복사" style="cursor:pointer"><span style="font-size:22px;color:var(--t3)">+</span></div>`;
   }).join("");
 
   const isHost = room.hostId === socket.id;
@@ -1374,6 +1453,30 @@ function toggleChatLog() {
   log.scrollTop = log.scrollHeight;
 }
 
+function addWaitChat(type, text, name) {
+  const log = document.getElementById("waitChatLog");
+  if (!log) return;
+  const div = document.createElement("div");
+  if (type === "system") {
+    div.className = "c-sys";
+    div.textContent = text;
+  } else {
+    div.className = "c-msg";
+    div.innerHTML = `<span class="c-nm">${esc(name || "")}</span>${esc(text)}`;
+  }
+  log.appendChild(div);
+  log.scrollTop = log.scrollHeight;
+}
+
+function sendWaitChat() {
+  const input = document.getElementById("waitChatInput");
+  const val = input.value.trim();
+  if (!val || !currentRoomId) return;
+  socket.emit("chat", { roomId: currentRoomId, message: val });
+  input.value = "";
+  input.focus();
+}
+
 function addChat(type, text, name) {
   const log = document.getElementById("chatLog");
   const cls = type === "system" ? "ch-sys" : type === "correct" ? "ch-ok" : "";
@@ -1452,13 +1555,13 @@ function renderQList(arr, arrName, containerId, countId) {
           <input class="inp" placeholder="정답 (쉼표로 복수 입력)" style="flex:3;min-width:140px" value="${esc(sq.answers)}"
             oninput="${arrName}[${i}].subQuestions[${si}].answers=this.value"
             onblur="renderQList(${arrName},'${arrName}','${containerId}','${countId}')">
-          ${subs.length > 1 ? `<button class="btn btn-g btn-sm" onclick="${arrName}[${i}].subQuestions.splice(${si},1);renderQList(${arrName},'${arrName}','${containerId}','${countId}')" style="color:var(--acc);flex:0 0 auto;padding:4px 8px">✕</button>` : '<div style="width:32px"></div>'}
+          ${subs.length > 1 ? `<button class="btn btn-g btn-sm" onclick="${arrName}[${i}].subQuestions.splice(${si},1);renderQList(${arrName},'${arrName}','${containerId}','${countId}')" style="color:var(--acc);flex:0 0 auto;padding:4px 8px;display:flex;align-items:center"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>` : '<div style="width:32px"></div>'}
         </div>
         <div style="display:flex;align-items:center;gap:12px;padding-left:60px;flex-wrap:wrap">
           <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;font-weight:600">
             <input type="checkbox" ${sq.showAnswer!==false?'checked':''} style="width:14px;height:14px;accent-color:var(--grn)"
               onchange="${arrName}[${i}].subQuestions[${si}].showAnswer=this.checked">
-            🔓 정답 공개
+            정답 공개
           </label>
           <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;font-weight:600">
             <input type="checkbox" ${sq.chosungHint?'checked':''} style="width:14px;height:14px;accent-color:var(--acc)"
@@ -1490,27 +1593,27 @@ function renderQList(arr, arrName, containerId, countId) {
       <div style="display:flex;align-items:center;gap:8px;padding:10px 14px;background:var(--bg2);border-bottom:1px solid var(--brd);flex-wrap:wrap">
         <span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--t3);min-width:28px">#${i+1}</span>
         <select class="q-sel" style="flex:0 0 auto" onchange="${arrName}[${i}].type=this.value;if(${arrName}[${i}].subQuestions.length===1&&!${arrName}[${i}].subQuestions[0].answers){${arrName}[${i}].subQuestions=defaultQ(this.value).subQuestions;}renderQList(${arrName},'${arrName}','${containerId}','${countId}')">
-          <option value="audio"     ${q.type==='audio'    ?'selected':''}>🎵 음악</option>
-          <option value="scene"     ${q.type==='scene'    ?'selected':''}>🎬 영상</option>
-          <option value="character" ${q.type==='character'?'selected':''}>💬 대사</option>
+          <option value="audio"     ${q.type==='audio'    ?'selected':''}>음악</option>
+          <option value="scene"     ${q.type==='scene'    ?'selected':''}>영상</option>
+          <option value="character" ${q.type==='character'?'selected':''}>대사</option>
         </select>
         <span style="font-size:11px;color:var(--t3)">${subs.length}개 소문제</span>
         <!-- 제한 시간 (문제 레벨) -->
         <label style="display:flex;align-items:center;gap:5px;font-size:12px;font-weight:600;color:var(--t2);margin-left:8px">
-          ⏱
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity:.6"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
           <input type="number" min="5" max="300" class="inp" style="width:62px;padding:4px 8px;font-family:'JetBrains Mono',monospace"
             value="${tl}" oninput="${arrName}[${i}].timeLimit=+this.value">
           <span style="color:var(--t3)">초</span>
         </label>
-        ${willLoop ? `<span style="font-size:11px;color:var(--ylw)">🔁 반복재생 (${clipLen}초 클립)</span>` : ''}
-        <button class="btn btn-g btn-sm" onclick="if(${arrName}.length>1){${arrName}.splice(${i},1);renderQList(${arrName},'${arrName}','${containerId}','${countId}')}else{alert('최소 1개 필요')}" style="color:var(--acc);margin-left:auto">✕ 삭제</button>
+        ${willLoop ? `<span style="font-size:11px;color:var(--ylw)">반복재생 (${clipLen}초 클립)</span>` : ''}
+        <button class="btn btn-g btn-sm" onclick="if(${arrName}.length>1){${arrName}.splice(${i},1);renderQList(${arrName},'${arrName}','${containerId}','${countId}')}else{alert('최소 1개 필요')}" style="color:var(--acc);margin-left:auto;display:flex;align-items:center;gap:4px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> 삭제</button>
       </div>
       <!-- YouTube 영역 -->
       <div style="display:flex;gap:0;border-bottom:1px solid var(--brd);flex-wrap:wrap">
         ${hasYt ? `<div style="flex:0 0 280px;background:#000;max-width:280px;position:relative;display:flex;flex-direction:column">
           <div style="aspect-ratio:16/9"><div id="yt-prev-${arrName}-${i}" style="width:100%;height:100%"></div></div>
           <div style="display:flex;align-items:center;gap:6px;padding:6px 8px;background:#111">
-            <span style="font-size:13px;cursor:pointer;user-select:none" onclick="togglePrevVol('${arrName}',${i})" id="pv-icon-${arrName}-${i}">${(q.volume===0)?'🔇':(q.volume<40)?'🔈':(q.volume<70)?'🔉':'🔊'}</span>
+            <span style="cursor:pointer;user-select:none;display:flex;align-items:center;color:#aaa" onclick="togglePrevVol('${arrName}',${i})" id="pv-icon-${arrName}-${i}">${getPrevVolSvg(q.volume)}</span>
             <input type="range" min="0" max="100" value="${q.volume !== undefined ? q.volume : 100}" step="1" style="flex:1;accent-color:#fff;height:3px;cursor:pointer"
               id="pv-vol-${arrName}-${i}"
               oninput="setPrevVol('${arrName}',${i},+this.value)">
@@ -1525,7 +1628,7 @@ function renderQList(arr, arrName, containerId, countId) {
           </div>
           ${hasYt ? `
           <div style="display:flex;flex-direction:column;gap:6px">
-            <div style="font-size:11px;color:var(--t3)" id="yt-dur-${arrName}-${i}">${q.ytDuration ? '영상 길이: ' + fmtTime(q.ytDuration) : '⏳ 영상 길이 감지 중...'}</div>
+            <div style="font-size:11px;color:var(--t3)" id="yt-dur-${arrName}-${i}">${q.ytDuration ? '영상 길이: ' + fmtTime(q.ytDuration) : '영상 길이 감지 중...'}</div>
             <div style="display:flex;align-items:center;gap:6px;font-size:12px">
               <span style="color:var(--t3);min-width:28px">시작</span>
               <input type="range" id="yt-sr-${arrName}-${i}" min="0" max="${q.ytDuration||600}" step="1" value="${startSec}" style="flex:1;accent-color:var(--acc)"
@@ -1542,7 +1645,7 @@ function renderQList(arr, arrName, containerId, countId) {
               <input type="number" id="yt-en-${arrName}-${i}" min="0" max="${q.ytDuration||600}" class="inp" style="width:60px;padding:4px 6px;font-family:'JetBrains Mono',monospace;font-size:12px"
                 value="${endSec||q.ytDuration||''}" oninput="setPrevEnd('${arrName}',${i},+this.value)">
             </div>
-            ${startSec < (endSec||9999) ? `<div style="font-size:11px;color:var(--t3)">구간: ${fmtTime(startSec)} → ${endSec ? fmtTime(endSec) : '끝'}${endSec ? ' (' + (endSec-startSec) + '초)' : ''}${willLoop?' 🔁 반복':''}</div>` : ''}
+            ${startSec < (endSec||9999) ? `<div style="font-size:11px;color:var(--t3)">구간: ${fmtTime(startSec)} → ${endSec ? fmtTime(endSec) : '끝'}${endSec ? ' (' + (endSec-startSec) + '초)' : ''}${willLoop?' 반복':''}</div>` : ''}
           </div>` : `<div style="font-size:12px;color:var(--t3);padding:8px 0">URL을 입력하면 미리보기와 슬라이더가 표시됩니다</div>`}
         </div>
       </div>
@@ -1566,6 +1669,17 @@ function fmtT(s) { const m=Math.floor(s/60); return `${m}:${String(s%60).padStar
 
 // 미리보기 플레이어 관리
 window._prevPlayers = {}; // key: `${arrName}-${i}`
+
+function getPrevVolSvg(vol) {
+  const muted = vol === 0;
+  return `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+    ${muted ? '<line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/>' :
+      vol < 40 ? '<path d="M15.54 8.46a5 5 0 010 7.07"/>' :
+      vol < 70 ? '<path d="M15.54 8.46a5 5 0 010 7.07"/><path d="M19.07 4.93a10 10 0 010 14.14"/>' :
+      '<path d="M15.54 8.46a5 5 0 010 7.07"/><path d="M19.07 4.93a10 10 0 010 14.14"/>'}
+  </svg>`;
+}
 
 function getQArr(arrName) {
   if (arrName === 'creatorQuestions') return creatorQuestions;
@@ -1670,7 +1784,7 @@ function setPrevVol(arrName, i, val) {
   // UI 업데이트
   const icon = document.getElementById(`pv-icon-${arrName}-${i}`);
   const pct  = document.getElementById(`pv-pct-${arrName}-${i}`);
-  if (icon) icon.textContent = val === 0 ? "🔇" : val < 40 ? "🔈" : val < 70 ? "🔉" : "🔊";
+  if (icon) icon.innerHTML = getPrevVolSvg(val);
   if (pct)  pct.textContent  = val + "%";
 }
 

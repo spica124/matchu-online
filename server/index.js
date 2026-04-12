@@ -311,14 +311,15 @@ app.get("*", (req, res) => res.sendFile(path.join(__dirname, "../public/index.ht
 // Room
 // ═══════════════════════════════════════════
 
-function createRoom(id, name, hostId, hostName, hostAvatar, mapId, maxPlayers) {
+function createRoom(id, name, hostId, hostName, hostAvatar, mapId, maxPlayers, password) {
   return {
     id, name, hostId, hostName, hostAvatar, mapId,
     maxPlayers: Math.min(Math.max(maxPlayers, 1), 8),
+    password: password || "",
     players: new Map(),
     status: "waiting",
     currentQuestion: 0,
-    answeredSubQs: new Map(),  // subQIndex → { playerName, playerAvatar }
+    answeredSubQs: new Map(),
     skipVoters: new Set(),
     timer: null,
     timeLeft: 0,
@@ -346,6 +347,7 @@ io.on("connection", (socket) => {
       id: r.id, name: r.name, hostName: r.hostName, mapId: r.mapId,
       mapName: r.map?.name || "알 수 없음", mapIcon: r.map?.icon || "❓",
       players: r.players.size, maxPlayers: r.maxPlayers, status: r.status,
+      hasPassword: !!r.password,
     })));
   });
 
@@ -356,14 +358,14 @@ io.on("connection", (socket) => {
     } catch { socket.emit("mapList", []); }
   });
 
-  socket.on("createRoom", async ({ name, mapId, maxPlayers }) => {
+  socket.on("createRoom", async ({ name, mapId, maxPlayers, password }) => {
     const user = users.get(socket.id);
     if (!user) return socket.emit("error", "먼저 등록해주세요");
     try {
       const map = await MapModel.findOne({ mapId }).lean();
       if (!map) return socket.emit("error", "맵을 찾을 수 없습니다");
       const roomId = "room-" + uuidv4().slice(0, 8);
-      const room = createRoom(roomId, name, socket.id, user.name, user.avatar, mapId, maxPlayers);
+      const room = createRoom(roomId, name, socket.id, user.name, user.avatar, mapId, maxPlayers, password);
       room.map = map;
       room.players.set(socket.id, { ...user, score: 0, answeredSubQs: new Set() });
       rooms.set(roomId, room);
@@ -373,13 +375,14 @@ io.on("connection", (socket) => {
     } catch (e) { socket.emit("error", "방 생성 실패: " + e.message); }
   });
 
-  socket.on("joinRoom", ({ roomId }) => {
+  socket.on("joinRoom", ({ roomId, password }) => {
     const user = users.get(socket.id);
     if (!user) return socket.emit("error", "먼저 등록해주세요");
     const room = rooms.get(roomId);
     if (!room) return socket.emit("error", "방을 찾을 수 없습니다");
     if (room.status !== "waiting") return socket.emit("error", "이미 게임이 진행 중입니다");
     if (room.players.size >= room.maxPlayers) return socket.emit("error", "방이 가득 찼습니다");
+    if (room.password && room.password !== (password || "")) return socket.emit("error", "비밀번호가 틀렸습니다", { roomId });
     room.players.set(socket.id, { ...user, score: 0, answeredSubQs: new Set() });
     socket.join(roomId);
     socket.emit("roomJoined", getRoomState(room));
