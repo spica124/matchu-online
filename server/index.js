@@ -396,6 +396,13 @@ io.on("connection", (socket) => {
     try {
       const map = await MapModel.findOne({ mapId: room.mapId }).lean();
       if (!map) return socket.emit("error", "맵 데이터를 찾을 수 없습니다");
+      // Shuffle questions (Fisher-Yates)
+      const qs = [...map.questions];
+      for (let i = qs.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [qs[i], qs[j]] = [qs[j], qs[i]];
+      }
+      map.questions = qs;
       room.map = map;
       room.status = "playing";
       room.currentQuestion = 0;
