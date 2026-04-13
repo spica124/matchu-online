@@ -398,9 +398,9 @@ body{font-family:'Nanum Gothic Rounded',sans-serif;background:var(--bg);color:va
   .gv-subq-list{margin-bottom:120px}
 
   /* Mobile chat log — 8 lines, hidden when keyboard open */
-  .mobile-chat-log-wrap{width:calc(100% - 16px)!important;left:8px!important;top:auto!important;bottom:130px!important;transform:none!important;display:block!important}
+  .mobile-chat-log-wrap{position:fixed!important;width:calc(100% - 16px)!important;left:8px!important;top:auto!important;bottom:calc(env(safe-area-inset-bottom, 0px) + 95px)!important;transform:none!important;display:block!important}
   .mobile-chat-log-wrap.chat-hidden{display:none!important}
-  .mobile-chat-log-wrap #chatLog{max-height:calc(1.8em * 8)!important;overflow:hidden!important}
+  .mobile-chat-log-wrap #chatLog{max-height:calc(1.8em * 8)!important;overflow-y:auto!important}
   body.kb-open .mobile-chat-log-wrap{display:none!important}
 
   /* Chat toggle button — mobile: hidden */
