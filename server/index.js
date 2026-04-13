@@ -313,7 +313,7 @@ function sendDiscordRoomCreated(room) {
   };
   const categoryLabel = {
     "anime-song": "🎵 애니 노래", "kpop": "🎤 K-POP", "jpop": "🌸 J-POP",
-    "ost": "🎬 OST", "vocaloid": "🤖 보컬로이드", "scene": "🎞 애니 장면", "character": "✨ 캐릭터",
+    "ost": "🎬 OST", "vocaloid": "🎤 보컬로이드", "scene": "🎞 애니 장면", "character": "🎭 캐릭터 대사",
   };
 
   const mapCategory = room.map?.category || "";
