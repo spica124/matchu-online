@@ -248,6 +248,30 @@ function authMiddleware(req, res, next) {
 }
 
 // ── 디스코드 웹훅 ──
+async function sendDiscordMapSubmitted(map) {
+  const webhookUrl = process.env.DISCORD_MAP_SUBMIT_WEBHOOK;
+  if (!webhookUrl) return;
+  const categoryLabel = {
+    "anime-song": "애니 노래", "kpop": "K-POP", "jpop": "J-POP",
+    "ost": "OST", "vocaloid": "보컬로이드", "scene": "애니 장면", "character": "캐릭터 대사",
+  }[map.category] || map.category || "기타";
+  const body = {
+    embeds: [{
+      title: `📬 새 맵 검토 요청`,
+      description: `**${map.icon || "🎵"} ${map.name}**`,
+      color: 0xF59E0B,
+      fields: [
+        { name: "제작자", value: map.author || "알 수 없음", inline: true },
+        { name: "카테고리", value: categoryLabel, inline: true },
+        { name: "문제 수", value: `${map.questions?.length || 0}문제`, inline: true },
+      ],
+      footer: { text: "마추기온라인 관리자 알림" },
+      timestamp: new Date().toISOString(),
+    }]
+  };
+  _sendWebhook(webhookUrl, body);
+}
+
 async function sendDiscordMapApproved(map) {
   const webhookUrl = process.env.DISCORD_MAP_WEBHOOK;
   if (!webhookUrl) return;
@@ -565,6 +589,7 @@ app.post("/api/maps/:id/submit", authMiddleware, async (req, res) => {
     m.rejectReason = "";
     m.submittedAt = new Date();
     await m.save();
+    sendDiscordMapSubmitted(m);
     res.json({ ok: true, status: "pending" });
   } catch (e) { console.error(e); res.status(500).json({ error: "서버 오류가 발생했습니다" }); }
 });
@@ -1162,6 +1187,28 @@ function broadcastRoomList() {
 }
 
 // ═══════════════════════════════════════════
+// ── 버그 제보 ──
+app.post("/api/bug-report", authMiddleware, async (req, res) => {
+  const { title, description } = req.body;
+  if (!title?.trim() || !description?.trim())
+    return res.status(400).json({ error: "제목과 내용을 입력해주세요" });
+
+  const webhookUrl = process.env.DISCORD_BUG_WEBHOOK;
+  if (webhookUrl) {
+    _sendWebhook(webhookUrl, {
+      embeds: [{
+        title: `🐛 버그 제보: ${title.trim()}`,
+        description: description.trim(),
+        color: 0xEF4444,
+        fields: [{ name: "제보자", value: req.user.username, inline: true }],
+        footer: { text: "마추기온라인 버그 제보" },
+        timestamp: new Date().toISOString(),
+      }]
+    });
+  }
+  res.json({ ok: true });
+});
+
 // Start
 // ═══════════════════════════════════════════
 

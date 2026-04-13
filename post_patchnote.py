@@ -37,7 +37,16 @@ def get_commit_info():
         ["git", "rev-list", "--count", "HEAD"],
         encoding="utf-8"
     ).strip()
-    return msg, count
+    # 직전 커밋 메시지 (없으면 빈 문자열)
+    try:
+        prev_msg = subprocess.check_output(
+            ["git", "log", "-2", "--pretty=%s"],
+            encoding="utf-8"
+        ).strip().splitlines()
+        prev = prev_msg[1] if len(prev_msg) > 1 else ""
+    except Exception:
+        prev = ""
+    return msg, count, prev
 
 def format_message(msg):
     """커밋 메시지를 읽기 좋은 패치노트로 변환"""
@@ -96,10 +105,12 @@ def send_to_discord(msg, version):
         print(f"❌ 전송 실패: {e}")
 
 if __name__ == "__main__":
-    msg, count = get_commit_info()
+    msg, count, prev = get_commit_info()
     # 자동 전송 무시 키워드
     skip_keywords = ["wip", "merge", "fix typo", "minor", "temp", "임시", "테스트"]
     if any(k in msg.lower() for k in skip_keywords):
-        print("⏭️  패치노트 전송 생략")
+        print("⏭️  패치노트 전송 생략 (키워드)")
+    elif msg == prev:
+        print("⏭️  패치노트 전송 생략 (이전과 동일한 내용)")
     else:
         send_to_discord(msg, count)

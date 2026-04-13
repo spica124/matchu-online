@@ -474,7 +474,8 @@ body{font-family:'Nanum Gothic Rounded',sans-serif;background:var(--bg);color:va
       <button class="nav-i" data-nav="browse" onclick="navigateTo('browse')"><span class="nav-ic"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></span> <span data-i18n="nav_browse">전체 보기</span></button>
       <button class="nav-i" data-nav="create-map" onclick="navigateTo('create-map')"><span class="nav-ic"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></span> <span data-i18n="nav_create">맵 제작</span></button>
       <div class="nav-sec" data-i18n="nav_sec_community">커뮤니티</div>
-      <a class="nav-i" href="https://discord.gg/cJANW7uvKU" target="_blank" rel="noopener" style="text-decoration:none;color:var(--t1)"><span class="nav-ic"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M20.317 4.37a19.791 19.791 0 00-4.885-1.515.074.074 0 00-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 00-5.487 0 12.64 12.64 0 00-.617-1.25.077.077 0 00-.079-.037A19.736 19.736 0 003.677 4.37a.07.07 0 00-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 00.031.057 19.9 19.9 0 005.993 3.03.078.078 0 00.084-.028 14.09 14.09 0 001.226-1.994.076.076 0 00-.041-.106 13.107 13.107 0 01-1.872-.892.077.077 0 01-.008-.128 10.2 10.2 0 00.372-.292.074.074 0 01.077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 01.078.01c.12.098.246.198.373.292a.077.077 0 01-.006.127 12.299 12.299 0 01-1.873.892.077.077 0 00-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 00.084.028 19.839 19.839 0 006.002-3.03.077.077 0 00.032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 00-.031-.03z"/></svg></span> <span>디스코드</span></a>
+      <a class="nav-i" href="https://discord.gg/cJANW7uvKU" target="_blank" rel="noopener" style="text-decoration:none;color:var(--t1)"><span class="nav-ic"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M20.317 4.37a19.791 19.791 0 00-4.885-1.515.074.074 0 00-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 00-5.487 0 12.64 12.64 0 00-.617-1.25.077.077 0 00-.079-.037A19.736 19.736 0 003.677 4.37a.07.07 0 00-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 00.031.057 19.9 19.9 0 005.993 3.03.078.078 0 00.084-.028 14.09 14.09 0 001.226-1.994.076.076 0 00-.041-.106 13.107 13.107 0 01-1.872-.892.077.077 0 01-.008-.128 10.2 10.2 0 00.372-.292.074.074 0 01.077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 01.078.01c.12.098.246.198.373.292a.077.077 0 01-.006.127 12.299 12.299 0 01-1.873.892.077.077 0 00-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 00.084.028 19.839 19.839 0 006.002-3.03.077.077 0 00.032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 00-.031-.03z"/></svg></span> <span>공식 디스코드</span></a>
+      <button class="nav-i" onclick="openBugReport();closeSidebar()" style="color:#ef4444"><span class="nav-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a4 4 0 014 4v1h1a2 2 0 012 2v1h-2v1a6 6 0 01-12 0v-1H3V9a2 2 0 012-2h1V6a4 4 0 014-4z"/><path d="M9 10h.01M15 10h.01M3 9l-2-2M21 9l2-2M3 15H1M21 15h2"/></svg></span> <span>버그 제보</span></button>
       <button class="nav-i" data-nav="ranking" onclick="navigateTo('ranking')"><span class="nav-ic"><svg viewBox="0 0 24 24"><path d="M8 21H4a1 1 0 01-1-1v-4a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1z"/><path d="M14 21h-4a1 1 0 01-1-1v-8a1 1 0 011-1h4a1 1 0 011 1v8a1 1 0 01-1 1z"/><path d="M20 21h-4a1 1 0 01-1-1V6a1 1 0 011-1h4a1 1 0 011 1v14a1 1 0 01-1 1z"/></svg></span> <span data-i18n="nav_ranking">랭킹</span></button>
       <div class="nav-sec" data-i18n="nav_sec_myactivity">내 활동</div>
       <button class="nav-i" data-nav="dashboard" onclick="navigateTo('dashboard')"><span class="nav-ic"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg></span> <span data-i18n="nav_dashboard">내 맵 대시보드</span></button>
@@ -842,6 +843,25 @@ body{font-family:'Nanum Gothic Rounded',sans-serif;background:var(--bg);color:va
       </div>
     </div>
     <div id="qEditorContent"></div>
+  </div>
+</div>
+
+<!-- ════ BUG REPORT MODAL ════ -->
+<div class="modal-bg hide" id="bugModal" onclick="closeBugReport()">
+  <div class="modal" onclick="event.stopPropagation()" style="max-width:440px">
+    <div class="modal-hd"><span>🐛 버그 제보</span><button class="modal-cls" onclick="closeBugReport()">✕</button></div>
+    <div style="padding:16px;display:flex;flex-direction:column;gap:12px">
+      <div>
+        <div style="font-size:.8rem;color:var(--t2);margin-bottom:4px">제목</div>
+        <input id="bugTitle" class="inp" placeholder="버그를 간단히 설명해주세요" style="width:100%;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:.8rem;color:var(--t2);margin-bottom:4px">상세 내용</div>
+        <textarea id="bugDesc" class="inp" placeholder="어떤 상황에서 발생했는지, 재현 방법 등을 적어주세요" rows="5" style="width:100%;box-sizing:border-box;resize:vertical"></textarea>
+      </div>
+      <div id="bugError" style="color:#ef4444;font-size:.8rem;display:none"></div>
+      <button class="btn btn-acc" onclick="submitBugReport()">제출하기</button>
+    </div>
   </div>
 </div>
 
@@ -3020,6 +3040,29 @@ function setAuthUser(token, user) {
   // 현재 페이지가 없으면 홈으로
   const anyVisible = [...document.querySelectorAll(".page")].some(p => !p.classList.contains("hide"));
   if (!anyVisible) navigateTo("home");
+}
+
+function openBugReport() {
+  if (!authUser) { showToast("로그인 후 버그를 제보할 수 있습니다"); return; }
+  document.getElementById('bugTitle').value = '';
+  document.getElementById('bugDesc').value = '';
+  document.getElementById('bugError').style.display = 'none';
+  document.getElementById('bugModal').classList.remove('hide');
+}
+function closeBugReport() {
+  document.getElementById('bugModal').classList.add('hide');
+}
+async function submitBugReport() {
+  const title = document.getElementById('bugTitle').value.trim();
+  const description = document.getElementById('bugDesc').value.trim();
+  const errEl = document.getElementById('bugError');
+  if (!title || !description) { errEl.textContent = '제목과 내용을 모두 입력해주세요'; errEl.style.display = 'block'; return; }
+  errEl.style.display = 'none';
+  try {
+    const res = await apiFetch('/api/bug-report', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title, description }) });
+    if (res.ok) { closeBugReport(); showToast('버그 제보가 접수되었습니다. 감사합니다!'); }
+    else { const d = await res.json(); errEl.textContent = d.error || '제출 실패'; errEl.style.display = 'block'; }
+  } catch { errEl.textContent = '서버 오류가 발생했습니다'; errEl.style.display = 'block'; }
 }
 
 function logout() {
