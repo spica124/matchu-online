@@ -397,10 +397,11 @@ body{font-family:'Nanum Gothic Rounded',sans-serif;background:var(--bg);color:va
   /* 문제 목록 하단 여백 (입력창에 안 가리도록) */
   .gv-subq-list{margin-bottom:120px}
 
-  /* Mobile chat log — always visible, 3 lines */
+  /* Mobile chat log — 8 lines, hidden when keyboard open */
   .mobile-chat-log-wrap{width:calc(100% - 16px)!important;left:8px!important;top:auto!important;bottom:130px!important;transform:none!important;display:block!important}
-  .mobile-chat-log-wrap.chat-hidden{display:block!important}
-  .mobile-chat-log-wrap #chatLog{max-height:calc(1.8em * 3)!important;overflow:hidden!important}
+  .mobile-chat-log-wrap.chat-hidden{display:none!important}
+  .mobile-chat-log-wrap #chatLog{max-height:calc(1.8em * 8)!important;overflow:hidden!important}
+  body.kb-open .mobile-chat-log-wrap{display:none!important}
 
   /* Chat toggle button — mobile: hidden */
   .chat-toggle-btn{display:none!important}
@@ -1443,6 +1444,15 @@ const COLORS = ["#FF6B6B","#4ECDC4","#45B7D1","#96CEB4","#FFEAA7","#DDA0DD","#98
 window.addEventListener("DOMContentLoaded", () => {
   // 언어 감지 및 적용
   detectLang();
+
+  // 모바일 키보드 열림 감지 — visualViewport 높이 변화로 판단
+  if (window.visualViewport) {
+    let _baseVH = window.visualViewport.height;
+    window.visualViewport.addEventListener("resize", () => {
+      const shrunk = window.visualViewport.height < _baseVH - 100;
+      document.body.classList.toggle("kb-open", shrunk);
+    });
+  }
 
   // 볼륨 슬라이더 초기값
   const sl2 = document.getElementById("volSlider2");
