@@ -147,7 +147,7 @@ body{font-family:'Nanum Gothic Rounded',sans-serif;background:var(--bg);color:va
 .r-info{flex:1;min-width:0}
 .r-nm{font-weight:700;font-size:14px;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .r-meta{font-size:12px;color:var(--t3);display:flex;gap:12px}
-.r-st{font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;white-space:nowrap;font-family:'JetBrains Mono',monospace}
+.r-st{font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;white-space:nowrap}
 .r-st.wait{background:var(--grn-s);color:var(--grn)}
 .r-st.play{background:var(--org-s);color:var(--org)}
 .r-dots{display:flex;align-items:center;gap:2px}
@@ -219,7 +219,6 @@ body{font-family:'Nanum Gothic Rounded',sans-serif;background:var(--bg);color:va
 /* 게임 내 전용 폰트 — Nanum Gothic Rounded, 숫자/코드는 JetBrains Mono */
 #page-game, #page-game *{font-family:'Nanum Gothic Rounded',sans-serif !important}
 #page-game .gv-timer,
-#page-game .gv-songcount,
 #page-game .sc-pts,
 #page-game .sc-rank,
 #page-game #skipCount,
@@ -230,7 +229,7 @@ body{font-family:'Nanum Gothic Rounded',sans-serif;background:var(--bg);color:va
 .t-fill{height:100%;transition:width 1s linear}
 
 /* 레이아웃 */
-.gv-wrap{display:grid;grid-template-columns:1fr 220px;gap:0;height:calc(100vh - var(--th));max-height:calc(100vh - var(--th));overflow:hidden;background:#000}
+.gv-wrap{display:grid;grid-template-columns:1fr 220px;gap:0;height:calc(100dvh - var(--th));max-height:calc(100dvh - var(--th));overflow:hidden;background:#000}
 .gv-main{display:flex;flex-direction:column;overflow:hidden;height:100%;background:#000;position:relative}
 .gv-sidebar{background:#0a0a0a;border-left:1px solid #1e1e1e;padding:12px;overflow-y:auto;height:100%}
 
@@ -385,7 +384,7 @@ body{font-family:'Nanum Gothic Rounded',sans-serif;background:var(--bg);color:va
   .page{padding:16px 14px}
 
   /* Game */
-  .gv-wrap{grid-template-columns:1fr;height:calc(100vh - var(--th));max-height:calc(100vh - var(--th));grid-template-rows:1fr auto}
+  .gv-wrap{grid-template-columns:1fr;height:calc(100dvh - var(--th));max-height:calc(100dvh - var(--th));grid-template-rows:1fr auto}
   .gv-sidebar{border-left:none;border-top:1px solid var(--brd);padding:12px 16px;height:auto;max-height:160px;overflow-y:auto}
   .gv-main{padding:8px}
   .gv-card{padding:14px 12px}
@@ -393,9 +392,10 @@ body{font-family:'Nanum Gothic Rounded',sans-serif;background:var(--bg);color:va
   .gv-timer{font-size:22px}
   .g-ans-row{flex-wrap:wrap}
   .g-ans-inp{min-width:0}
-
-  /* Mobile game chat input fix */
-  .mobile-chat-input-wrap{left:8px!important;right:8px!important;width:auto!important;transform:none!important;box-sizing:border-box}
+  /* 모바일 입력창: 키보드 바로 위 fixed 고정 */
+  .mobile-chat-input-wrap{position:fixed!important;bottom:env(safe-area-inset-bottom,0)!important;left:8px!important;right:8px!important;width:auto!important;transform:none!important;z-index:100!important;box-sizing:border-box}
+  /* 문제 목록 하단 여백 (입력창에 안 가리도록) */
+  .gv-subq-list{margin-bottom:120px}
 
   /* Mobile chat log — always visible, 3 lines */
   .mobile-chat-log-wrap{width:calc(100% - 16px)!important;left:8px!important;top:auto!important;bottom:130px!important;transform:none!important;display:block!important}
@@ -716,7 +716,7 @@ body{font-family:'Nanum Gothic Rounded',sans-serif;background:var(--bg);color:va
           <div style="flex:1;position:relative;min-height:0;overflow:hidden">
 
             <!-- 게임 정보: 전체 너비 기준, 위 1/4 지점 -->
-            <div class="gv-card" style="position:absolute;inset:0;justify-content:flex-start;padding-top:12%">
+            <div class="gv-card" style="position:absolute;inset:0;justify-content:flex-start;padding-top:4%">
               <div id="gameFeedback"></div>
               <div class="gv-instruction" id="gamePrompt" data-i18n="game_instruction">음악을 듣고 답을 입력하세요</div>
               <span class="gv-songcount" id="gameQC">남은 곡 ( 1 / 1 )</span>
