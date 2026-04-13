@@ -300,22 +300,44 @@ function sendDiscordRoomCreated(room) {
   if (!webhookUrl) return;
   const siteUrl = process.env.ALLOWED_ORIGIN || "https://your-app.onrender.com";
   const joinUrl = `${siteUrl}?join=${room.id}`;
+
+  // 카테고리 → env 키 매핑
+  const categoryRoleEnv = {
+    "anime-song": "DISCORD_ROLE_ANIME_SONG",
+    "kpop":       "DISCORD_ROLE_KPOP",
+    "jpop":       "DISCORD_ROLE_JPOP",
+    "ost":        "DISCORD_ROLE_OST",
+    "vocaloid":   "DISCORD_ROLE_VOCALOID",
+    "scene":      "DISCORD_ROLE_SCENE",
+    "character":  "DISCORD_ROLE_CHARACTER",
+  };
+  const categoryLabel = {
+    "anime-song": "🎵 애니 노래", "kpop": "🎤 K-POP", "jpop": "🌸 J-POP",
+    "ost": "🎬 OST", "vocaloid": "🤖 보컬로이드", "scene": "🎞 애니 장면", "character": "✨ 캐릭터",
+  };
+
+  const mapCategory = room.map?.category || "";
+  const roleId = process.env[categoryRoleEnv[mapCategory]];
+  const roleMention = roleId ? `<@&${roleId}>` : "";
+  const catLabel = categoryLabel[mapCategory] || "기타";
+
   const body = {
+    content: roleMention || undefined,
     embeds: [{
-      title: `🎮 새 방이 열렸습니다!`,
-      description: `**${room.name}**`,
-      color: 0x3498DB,
+      title: `🎮 새로운 방이 열렸어요!`,
+      description: `### ${room.name}\n${catLabel} 방에서 함께 플레이해요!`,
+      color: 0x5865F2,
       fields: [
-        { name: "맵", value: room.map?.name || "알 수 없음", inline: true },
-        { name: "호스트", value: room.hostName, inline: true },
-        { name: "인원", value: `${room.players.size}/${room.maxPlayers}명`, inline: true },
+        { name: "🗺 맵", value: room.map?.name || "알 수 없음", inline: true },
+        { name: "👑 호스트", value: room.hostName, inline: true },
+        { name: "👥 인원", value: `${room.players.size}/${room.maxPlayers}명`, inline: true },
       ],
       footer: { text: "마추기온라인" },
       timestamp: new Date().toISOString(),
     }],
     components: [{
       type: 1,
-      components: [{ type: 2, style: 5, label: "🚪 바로 입장", url: joinUrl }]
+      components: [{ type: 2, style: 5, label: "🚪 바로 입장하기", url: joinUrl }]
     }]
   };
   _sendWebhook(webhookUrl, body);
