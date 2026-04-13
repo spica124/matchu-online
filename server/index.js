@@ -574,6 +574,7 @@ function createRoom(id, name, hostId, hostName, hostAvatar, mapId, maxPlayers, p
     maxPlayers: Math.min(Math.max(maxPlayers, 1), 8),
     password: password || "",
     players: new Map(),
+    spectators: new Map(),
     status: "waiting",
     currentQuestion: 0,
     answeredSubQs: new Map(),
@@ -685,6 +686,44 @@ io.on("connection", (socket) => {
     socket.emit("roomJoined", getRoomState(room));
     io.to(roomId).emit("playerJoined", { player: { id: socket.id, name: user.name, avatar: user.avatar }, players: getPlayersArray(room) });
     broadcastRoomList();
+  });
+
+  // ── 관전 입장 ──
+  socket.on("watchRoom", async ({ roomId, password }) => {
+    const user = users.get(socket.id);
+    console.log(`[watchRoom] sid=${socket.id} roomId=${roomId} user=${user?.name}`);
+    if (!user) return socket.emit("error", "먼저 등록해주세요");
+    const room = rooms.get(roomId);
+    if (!room) return socket.emit("error", "방을 찾을 수 없습니다");
+    if (room.status === "finished") return socket.emit("error", "이미 종료된 게임입니다");
+    if (room.password) {
+      const pwMatch = await bcrypt.compare(password || "", room.password);
+      if (!pwMatch) return socket.emit("error", "비밀번호가 틀렸습니다", { roomId });
+    }
+    room.spectators.set(socket.id, { ...user });
+    socket.join(roomId);
+    // 현재 게임 상태 전송
+    const roomState = getRoomState(room);
+    roomState.spectating = true;
+    if (room.status === "playing" && room.map) {
+      const q = room.map.questions[room.currentQuestion];
+      const subQs = getSubQuestions(q);
+      roomState.midGameState = {
+        currentQuestion: room.currentQuestion,
+        totalQuestions: room.map.questions.length,
+        type: q.type,
+        timeLimit: q.timeLimit || 30,
+        timeLeft: room.timeLeft,
+        mediaUrl: q.mediaUrl || "",
+        startTime: q.startTime || 0,
+        endTime: q.endTime || 0,
+        volume: (q.volume !== undefined && q.volume !== null) ? q.volume : 100,
+        subQuestions: subQs.map((sq, i) => ({ index: i, prompt: sq.prompt || q.hint || "" })),
+        scores: getScoresArray(room),
+      };
+    }
+    socket.emit("roomJoined", roomState);
+    io.to(roomId).emit("chatMessage", { type: "system", text: `👁 ${user.name}님이 관전 중입니다.` });
   });
 
   socket.on("leaveRoom", () => leaveAllRooms(socket));
@@ -982,10 +1021,16 @@ function nextQuestion(room) {
 
 function leaveAllRooms(socket) {
   rooms.forEach((room, roomId) => {
+    const user = users.get(socket.id);
+    // 관전자면 조용히 제거
+    if (room.spectators.has(socket.id)) {
+      room.spectators.delete(socket.id);
+      socket.leave(roomId);
+      return;
+    }
     if (!room.players.has(socket.id)) return;
     room.players.delete(socket.id);
     socket.leave(roomId);
-    const user = users.get(socket.id);
     io.to(roomId).emit("playerLeft", { playerId: socket.id, playerName: user?.name || "???", players: getPlayersArray(room) });
     io.to(roomId).emit("chatMessage", { type: "system", text: `${user?.name || "???"} 님이 나갔습니다.` });
     if (room.players.size === 0) { clearInterval(room.timer); rooms.delete(roomId); }

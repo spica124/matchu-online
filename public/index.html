@@ -402,6 +402,10 @@ body{font-family:'Nanum Gothic Rounded',sans-serif;background:var(--bg);color:va
   .mobile-chat-log-wrap.chat-hidden{display:none!important}
   .mobile-chat-log-wrap #chatLog{max-height:calc(1.8em * 8)!important;overflow-y:auto!important}
   body.kb-open .mobile-chat-log-wrap{display:none!important}
+  /* 키보드 열리면: 사이드바 숨기고 gv-wrap을 1행으로, 게임카드가 전체 차지 */
+  body.kb-open .gv-wrap{grid-template-rows:1fr!important}
+  body.kb-open .gv-sidebar{display:none!important}
+  body.kb-open .gv-wrap{height:calc(var(--vvh, 100vh) - var(--th))!important;max-height:calc(var(--vvh, 100vh) - var(--th))!important}
 
   /* Chat toggle button — mobile: hidden */
   .chat-toggle-btn{display:none!important}
@@ -718,6 +722,7 @@ body{font-family:'Nanum Gothic Rounded',sans-serif;background:var(--bg);color:va
 
             <!-- 게임 정보: 전체 너비 기준, 위 1/4 지점 -->
             <div class="gv-card" style="position:absolute;inset:0;justify-content:flex-start;padding-top:4%">
+              <div id="spectateBadge" style="display:none;align-items:center;gap:6px;background:#1a1a2e;border:1px solid #4444aa;border-radius:20px;padding:4px 14px;font-size:12px;font-weight:700;color:#8888ff;margin-bottom:4px">👁 <span data-i18n-spectate>관전 중</span></div>
               <div id="gameFeedback"></div>
               <div class="gv-instruction" id="gamePrompt" data-i18n="game_instruction">음악을 듣고 답을 입력하세요</div>
               <span class="gv-songcount" id="gameQC">남은 곡 ( 1 / 1 )</span>
@@ -1338,6 +1343,24 @@ if ("serviceWorker" in navigator) {
 // Client State & Socket
 // ═══════════════════════════════════════════
 
+// 입장 효과음 (Web Audio API — 딩동 2음)
+function playJoinSound() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    [[880, 0, 0.12], [1100, 0.13, 0.12]].forEach(([freq, delay, dur]) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.type = "sine"; osc.frequency.value = freq;
+      gain.gain.setValueAtTime(0, ctx.currentTime + delay);
+      gain.gain.linearRampToValueAtTime(0.25, ctx.currentTime + delay + 0.01);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + dur);
+      osc.start(ctx.currentTime + delay);
+      osc.stop(ctx.currentTime + delay + dur);
+    });
+  } catch(e) {}
+}
+
 // 저장된 토큰이 있으면 연결 시 전달 (Socket.IO JWT 미들웨어 인증)
 const socket = io({ auth: { token: localStorage.getItem("authToken") || "" } });
 
@@ -1448,10 +1471,13 @@ window.addEventListener("DOMContentLoaded", () => {
   // 모바일 키보드 열림 감지 — visualViewport 높이 변화로 판단
   if (window.visualViewport) {
     let _baseVH = window.visualViewport.height;
-    window.visualViewport.addEventListener("resize", () => {
+    const updateVVH = () => {
+      document.documentElement.style.setProperty("--vvh", window.visualViewport.height + "px");
       const shrunk = window.visualViewport.height < _baseVH - 100;
       document.body.classList.toggle("kb-open", shrunk);
-    });
+    };
+    window.visualViewport.addEventListener("resize", updateVVH);
+    updateVVH();
   }
 
   // 볼륨 슬라이더 초기값
@@ -1551,15 +1577,55 @@ socket.on("myMapList", maps => {
   renderCreateModalMaps(maps);
 });
 
+let _spectating = false;
+
 socket.on("roomJoined", room => {
+  console.log("[roomJoined] spectating=", room.spectating, "midGameState=", !!room.midGameState, "status=", room.status);
   currentRoom = room;
   currentRoomId = room.id;
-  showWaiting(room);
-  navigateTo("waiting");
+  _spectating = !!room.spectating;
+
+  if (room.spectating && room.midGameState) {
+    // 관전 — 게임 화면으로 바로 진입
+    const mg = room.midGameState;
+    gameState = {
+      totalQ: mg.totalQuestions, currentQ: mg.currentQuestion, answered: true,
+      playerCount: room.players.length, timeLeft: mg.timeLeft, timeLimit: mg.timeLimit,
+      subQAnswerers: {}, subQPrompts: {}, chosungHints: {}, revealAnswers: {},
+      myAnsweredSubQs: {}, subQuestions: mg.subQuestions || [], totalSubQ: (mg.subQuestions || []).length || 1, subQCounts: {},
+    };
+    (mg.subQuestions || []).forEach((sq, i) => {
+      gameState.subQPrompts[i] = sq.prompt || `${t("game_q_label")} ${i + 1}`;
+      gameState.subQAnswerers[i] = [];
+    });
+    document.getElementById("chatLog").innerHTML = "";
+    document.getElementById("subqList").innerHTML = "";
+    document.getElementById("gameFeedback").innerHTML = "";
+    document.getElementById("gameQC").textContent = `${t("game_q_remaining")} ( ${mg.totalQuestions - mg.currentQuestion} / ${mg.totalQuestions} )`;
+    document.getElementById("gameTimer").textContent = mg.timeLeft;
+    renderSubQList();
+    renderScoreboard(mg.scores || []);
+    const elapsed = mg.timeLimit - mg.timeLeft;
+    const ytId = getYouTubeId(mg.mediaUrl || "");
+    playYouTube(ytId, (mg.startTime || 0) + elapsed, mg.endTime || 0, mg.timeLimit || 30, mg.volume !== undefined ? mg.volume : 100);
+    setSpectateUI(true);
+    addChat("system", _lang === "ko" ? "👁 관전 중입니다." : "👁 Spectating.");
+    navigateTo("game");
+  } else if (room.spectating) {
+    // 관전인데 waiting 상태 방
+    setSpectateUI(false);
+    showWaiting(room);
+    navigateTo("waiting");
+  } else {
+    setSpectateUI(false);
+    showWaiting(room);
+    navigateTo("waiting");
+  }
 });
 
 socket.on("playerJoined", ({ players }) => {
   if (currentRoom) { currentRoom.players = players; showWaiting(currentRoom); }
+  playJoinSound();
 });
 
 socket.on("playerLeft", ({ playerName, players }) => {
@@ -1583,6 +1649,7 @@ socket.on("gameStarted", ({ totalQuestions, players }) => {
   document.getElementById("gameFeedback").innerHTML = "";
   addChat("system", t("game_started_msg"));
   renderScoreboard(players.map(p => ({ ...p, score: 0 })));
+  setSpectateUI(_spectating);
   navigateTo("game");
 });
 
@@ -1649,6 +1716,7 @@ socket.on("question", ({ index, total, type, hint, timeLimit, mediaUrl, startTim
     const mapVol = (volume !== undefined && volume !== null) ? volume : 100;
     playYouTube(ytId, startTime || 0, endTime || 0, timeLimit || gameState.timeLimit || 30, mapVol);
   }
+  if (_spectating) { setSpectateUI(true); navigateTo("game"); }
 });
 
 socket.on("timeUpdate", t => {
@@ -1911,11 +1979,36 @@ function joinRoom(roomId, hasPassword) {
   }
 }
 
+function watchRoom(roomId, hasPassword) {
+  console.log("[watchRoom] roomId=", roomId, "hasPassword=", hasPassword);
+  if (hasPassword) {
+    const pw = prompt(t('room_join_password'));
+    if (pw === null) return;
+    socket.emit("watchRoom", { roomId, password: pw });
+  } else {
+    socket.emit("watchRoom", { roomId });
+  }
+}
+
 function leaveRoom() {
   socket.emit("leaveRoom");
   currentRoom = null;
   currentRoomId = null;
+  _spectating = false;
+  setSpectateUI(false);
   navigateTo("home");
+}
+
+function setSpectateUI(on) {
+  const input = document.getElementById("chatInput");
+  const skipBtn = document.getElementById("skipBtn");
+  const badge = document.getElementById("spectateBadge");
+  if (input) {
+    input.disabled = on;
+    input.placeholder = on ? (_lang==='ko'?'관전 중 (채팅 불가)':'Spectating (no chat)') : (input.getAttribute('data-i18n-placeholder') ? t(input.getAttribute('data-i18n-placeholder')) : '');
+  }
+  if (skipBtn) skipBtn.style.display = on ? "none" : "";
+  if (badge) badge.style.display = on ? "flex" : "none";
 }
 
 function startGame() {
@@ -1998,6 +2091,7 @@ function filterRoomList(query) {
         ${Array.from({length:r.maxPlayers}).map((_,i) => `<span class="r-dot ${i < r.players ? 'f' : 'e'}"></span>`).join("")}
         <span class="r-cnt">${r.players}/${r.maxPlayers}</span>
       </div>
+     
     </div>
   `).join("") + makePager(_roomPage, rooms.length, ROOM_PER_PAGE, 'goRoomPage');
 }
