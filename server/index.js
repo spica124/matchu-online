@@ -247,6 +247,80 @@ function authMiddleware(req, res, next) {
   } catch { res.status(401).json({ error: "토큰이 유효하지 않습니다" }); }
 }
 
+// ── 디스코드 웹훅 ──
+async function sendDiscordMapApproved(map) {
+  const webhookUrl = process.env.DISCORD_MAP_WEBHOOK;
+  if (!webhookUrl) return;
+  const siteUrl = process.env.ALLOWED_ORIGIN || "https://your-app.onrender.com";
+  const questionCount = map.questions?.length || 0;
+  const categoryLabel = {
+    "anime-song": "애니 노래", "kpop": "K-POP", "jpop": "J-POP",
+    "ost": "OST", "vocaloid": "보컬로이드", "scene": "장면", "character": "캐릭터",
+  }[map.category] || map.category || "기타";
+
+  const body = {
+    embeds: [{
+      title: `${map.icon || "🎵"} ${map.name}`,
+      description: `새로운 맵이 승인되었습니다!`,
+      color: 0x4ade80,
+      fields: [
+        { name: "제작자", value: map.author || "알 수 없음", inline: true },
+        { name: "카테고리", value: categoryLabel, inline: true },
+        { name: "문제 수", value: `${questionCount}문제`, inline: true },
+      ],
+      footer: { text: "마추기온라인" },
+      timestamp: new Date().toISOString(),
+    }],
+    components: [{
+      type: 1,
+      components: [{
+        type: 2, style: 5, label: "🎮 바로 플레이",
+        url: siteUrl,
+      }]
+    }]
+  };
+
+  _sendWebhook(webhookUrl, body);
+}
+
+function _sendWebhook(webhookUrl, body) {
+  try {
+    const https = require("https");
+    const data = JSON.stringify(body);
+    const url = new URL(webhookUrl);
+    const req = https.request({ hostname: url.hostname, path: url.pathname + url.search, method: "POST", headers: { "Content-Type": "application/json", "Content-Length": Buffer.byteLength(data) } }, () => {});
+    req.on("error", e => console.error("Discord webhook error:", e.message));
+    req.write(data);
+    req.end();
+  } catch (e) { console.error("Discord webhook error:", e.message); }
+}
+
+function sendDiscordRoomCreated(room) {
+  const webhookUrl = process.env.DISCORD_ROOM_WEBHOOK;
+  if (!webhookUrl) return;
+  const siteUrl = process.env.ALLOWED_ORIGIN || "https://your-app.onrender.com";
+  const joinUrl = `${siteUrl}?join=${room.id}`;
+  const body = {
+    embeds: [{
+      title: `🎮 새 방이 열렸습니다!`,
+      description: `**${room.name}**`,
+      color: 0x3498DB,
+      fields: [
+        { name: "맵", value: room.map?.name || "알 수 없음", inline: true },
+        { name: "호스트", value: room.hostName, inline: true },
+        { name: "인원", value: `${room.players.size}/${room.maxPlayers}명`, inline: true },
+      ],
+      footer: { text: "마추기온라인" },
+      timestamp: new Date().toISOString(),
+    }],
+    components: [{
+      type: 1,
+      components: [{ type: 2, style: 5, label: "🚪 바로 입장", url: joinUrl }]
+    }]
+  };
+  _sendWebhook(webhookUrl, body);
+}
+
 function adminMiddleware(req, res, next) {
   const token = req.cookies?.authToken || req.headers.authorization?.split(" ")[1];
   if (!token) return res.status(401).json({ error: "로그인이 필요합니다" });
@@ -521,6 +595,7 @@ app.post("/api/admin/maps/:id/approve", adminMiddleware, async (req, res) => {
     m.rejectReason = "";
     m.approvedAt = new Date();
     await m.save();
+    sendDiscordMapApproved(m);
     res.json({ ok: true });
   } catch (e) { console.error(e); res.status(500).json({ error: "서버 오류가 발생했습니다" }); }
 });
@@ -665,6 +740,7 @@ io.on("connection", (socket) => {
       rooms.set(roomId, room);
       socket.join(roomId);
       socket.emit("roomJoined", getRoomState(room));
+      if (!password) sendDiscordRoomCreated(room); // 공개방만 알림
       broadcastRoomList();
     } catch (e) { console.error(e); socket.emit("error", "방 생성에 실패했습니다"); }
   });

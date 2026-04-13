@@ -1,3 +1,5 @@
 node_modules/
 .env
 .DS_Store
+setup_matchu_discord.py
+matchu_bot_data.json
