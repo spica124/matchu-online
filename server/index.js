@@ -307,16 +307,40 @@ async function sendDiscordMapApproved(map) {
   _sendWebhook(webhookUrl, body);
 }
 
-function _sendWebhook(webhookUrl, body) {
+function _sendWebhook(webhookUrl, body, onMessageId) {
   try {
     const https = require("https");
     const data = JSON.stringify(body);
-    const url = new URL(webhookUrl);
-    const req = https.request({ hostname: url.hostname, path: url.pathname + url.search, method: "POST", headers: { "Content-Type": "application/json", "Content-Length": Buffer.byteLength(data) } }, () => {});
+    const url = new URL(webhookUrl + (onMessageId ? "?wait=true" : ""));
+    const req = https.request({
+      hostname: url.hostname,
+      path: url.pathname + url.search,
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Content-Length": Buffer.byteLength(data) }
+    }, (res) => {
+      if (onMessageId) {
+        let raw = "";
+        res.on("data", d => raw += d);
+        res.on("end", () => {
+          try { onMessageId(JSON.parse(raw).id); } catch {}
+        });
+      }
+    });
     req.on("error", e => console.error("Discord webhook error:", e.message));
     req.write(data);
     req.end();
   } catch (e) { console.error("Discord webhook error:", e.message); }
+}
+
+function _deleteWebhookMessage(webhookUrl, messageId) {
+  try {
+    const https = require("https");
+    const url = new URL(webhookUrl);
+    const path = url.pathname + `/messages/${messageId}`;
+    const req = https.request({ hostname: url.hostname, path, method: "DELETE" }, () => {});
+    req.on("error", e => console.error("Discord webhook delete error:", e.message));
+    req.end();
+  } catch (e) { console.error("Discord webhook delete error:", e.message); }
 }
 
 function sendDiscordRoomCreated(room) {
@@ -365,7 +389,16 @@ function sendDiscordRoomCreated(room) {
       components: [{ type: 2, style: 5, label: "🚪 바로 입장하기", url: joinUrl }]
     }]
   };
-  _sendWebhook(webhookUrl, body);
+  _sendWebhook(webhookUrl, body, (msgId) => {
+    room.discordMsgId = msgId;
+  });
+}
+
+function deleteDiscordRoomMessage(room) {
+  const webhookUrl = process.env.DISCORD_ROOM_WEBHOOK;
+  if (!webhookUrl || !room.discordMsgId) return;
+  _deleteWebhookMessage(webhookUrl, room.discordMsgId);
+  room.discordMsgId = null;
 }
 
 function adminMiddleware(req, res, next) {
@@ -869,6 +902,7 @@ io.on("connection", (socket) => {
       room.map = map;
       room.status = "playing";
       room.currentQuestion = 0;
+      deleteDiscordRoomMessage(room);
       room.players.forEach(p => { p.score = 0; p.answeredSubQs = new Set(); });
       await MapModel.updateOne({ mapId: room.mapId }, { $inc: { plays: 1 } });
       io.to(roomId).emit("gameStarted", { totalQuestions: map.questions.length, players: getPlayersArray(room) });
@@ -1157,7 +1191,7 @@ function leaveAllRooms(socket) {
     socket.leave(roomId);
     io.to(roomId).emit("playerLeft", { playerId: socket.id, playerName: user?.name || "???", players: getPlayersArray(room) });
     io.to(roomId).emit("chatMessage", { type: "system", text: `${user?.name || "???"} 님이 나갔습니다.` });
-    if (room.players.size === 0) { clearInterval(room.timer); rooms.delete(roomId); }
+    if (room.players.size === 0) { deleteDiscordRoomMessage(room); clearInterval(room.timer); rooms.delete(roomId); }
     else if (room.hostId === socket.id) {
       const nextHost = room.players.keys().next().value;
       room.hostId = nextHost;
