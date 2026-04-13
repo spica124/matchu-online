@@ -323,9 +323,10 @@ function sendDiscordRoomCreated(room) {
 
   const body = {
     content: roleMention || undefined,
+    allowed_mentions: roleId ? { roles: [roleId] } : { parse: [] },
     embeds: [{
-      title: `🎮 새로운 방이 열렸어요!`,
-      description: `### ${room.name}\n${catLabel} 방에서 함께 플레이해요!`,
+      title: `🎮 ${room.name} 이 열렸어요!`,
+      description: `${catLabel} 방에서 함께 플레이해요!`,
       color: 0x5865F2,
       fields: [
         { name: "🗺 맵", value: room.map?.name || "알 수 없음", inline: true },
