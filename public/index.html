@@ -468,7 +468,7 @@ body{font-family:'Nanum Gothic Rounded',sans-serif;background:var(--bg);color:va
       <button class="nav-i" data-nav="browse" onclick="navigateTo('browse')"><span class="nav-ic"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></span> <span data-i18n="nav_browse">전체 보기</span></button>
       <button class="nav-i" data-nav="create-map" onclick="navigateTo('create-map')"><span class="nav-ic"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></span> <span data-i18n="nav_create">맵 제작</span></button>
       <div class="nav-sec" data-i18n="nav_sec_community">커뮤니티</div>
-      <button class="nav-i" data-nav="ranking" onclick="navigateTo('ranking')"><span class="nav-ic"><svg viewBox="0 0 24 24"><path d="M8 21H4a1 1 0 01-1-1v-4a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1z"/><path d="M14 21h-4a1 1 0 01-1-1v-8a1 1 0 011-1h4a1 1 0 011 1v8a1 1 0 01-1 1z"/><path d="M20 21h-4a1 1 0 01-1-1V6a1 1 0 011-1h4a1 1 0 011 1v14a1 1 0 01-1 1z"/></svg></span> <span data-i18n="nav_ranking">글로벌 랭킹</span></button>
+      <button class="nav-i" data-nav="ranking" onclick="navigateTo('ranking')"><span class="nav-ic"><svg viewBox="0 0 24 24"><path d="M8 21H4a1 1 0 01-1-1v-4a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1z"/><path d="M14 21h-4a1 1 0 01-1-1v-8a1 1 0 011-1h4a1 1 0 011 1v8a1 1 0 01-1 1z"/><path d="M20 21h-4a1 1 0 01-1-1V6a1 1 0 011-1h4a1 1 0 011 1v14a1 1 0 01-1 1z"/></svg></span> <span data-i18n="nav_ranking">랭킹</span></button>
       <div class="nav-sec" data-i18n="nav_sec_myactivity">내 활동</div>
       <button class="nav-i" data-nav="dashboard" onclick="navigateTo('dashboard')"><span class="nav-ic"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg></span> <span data-i18n="nav_dashboard">내 맵 대시보드</span></button>
     </div>
@@ -504,7 +504,7 @@ body{font-family:'Nanum Gothic Rounded',sans-serif;background:var(--bg);color:va
         <p data-i18n="home_hero_sub">점수를 랭킹에 등록하고 전국의 플레이어와 경쟁하세요</p>
       </div>
       <div class="qactions">
-        <button class="qact" onclick="navigateTo('ranking')" data-i18n="nav_ranking">글로벌 랭킹</button>
+        <button class="qact" onclick="navigateTo('ranking')" data-i18n="nav_ranking">랭킹</button>
         <button class="qact" onclick="showCreateModal()" data-i18n="room_create">방 만들기</button>
         <button class="qact" onclick="navigateTo('create-map')" data-i18n="nav_create">맵 제작</button>
       </div>
@@ -523,6 +523,12 @@ body{font-family:'Nanum Gothic Rounded',sans-serif;background:var(--bg);color:va
       <div class="r-list" id="roomList">
         <div class="empty" data-i18n="home_no_rooms">아직 열린 방이 없습니다. 첫 번째 방을 만들어보세요!</div>
       </div>
+    </div>
+
+    <!-- ════ POPULAR MAPS ════ -->
+    <div class="page hide" id="page-popular">
+      <div class="sec-h"><span class="sec-t" data-i18n="nav_popular">인기</span></div>
+      <div class="m-grid" id="popularGrid"></div>
     </div>
 
     <!-- ════ BROWSE MAPS ════ -->
@@ -781,7 +787,8 @@ body{font-family:'Nanum Gothic Rounded',sans-serif;background:var(--bg);color:va
 
     <!-- ════ RANKING ════ -->
     <div class="page hide" id="page-ranking">
-      <div class="sec-h"><span class="sec-t" data-i18n="nav_ranking">글로벌 랭킹</span></div>
+      <div class="sec-h"><span class="sec-t" data-i18n="nav_ranking">랭킹</span></div>
+      <div style="font-size:12px;color:var(--t3);margin-bottom:12px;padding:10px 14px;background:var(--bg3);border:1px solid var(--brd);border-radius:var(--r)" data-i18n="rank_desc">모든 맵 최고점수의 총합입니다</div>
       <div style="background:var(--bg3);border:1px solid var(--brd);border-radius:var(--rl);overflow:hidden">
         <div style="display:grid;grid-template-columns:48px 1fr 100px;gap:0;padding:10px 16px;border-bottom:1px solid var(--brd);font-size:11px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;font-family:'JetBrains Mono',monospace">
           <span>#</span><span data-i18n="rank_player">플레이어</span><span style="text-align:right" data-i18n="rank_score">총점수</span>
@@ -954,7 +961,7 @@ const I18N = {
   ko: {
     // 네비게이션
     nav_home: "홈", nav_guide: "가이드", nav_popular: "인기", nav_favorites: "즐겨찾기",
-    nav_browse: "전체 보기", nav_create: "맵 제작", nav_ranking: "글로벌 랭킹",
+    nav_browse: "전체 보기", nav_create: "맵 제작", nav_ranking: "랭킹",
     nav_dashboard: "내 맵 대시보드", nav_sec_maps: "맵 찾기",
     nav_sec_community: "커뮤니티", nav_sec_myactivity: "내 활동",
     // 사이드바
@@ -1029,10 +1036,54 @@ const I18N = {
     dash_new_map: "+ 새 맵 만들기",
     dash_draft: "초안", dash_pending: "심사중", dash_approved: "배포완료", dash_rejected: "반려",
     // 랭킹
-    rank_player: "플레이어", rank_score: "총점수", rank_loading: "랭킹 데이터 로딩 중...",
+    rank_player: "플레이어", rank_score: "총점수", rank_loading: "랭킹 데이터 로딩 중...", rank_desc: "모든 맵 최고점수의 총합입니다",
     // 공통
     loading: "로딩 중...", refresh: "새로고침", cancel: "취소", save: "저장", close: "✕ 닫기",
     confirm_delete: "정말 삭제하시겠습니까?",
+    // Game
+    game_started_msg: "게임이 시작되었습니다!",
+    game_q_remaining: "남은 곡",
+    game_hint_prefix: "힌트: ",
+    game_q_label: "문제",
+    // Map editor
+    yt_dur: "영상 길이: ", yt_dur_loading: "영상 길이 감지 중...",
+    yt_start: "시작", yt_end_label: "끝",
+    yt_range: "구간: ", yt_end_time: "끝", yt_loop: "반복", yt_loop_long: "반복재생", yt_sec: "초",
+    yt_url_hint: "URL을 입력하면 미리보기와 슬라이더가 표시됩니다",
+    yt_url_hint2: "URL 입력 후 슬라이더가 표시됩니다",
+    yt_timelimit: "제한시간",
+    yt_loop_clip: "반복재생",
+    yt_first_ans_note: "${t('yt_first_ans_note')}",
+    subq_add: "+ 소문제 추가", subq_label: "소문제",
+    // Auth validation
+    auth_err_empty: "아이디와 비밀번호를 입력해주세요",
+    auth_err_pw_short: "비밀번호는 8자 이상이어야 합니다",
+    auth_err_pw_confirm: "비밀번호 확인을 입력해주세요",
+    auth_err_pw_mismatch: "비밀번호가 일치하지 않습니다",
+    auth_err_generic: "오류가 발생했습니다",
+    // Toasts / confirms
+    invite_copied: "초대 링크 복사됨!",
+    copy_link_prompt: "아래 링크를 복사하세요:",
+    leave_game_confirm: "게임에서 나가시겠습니까?",
+    cancel_submit_confirm: "배포 신청을 취소하시겠습니까?",
+    cancel_submit_toast: "신청이 취소되었습니다.",
+    deploy_toast: "배포 신청이 완료되었습니다!",
+    map_create_toast: "맵이 생성되었습니다! 🎉",
+    map_update_toast: "맵이 수정되었습니다! 🎉",
+    min_one_q: "최소 1개 필요합니다.",
+    min_one_q_game: "최소 1개의 문제가 필요합니다.",
+    map_not_found: "맵 정보를 찾을 수 없습니다. 대시보드를 새로고침해주세요.",
+    map_select_first: "먼저 맵을 선택하세요. 맵 탐색으로 이동합니다.",
+    dash_map_count_suffix: "개의 맵을 만들었습니다",
+    admin_pending_suffix: "개",
+    approve_toast: "승인되었습니다!", reject_toast: "거절되었습니다.",
+    reason_label: "거절 사유", no_tags: "없음",
+    chosung_custom: "커스텀",
+    // Category sub-question defaults
+    cat_sq_song: "노래 제목", cat_sq_anime: "애니 제목", cat_sq_artist: "가수",
+    cat_sq_char: "캐릭터 이름", cat_sq_anime2: "애니 이름",
+    cat_sq_work: "작품 제목", cat_sq_voc_song: "노래 이름", cat_sq_voc_artist: "가수 이름", cat_sq_composer: "작곡가 이름",
+    defaultq_sq1: "노래 제목", defaultq_sq2: "가수",
     // 카테고리
     cat_anime_song: "애니 노래", cat_scene: "애니 장면", cat_character: "캐릭터 대사",
     cat_kpop: "K-POP", cat_jpop: "J-POP", cat_ost: "OST", cat_vocaloid: "보컬로이드",
@@ -1137,10 +1188,54 @@ const I18N = {
     dash_new_map: "+ New Map",
     dash_draft: "Draft", dash_pending: "Pending", dash_approved: "Live", dash_rejected: "Rejected",
     // Ranking
-    rank_player: "Player", rank_score: "Total Score", rank_loading: "Loading ranking data...",
+    rank_player: "Player", rank_score: "Total Score", rank_loading: "Loading ranking data...", rank_desc: "Sum of best scores across all maps",
     // Common
     loading: "Loading...", refresh: "Refresh", cancel: "Cancel", save: "Save", close: "✕ Close",
     confirm_delete: "Are you sure you want to delete this?",
+    // Game
+    game_started_msg: "Game started!",
+    game_q_remaining: "Remaining",
+    game_hint_prefix: "Hint: ",
+    game_q_label: "Q",
+    // Map editor
+    yt_dur: "Duration: ", yt_dur_loading: "Detecting video duration...",
+    yt_start: "Start", yt_end_label: "End",
+    yt_range: "Range: ", yt_end_time: "end", yt_loop: "loop", yt_loop_long: "Looping", yt_sec: "sec",
+    yt_url_hint: "Enter a URL to show the preview and sliders",
+    yt_url_hint2: "Enter URL to show sliders",
+    yt_timelimit: "Time limit",
+    yt_loop_clip: "Looping",
+    yt_first_ans_note: "※ Only the first answer is shown on the results screen",
+    subq_add: "+ Add Sub-Q", subq_label: "Sub-questions",
+    // Auth validation
+    auth_err_empty: "Please enter your username and password",
+    auth_err_pw_short: "Password must be at least 8 characters",
+    auth_err_pw_confirm: "Please confirm your password",
+    auth_err_pw_mismatch: "Passwords do not match",
+    auth_err_generic: "An error occurred",
+    // Toasts / confirms
+    invite_copied: "Invite link copied!",
+    copy_link_prompt: "Copy this link:",
+    leave_game_confirm: "Leave the game?",
+    cancel_submit_confirm: "Cancel your submission?",
+    cancel_submit_toast: "Submission cancelled.",
+    deploy_toast: "Map submitted for review!",
+    map_create_toast: "Map created! 🎉",
+    map_update_toast: "Map updated! 🎉",
+    min_one_q: "At least 1 required.",
+    min_one_q_game: "At least 1 question required.",
+    map_not_found: "Map not found. Please refresh the dashboard.",
+    map_select_first: "Please select a map first.",
+    dash_map_count_suffix: " maps created",
+    admin_pending_suffix: "",
+    approve_toast: "Approved!", reject_toast: "Rejected.",
+    reason_label: "Reason", no_tags: "None",
+    chosung_custom: "Custom",
+    // Category sub-question defaults
+    cat_sq_song: "Song Title", cat_sq_anime: "Anime Title", cat_sq_artist: "Artist",
+    cat_sq_char: "Character Name", cat_sq_anime2: "Anime Name",
+    cat_sq_work: "Work Title", cat_sq_voc_song: "Song Name", cat_sq_voc_artist: "Artist Name", cat_sq_composer: "Composer",
+    defaultq_sq1: "Song Title", defaultq_sq2: "Artist",
     // Categories
     cat_anime_song: "Anime Song", cat_scene: "Anime Scene", cat_character: "Character Quote",
     cat_kpop: "K-POP", cat_jpop: "J-POP", cat_ost: "OST", cat_vocaloid: "Vocaloid",
@@ -1305,24 +1400,26 @@ function applyGlobalChosung() {
 }
 
 // 카테고리별 기본 소문제 목록
-const CATEGORY_SUBQS = {
-  "anime-song": ["노래 제목", "애니 제목"],
-  "scene":      ["애니 제목"],
-  "character":  ["캐릭터 이름", "애니 이름"],
-  "kpop":       ["노래 제목", "가수"],
-  "jpop":       ["노래 제목", "가수"],
-  "ost":        ["노래 제목", "작품 제목"],
-  "vocaloid":   ["노래 이름", "가수 이름", "작곡가 이름"],
-};
+function getCategorySubqs() {
+  return {
+    "anime-song": [t('cat_sq_song'), t('cat_sq_anime')],
+    "scene":      [t('cat_sq_anime')],
+    "character":  [t('cat_sq_char'), t('cat_sq_anime2')],
+    "kpop":       [t('cat_sq_song'), t('cat_sq_artist')],
+    "jpop":       [t('cat_sq_song'), t('cat_sq_artist')],
+    "ost":        [t('cat_sq_song'), t('cat_sq_work')],
+    "vocaloid":   [t('cat_sq_voc_song'), t('cat_sq_voc_artist'), t('cat_sq_composer')],
+  };
+}
 
 function defaultQ() {
-  return { type: "audio", mediaUrl:"", startTime:0, endTime:0, timeLimit:30, subQuestions: [defaultSubQ("노래 제목"), defaultSubQ("가수")] };
+  return { type: "audio", mediaUrl:"", startTime:0, endTime:0, timeLimit:30, subQuestions: [defaultSubQ(t('defaultq_sq1')), defaultSubQ(t('defaultq_sq2'))] };
 }
 
 // 카테고리 변경 시 소문제 자동완성
 function applyCategorySubQs(arrName, category) {
   const arr = arrName === 'creatorQuestions' ? creatorQuestions : editQuestions;
-  const prompts = CATEGORY_SUBQS[category];
+  const prompts = getCategorySubqs()[category];
   if (!prompts || !arr) return;
   arr.forEach(q => {
     // 정답이 모두 비어있을 때만 소문제 prompt 자동 적용
@@ -1434,6 +1531,7 @@ socket.on("mapList", maps => {
   allMaps = maps;
   renderMapGrid(maps);
   renderCreateModalMaps(maps);
+  renderPopularGrid(maps);
 });
 
 // 내 맵 목록 (방 만들기 모달 — 내 맵 포함, 승인 여부 무관)
@@ -1471,7 +1569,7 @@ socket.on("gameStarted", ({ totalQuestions, players }) => {
   document.getElementById("chatLog").innerHTML = "";
   document.getElementById("subqList").innerHTML = "";
   document.getElementById("gameFeedback").innerHTML = "";
-  addChat("system", "게임이 시작되었습니다!");
+  addChat("system", t("game_started_msg"));
   renderScoreboard(players.map(p => ({ ...p, score: 0 })));
   navigateTo("game");
 });
@@ -1496,12 +1594,12 @@ socket.on("question", ({ index, total, type, hint, timeLimit, mediaUrl, startTim
   gameState.subQuestions = subQuestions || [];
   gameState.totalSubQ = (subQuestions || []).length || 1;
   (subQuestions || []).forEach((sq, i) => {
-    gameState.subQPrompts[i] = sq.prompt || `문제 ${i + 1}`;
+    gameState.subQPrompts[i] = sq.prompt || `${t("game_q_label")} ${i + 1}`;
     gameState.subQAnswerers[i] = [];
   });
 
-  document.getElementById("gameQC").textContent = `남은 곡 ( ${sTot - sIdx} / ${sTot} )`;
-  document.getElementById("gamePrompt").textContent = "음악을 듣고 답을 입력하세요";
+  document.getElementById("gameQC").textContent = `${t("game_q_remaining")} ( ${sTot - sIdx} / ${sTot} )`;
+  document.getElementById("gamePrompt").textContent = t("game_instruction");
   document.getElementById("gameTimer").textContent = timeLimit;
   document.getElementById("gameTimer").classList.remove("urg");
   document.getElementById("timerFill").style.width = "100%";
@@ -1513,7 +1611,7 @@ socket.on("question", ({ index, total, type, hint, timeLimit, mediaUrl, startTim
   // 힌트 (텍스트 힌트)
   const hintEl = document.getElementById("gameHint");
   if (hint && hint !== prompt) {
-    hintEl.textContent = `힌트: ${hint}`;
+    hintEl.textContent = t("game_hint_prefix") + hint;
     hintEl.style.display = "block";
   } else {
     hintEl.style.display = "none";
@@ -1585,15 +1683,19 @@ socket.on("wrongAnswer", ({ text }) => {
 socket.on("timeUp", ({ answer, revealList, scores }) => {
   gameState.revealAnswers = {};
   gameState.chosungHints = {};
-  gameState.myAnswers = {};
+  // myAnswers는 초기화하지 않음 — 내가 맞춘 정답은 계속 표시
   gameState._lastTyped = "";
   if (revealList) {
     revealList.forEach((r, idx) => {
-      if (!r.answered && r.answer != null) gameState.revealAnswers[idx] = r.answer;
+      // 내가 이미 맞춘 소문제는 revealAnswers에 넣지 않음 (myAnswers로 이미 표시됨)
+      const alreadyAnswered = gameState.myAnswers && gameState.myAnswers[idx];
+      if (!alreadyAnswered && r.answer != null) gameState.revealAnswers[idx] = r.answer;
     });
     renderSubQList();
   } else if (answer) {
-    gameState.revealAnswers[0] = answer;
+    if (!(gameState.myAnswers && gameState.myAnswers[0])) {
+      gameState.revealAnswers[0] = answer;
+    }
     renderSubQList();
   }
   renderScoreboard(scores);
@@ -1607,12 +1709,27 @@ socket.on("chatMessage", ({ type, name, text }) => {
     text.includes("스킵") ||
     text.includes("정답:")
   )) return;
+  // 영어 모드일 때 서버발 한국어 시스템 메시지 치환
+  let displayText = text;
+  if (_lang === "en" && type === "system") {
+    displayText = displayText
+      .replace("게임이 시작되었습니다!", "Game started!")
+      .replace("모든 플레이어가 완료!", "All players answered!")
+      .replace("🏆 게임 종료!", "🏆 Game over!")
+      .replace(/님이 나갔습니다\.$/, " has left.")
+      .replace("님이 나갔습니다.", " has left.")
+      .replace(/님이 \[(.+?)\] 정답! \(\+(\d+)점\)/, (_, q, pts) => `answered [${q}]! (+${pts}pts)`)
+      .replace("정답! (", "Correct! (")
+      .replace("점)", "pts)")
+      .replace(/시간 초과! 정답: (.+)/, (_, ans) => `Time's up! Answer: ${ans}`)
+      .replace("⏭ 스킵! 정답:", "⏭ Skipped! Answer:");
+  }
   // 대기실 채팅 vs 게임 채팅 분기
   const waitPage = document.getElementById("page-waiting");
   if (waitPage && !waitPage.classList.contains("hide")) {
-    addWaitChat(type, text, name);
+    addWaitChat(type, displayText, name);
   } else {
-    addChat(type, text, name);
+    addChat(type, displayText, name);
   }
 });
 
@@ -1677,8 +1794,10 @@ function navigateTo(page) {
   if (page === "ranking") { loadRanking(); }
   if (page === "dashboard") { loadDashboard(); }
   if (page === "admin") { loadAdminPanel(); }
-  if (page === "browse" || page === "popular") {
-    document.getElementById("page-browse").classList.remove("hide");
+  if (page === "popular") {
+    renderPopularGrid(allMaps);
+  }
+  if (page === "browse") {
     socket.emit("getMaps");
   }
   if (page === "favorites") {
@@ -1688,7 +1807,7 @@ function navigateTo(page) {
 }
 
 function leaveGameConfirm() {
-  if (confirm("게임에서 나가시겠습니까?")) {
+  if (confirm(t("leave_game_confirm"))) {
     stopYoutube();
     leaveRoom();
   }
@@ -1751,8 +1870,8 @@ function createRoom() {
 function copyInviteLink() {
   if (!currentRoomId) return;
   const url = `${location.origin}?join=${currentRoomId}`;
-  navigator.clipboard.writeText(url).then(() => showToast("초대 링크 복사됨!")).catch(() => {
-    prompt("아래 링크를 복사하세요:", url);
+  navigator.clipboard.writeText(url).then(() => showToast(t("invite_copied"))).catch(() => {
+    prompt(t("copy_link_prompt"), url);
   });
 }
 
@@ -1885,6 +2004,28 @@ function renderBattleMini(rooms) {
 let _mapCatFilter = "all";
 let _mapPage = 0;
 const MAP_PER_PAGE = 20;
+
+let _popPage = 0;
+const POP_PER_PAGE = 20;
+
+function renderPopularGrid(maps) {
+  _popPage = 0;
+  applyPopularFilter(maps);
+}
+
+function goPopPage(p) { _popPage = p; applyPopularFilter(allMaps); }
+
+function applyPopularFilter(maps) {
+  const sorted = [...(maps || allMaps)].sort((a, b) => (b.plays || 0) - (a.plays || 0));
+  if (_popPage >= Math.ceil((sorted.length || 1) / POP_PER_PAGE)) _popPage = 0;
+  const page = sorted.slice(_popPage * POP_PER_PAGE, (_popPage + 1) * POP_PER_PAGE);
+  const grid = document.getElementById("popularGrid");
+  if (!grid) return;
+  grid.innerHTML = (sorted.length
+    ? page.map(m => renderMapCard(m)).join("")
+    : `<div class="empty" style="grid-column:1/-1">${_lang === 'ko' ? '아직 맵이 없습니다.' : 'No maps yet.'}</div>`)
+    + `<div style="grid-column:1/-1">${makePager(_popPage, sorted.length, POP_PER_PAGE, 'goPopPage')}</div>`;
+}
 
 function renderMapGrid(maps, filter) {
   if (filter !== undefined) _mapCatFilter = filter;
@@ -2203,9 +2344,9 @@ function renderQList(arr, arrName, containerId, countId) {
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity:.6"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
           <input type="number" min="5" max="300" class="inp" style="width:62px;padding:4px 8px;font-family:'JetBrains Mono',monospace"
             value="${tl}" oninput="${arrName}[${i}].timeLimit=+this.value">
-          <span style="color:var(--t3)">초</span>
+          <span style="color:var(--t3)">${t('yt_sec')}</span>
         </label>
-        ${willLoop ? `<span style="font-size:11px;color:var(--ylw)">반복재생 (${clipLen}초 클립)</span>` : ''}
+        ${willLoop ? `<span style="font-size:11px;color:var(--ylw)">${t('yt_loop_clip')} (${clipLen}${t('yt_sec')} clip)</span>` : ''}
         <button class="btn btn-g btn-sm" onclick="if(${arrName}.length>1){${arrName}.splice(${i},1);renderQList(${arrName},'${arrName}','${containerId}','${countId}')}else{alert('최소 1개 필요')}" style="color:var(--acc);margin-left:auto;display:flex;align-items:center;gap:4px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> 삭제</button>
       </div>
       <!-- YouTube 영역 -->
@@ -2228,9 +2369,9 @@ function renderQList(arr, arrName, containerId, countId) {
           </div>
           ${hasYt ? `
           <div style="display:flex;flex-direction:column;gap:6px">
-            <div style="font-size:11px;color:var(--t3)" id="yt-dur-${arrName}-${i}">${q.ytDuration ? '영상 길이: ' + fmtTime(q.ytDuration) : '영상 길이 감지 중...'}</div>
+            <div style="font-size:11px;color:var(--t3)" id="yt-dur-${arrName}-${i}">${q.ytDuration ? t('yt_dur') + fmtTime(q.ytDuration) : t('yt_dur_loading')}</div>
             <div style="display:flex;align-items:center;gap:6px;font-size:12px">
-              <span style="color:var(--t3);min-width:28px">시작</span>
+              <span style="color:var(--t3);min-width:28px">${t('yt_start')}</span>
               <input type="range" id="yt-sr-${arrName}-${i}" min="0" max="${q.ytDuration||600}" step="1" value="${startSec}" style="flex:1;accent-color:var(--acc)"
                 oninput="setPrevStart('${arrName}',${i},'${ytId}',+this.value)">
               <span id="yt-st-${arrName}-${i}" style="font-family:'JetBrains Mono',monospace;color:var(--ylw);min-width:40px;font-size:12px">${fmtTime(startSec)}</span>
@@ -2238,22 +2379,22 @@ function renderQList(arr, arrName, containerId, countId) {
                 value="${startSec}" oninput="setPrevStart('${arrName}',${i},'${ytId}',+this.value)">
             </div>
             <div style="display:flex;align-items:center;gap:6px;font-size:12px">
-              <span style="color:var(--t3);min-width:28px">끝</span>
+              <span style="color:var(--t3);min-width:28px">${t('yt_end_label')}</span>
               <input type="range" id="yt-er-${arrName}-${i}" min="0" max="${q.ytDuration||600}" step="1" value="${endSec||q.ytDuration||600}" style="flex:1;accent-color:var(--grn)"
                 oninput="setPrevEnd('${arrName}',${i},+this.value)">
               <span id="yt-et-${arrName}-${i}" style="font-family:'JetBrains Mono',monospace;color:var(--grn);min-width:40px;font-size:12px">${endSec ? fmtTime(endSec) : (q.ytDuration ? fmtTime(q.ytDuration) : '∞')}</span>
               <input type="number" id="yt-en-${arrName}-${i}" min="0" max="${q.ytDuration||600}" class="inp" style="width:60px;padding:4px 6px;font-family:'JetBrains Mono',monospace;font-size:12px"
                 value="${endSec||q.ytDuration||''}" oninput="setPrevEnd('${arrName}',${i},+this.value)">
             </div>
-            ${startSec < (endSec||9999) ? `<div style="font-size:11px;color:var(--t3)">구간: ${fmtTime(startSec)} → ${endSec ? fmtTime(endSec) : '끝'}${endSec ? ' (' + (endSec-startSec) + '초)' : ''}${willLoop?' 반복':''}</div>` : ''}
-          </div>` : `<div style="font-size:12px;color:var(--t3);padding:8px 0">URL을 입력하면 미리보기와 슬라이더가 표시됩니다</div>`}
+            ${startSec < (endSec||9999) ? `<div style="font-size:11px;color:var(--t3)">${t('yt_range')}${fmtTime(startSec)} → ${endSec ? fmtTime(endSec) : t('yt_end_time')}${endSec ? ' (' + (endSec-startSec) + t('yt_sec') + ')' : ''}${willLoop?' '+t('yt_loop'):''}</div>` : ''}
+          </div>` : `<div style="font-size:12px;color:var(--t3);padding:8px 0">${t('yt_url_hint')}</div>`}
         </div>
       </div>
       <!-- 소문제 목록 -->
       <div>
         <div style="padding:6px 14px;background:var(--bg5);display:flex;align-items:center;justify-content:space-between">
-          <span style="font-size:11px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.5px">소문제</span>
-          <button class="btn btn-g btn-sm" onclick="${arrName}[${i}].subQuestions.push(defaultSubQ(''));renderQList(${arrName},'${arrName}','${containerId}','${countId}')" style="font-size:12px;padding:3px 10px">+ 소문제 추가</button>
+          <span style="font-size:11px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.5px">${t('subq_label')}</span>
+          <button class="btn btn-g btn-sm" onclick="${arrName}[${i}].subQuestions.push(defaultSubQ(''));renderQList(${arrName},'${arrName}','${containerId}','${countId}')" style="font-size:12px;padding:3px 10px">${t('subq_add')}</button>
         </div>
         ${subQHtml}
       </div>
@@ -2358,7 +2499,7 @@ function initPreviewPlayers(arr, arrName, offsetIdx) {
               if (el) el.max = dur;
             });
             const durEl = document.getElementById(`yt-dur-${arrName}-${i}`);
-            if (durEl) durEl.textContent = '영상 길이: ' + fmtT(dur);
+            if (durEl) durEl.textContent = t('yt_dur') + fmtT(dur);
             // endTime이 0이면 영상 끝으로 설정
             if (!realArr[i].endTime) {
               realArr[i].endTime = dur;
@@ -2444,7 +2585,7 @@ function renderCreatorQCards() {
 }
 
 function deleteQCard(i) {
-  if (creatorQuestions.length <= 1) return alert("최소 1개 필요합니다.");
+  if (creatorQuestions.length <= 1) return alert(t("min_one_q"));
   if (!confirm(`Q.${i+1}번 문제를 삭제하시겠습니까?`)) return;
   creatorQuestions.splice(i, 1);
   renderCreatorQCards();
@@ -2478,7 +2619,7 @@ function nextQEditorQ() {
   if (currentQEditorIdx < creatorQuestions.length - 1) openQEditorModal(currentQEditorIdx + 1);
 }
 function deleteQEditor() {
-  if (creatorQuestions.length <= 1) return alert("최소 1개 필요합니다.");
+  if (creatorQuestions.length <= 1) return alert(t("min_one_q"));
   if (!confirm(`Q.${currentQEditorIdx+1}번 문제를 삭제하시겠습니까?`)) return;
   creatorQuestions.splice(currentQEditorIdx, 1);
   if (currentQEditorIdx >= creatorQuestions.length) currentQEditorIdx = creatorQuestions.length - 1;
@@ -2567,34 +2708,34 @@ function renderQEditorContent() {
       <div style="font-size:11px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">${t('q_playback')}</div>
       ${hasYt ? `
       <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px">
-        <div style="font-size:11px;color:var(--t3)" id="yt-dur-${arrName}-${i}">${q.ytDuration ? '영상 길이: ' + fmtTime(q.ytDuration) : '영상 길이 감지 중...'}</div>
+        <div style="font-size:11px;color:var(--t3)" id="yt-dur-${arrName}-${i}">${q.ytDuration ? t('yt_dur') + fmtTime(q.ytDuration) : t('yt_dur_loading')}</div>
         <div style="display:flex;align-items:center;gap:6px;font-size:12px">
-          <span style="color:var(--t3);min-width:28px">시작</span>
+          <span style="color:var(--t3);min-width:28px">${t('yt_start')}</span>
           <input type="range" id="yt-sr-${arrName}-${i}" min="0" max="${q.ytDuration||600}" step="1" value="${startSec}" style="flex:1;accent-color:var(--acc)"
             oninput="setPrevStart('${arrName}',${i},'${ytId}',+this.value)">
           <span id="yt-st-${arrName}-${i}" style="font-family:'JetBrains Mono',monospace;color:var(--ylw);min-width:40px;font-size:12px">${fmtTime(startSec)}</span>
           <input type="number" id="yt-sn-${arrName}-${i}" min="0" max="${q.ytDuration||600}" class="inp" style="width:58px;padding:4px 6px;font-family:'JetBrains Mono',monospace;font-size:12px" value="${startSec}" oninput="setPrevStart('${arrName}',${i},'${ytId}',+this.value)">
         </div>
         <div style="display:flex;align-items:center;gap:6px;font-size:12px">
-          <span style="color:var(--t3);min-width:28px">끝</span>
+          <span style="color:var(--t3);min-width:28px">${t('yt_end_label')}</span>
           <input type="range" id="yt-er-${arrName}-${i}" min="0" max="${q.ytDuration||600}" step="1" value="${endSec||q.ytDuration||600}" style="flex:1;accent-color:var(--grn)"
             oninput="setPrevEnd('${arrName}',${i},+this.value)">
           <span id="yt-et-${arrName}-${i}" style="font-family:'JetBrains Mono',monospace;color:var(--grn);min-width:40px;font-size:12px">${endSec?fmtTime(endSec):(q.ytDuration?fmtTime(q.ytDuration):'∞')}</span>
           <input type="number" id="yt-en-${arrName}-${i}" min="0" max="${q.ytDuration||600}" class="inp" style="width:58px;padding:4px 6px;font-family:'JetBrains Mono',monospace;font-size:12px" value="${endSec||q.ytDuration||''}" oninput="setPrevEnd('${arrName}',${i},+this.value)">
         </div>
-        ${startSec < (endSec||9999) ? `<div style="font-size:11px;color:var(--t3)">구간: ${fmtTime(startSec)} → ${endSec?fmtTime(endSec):'끝'}${endSec?' ('+( endSec-startSec)+'초)':''}${willLoop?' · 반복재생':''}</div>` : ''}
-      </div>` : `<div style="font-size:12px;color:var(--t3);margin-bottom:12px">URL 입력 후 슬라이더가 표시됩니다</div>`}
+        ${startSec < (endSec||9999) ? `<div style="font-size:11px;color:var(--t3)">${t('yt_range')}${fmtTime(startSec)} → ${endSec?fmtTime(endSec):t('yt_end_time')}${endSec?' ('+(endSec-startSec)+t('yt_sec')+')':''}${willLoop?' · '+t('yt_loop_long'):''}</div>` : ''}
+      </div>` : `<div style="font-size:12px;color:var(--t3);margin-bottom:12px">${t('yt_url_hint2')}</div>`}
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap">
         <label style="display:flex;align-items:center;gap:5px;font-size:12px;font-weight:600;color:var(--t2)">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity:.6"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-          제한시간
+          ${t('yt_timelimit')}
           <input type="number" min="5" max="300" class="inp" style="width:62px;padding:4px 8px;font-family:'JetBrains Mono',monospace"
             value="${tl}" oninput="${arrName}[${i}].timeLimit=+this.value">
-          초
+          ${t('yt_sec')}
         </label>
-        ${willLoop ? `<span style="font-size:11px;color:var(--ylw)">반복재생 (${clipLen}초 클립)</span>` : ''}
+        ${willLoop ? `<span style="font-size:11px;color:var(--ylw)">${t('yt_loop_clip')} (${clipLen}${t('yt_sec')} clip)</span>` : ''}
       </div>
-      <div style="font-size:11px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">※ 첫 번째 정답만 결과 화면에 표시됩니다</div>
+      <div style="font-size:11px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">${t('yt_first_ans_note')}</div>
     </div>
   </div>
   <div class="qem-sq">
@@ -2612,7 +2753,7 @@ function renderQEditorContent() {
 function addCreatorQ() {
   if (creatorQuestions.length >= 500) return alert(_lang==='ko'?"한 맵에 최대 500개까지 문제를 추가할 수 있습니다.":"A map can have at most 500 questions.");
   const cat = document.getElementById("cmCat")?.value || "";
-  const prompts = CATEGORY_SUBQS[cat];
+  const prompts = getCategorySubqs()[cat];
   const q = defaultQ("audio");
   if (prompts) q.subQuestions = prompts.map(p => defaultSubQ(p));
   creatorQuestions.push(q);
@@ -2651,7 +2792,7 @@ async function saveNewMap() {
       }),
     });
     if (ok) {
-      alert(_lang==='ko'?"맵이 생성되었습니다! 🎉":"Map created successfully! 🎉");
+      alert(t("map_create_toast"));
       creatorQuestions = [defaultQ("audio")];
       document.getElementById("cmName").value = "";
       document.getElementById("qEditorModal").classList.add("hide");
@@ -2728,12 +2869,12 @@ async function doAuth() {
   const password = document.getElementById("authPassword").value;
   const errEl = document.getElementById("authError");
   errEl.style.display = "none";
-  if (!username || !password) { errEl.textContent = "아이디와 비밀번호를 입력해주세요"; errEl.style.display = "block"; return; }
+  if (!username || !password) { errEl.textContent = t("auth_err_empty"); errEl.style.display = "block"; return; }
   if (_authTab === "register") {
-    if (password.length < 8) { errEl.textContent = "비밀번호는 8자 이상이어야 합니다"; errEl.style.display = "block"; return; }
+    if (password.length < 8) { errEl.textContent = t("auth_err_pw_short"); errEl.style.display = "block"; return; }
     const confirm = document.getElementById("authPasswordConfirm").value;
-    if (!confirm) { errEl.textContent = "비밀번호 확인을 입력해주세요"; errEl.style.display = "block"; return; }
-    if (password !== confirm) { errEl.textContent = "비밀번호가 일치하지 않습니다"; errEl.style.display = "block"; return; }
+    if (!confirm) { errEl.textContent = t("auth_err_pw_confirm"); errEl.style.display = "block"; return; }
+    if (password !== confirm) { errEl.textContent = t("auth_err_pw_mismatch"); errEl.style.display = "block"; return; }
   }
   try {
     const body = { username, password };
@@ -2742,7 +2883,7 @@ async function doAuth() {
       method: "POST", credentials: "include",
       headers: { "Content-Type": "application/json" }, body: JSON.stringify(body),
     });
-    if (!ok) { errEl.textContent = data.error || "오류가 발생했습니다"; errEl.style.display = "block"; return; }
+    if (!ok) { errEl.textContent = data.error || t("auth_err_generic"); errEl.style.display = "block"; return; }
     setAuthUser(data.token, data.user);
     hideAuthModal();
   } catch(e) { errEl.textContent = "서버 오류: " + e.message; errEl.style.display = "block"; }
@@ -2919,7 +3060,7 @@ async function loadDashboard(keepPage) {
     });
     if (!ok) { el.innerHTML = `<div class="empty">${data.error||'불러오기 실패'}</div>`; return; }
     document.getElementById("dashSubtitle").textContent = _lang === 'ko'
-      ? `총 ${data.length}개의 맵을 만들었습니다`
+      ? (_lang==="ko" ? `총 ${data.length}개의 맵을 만들었습니다` : `${data.length}${t("dash_map_count_suffix")}`)
       : `You have created ${data.length} map${data.length !== 1 ? 's' : ''}`;
     if (!data.length) {
       el.innerHTML = `<div class="empty">${_lang==='ko'?'아직 만든 맵이 없습니다. 맵 제작 메뉴에서 첫 맵을 만들어보세요!':'No maps yet. Create your first map!'}</div>`;
@@ -2985,7 +3126,7 @@ function goDashPage(p) { _dashPage = p; loadDashboard(true); }
 
 async function deleteMap(idx) {
   const mapItem = (window._dashMaps || [])[idx];
-  if (!mapItem) return alert("맵 정보를 찾을 수 없습니다. 대시보드를 새로고침해주세요.");
+  if (!mapItem) return alert(t("map_not_found"));
   const mapId = mapItem.id || mapItem.mapId || String(mapItem._id || "");
   const mapName = mapItem.name || "";
   if (!confirm(_lang==='ko'?`"${mapName}" 맵을 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.`:`Delete map "${mapName}"?\nThis action cannot be undone.`)) return;
@@ -3001,7 +3142,7 @@ async function deleteMap(idx) {
 
 async function submitMap(idx) {
   const mapItem = (window._dashMaps || [])[idx];
-  if (!mapItem) return alert("맵 정보를 찾을 수 없습니다. 대시보드를 새로고침해주세요.");
+  if (!mapItem) return alert(t("map_not_found"));
   const mapId = mapItem.id || mapItem.mapId || String(mapItem._id || "");
   if (!mapId) return alert("맵 ID가 올바르지 않습니다. 대시보드를 새로고침해주세요.");
   if (!confirm(_lang==='ko'?"이 맵을 배포 신청하시겠습니까?\n관리자가 검토 후 승인하면 맵 찾기에 공개됩니다.":"Submit this map for review?\nOnce approved by admin, it will appear in Browse Maps.")) return;
@@ -3009,21 +3150,21 @@ async function submitMap(idx) {
     const { ok, data } = await fetchJSON(`/api/maps/${mapId}/submit`, {
       method: "POST", headers: { "Authorization": `Bearer ${authToken}` },
     });
-    if (ok) { showToast("배포 신청이 완료되었습니다!"); loadDashboard(); }
+    if (ok) { showToast(t("deploy_toast")); loadDashboard(); }
     else alert(data.error || "신청 실패");
   } catch(e) { alert("신청 실패: " + e.message); }
 }
 
 async function cancelSubmitMap(idx) {
   const mapItem = (window._dashMaps || [])[idx];
-  if (!mapItem) return alert("맵 정보를 찾을 수 없습니다. 대시보드를 새로고침해주세요.");
+  if (!mapItem) return alert(t("map_not_found"));
   const mapId = mapItem.id || mapItem.mapId || String(mapItem._id || "");
-  if (!confirm("배포 신청을 취소하시겠습니까?")) return;
+  if (!confirm(t("cancel_submit_confirm"))) return;
   try {
     const { ok, data } = await fetchJSON(`/api/maps/${mapId}/cancel-submit`, {
       method: "POST", headers: { "Authorization": `Bearer ${authToken}` },
     });
-    if (ok) { showToast("신청이 취소되었습니다."); loadDashboard(); }
+    if (ok) { showToast(t("cancel_submit_toast")); loadDashboard(); }
     else alert(data.error || "취소 실패");
   } catch(e) { alert("취소 실패: " + e.message); }
 }
@@ -3037,7 +3178,7 @@ async function loadAdminPanel() {
   try {
     const { ok, data } = await fetchJSON("/api/admin/maps", { headers: { "Authorization": `Bearer ${authToken}` } });
     if (!ok) { el.innerHTML = `<div class="empty">${data.error || '권한 없음'}</div>`; return; }
-    sub.textContent = `검토 대기 중인 맵 ${data.length}개`;
+    sub.textContent = _lang==="ko" ? `검토 대기 중인 맵 ${data.length}개` : `${data.length} map(s) pending review`;
     if (!data.length) { el.innerHTML = '<div class="empty">검토 대기 중인 맵이 없습니다.</div>'; return; }
     el.innerHTML = data.map(m => `
       <div style="background:var(--bg3);border:1px solid var(--brd);border-radius:var(--r);margin-bottom:12px;overflow:hidden">
@@ -3051,6 +3192,7 @@ async function loadAdminPanel() {
             </div>
           </div>
           <div style="display:flex;gap:8px;flex-shrink:0">
+            <button class="btn btn-sm" style="background:var(--bg4);color:var(--t2);border:1px solid var(--brd2)" onclick="adminToggleDetail('${m.id}')">🔍 내용 보기</button>
             <button class="btn btn-sm" style="background:rgba(34,197,94,.12);color:var(--grn);border:1px solid rgba(34,197,94,.3)" onclick="adminApprove('${m.id}','${esc(m.name)}')">승인</button>
             <button class="btn btn-sm" style="background:var(--acc-s);color:var(--acc);border:1px solid rgba(232,64,94,.3)" onclick="adminReject('${m.id}','${esc(m.name)}')">거절</button>
           </div>
@@ -3058,9 +3200,51 @@ async function loadAdminPanel() {
         <div style="padding:0 18px 12px;font-size:12px;color:var(--t3)">
           카테고리: ${esc(m.category)} · 태그: ${m.tags?.join(', ') || '없음'}
         </div>
+        <div id="admin-detail-${m.id}" style="display:none;border-top:1px solid var(--brd);padding:14px 18px">
+          <div style="font-size:11px;color:var(--t3);margin-bottom:10px">로딩 중...</div>
+        </div>
       </div>
     `).join("");
   } catch(e) { el.innerHTML = '<div class="empty">불러오기 실패.</div>'; }
+}
+
+async function adminToggleDetail(mapId) {
+  const el = document.getElementById(`admin-detail-${mapId}`);
+  if (!el) return;
+  if (el.style.display !== "none") { el.style.display = "none"; return; }
+  el.style.display = "block";
+  if (el.dataset.loaded) return; // 이미 로드됨
+  el.innerHTML = '<div style="font-size:11px;color:var(--t3)">로딩 중...</div>';
+  try {
+    const { ok, data } = await fetchJSON(`/api/admin/maps/${mapId}`, { headers: { "Authorization": `Bearer ${authToken}` } });
+    if (!ok) { el.innerHTML = `<div style="color:var(--acc);font-size:12px">${data.error || '불러오기 실패'}</div>`; return; }
+    const qs = data.questions || [];
+    el.innerHTML = `
+      <div style="font-size:12px;font-weight:700;margin-bottom:10px;color:var(--t2)">문제 목록 (${qs.length}개)</div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        ${qs.map((q, i) => {
+          const subQs = (q.subQuestions && q.subQuestions.length > 0) ? q.subQuestions : [{ prompt: q.hint || '', answers: q.answers || [] }];
+          const ytId = q.mediaUrl ? (q.mediaUrl.match(/(?:v=|youtu\.be\/)([^&?/]+)/)?.[1] || '') : '';
+          return `
+          <div style="background:var(--bg4);border-radius:var(--rs);padding:12px;border:1px solid var(--brd2)">
+            <div style="display:flex;gap:10px;align-items:flex-start;flex-wrap:wrap">
+              <div style="width:22px;height:22px;border-radius:50%;background:var(--acc-s);border:1px solid var(--acc);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:var(--acc);flex-shrink:0">${i+1}</div>
+              <div style="flex:1;min-width:0">
+                ${ytId ? `<div style="margin-bottom:8px"><a href="https://youtu.be/${esc(ytId)}" target="_blank" rel="noopener" style="color:var(--blu);font-size:12px;word-break:break-all">▶ youtu.be/${esc(ytId)}</a><span style="font-size:11px;color:var(--t3);margin-left:8px">${q.startTime||0}s ~ ${q.endTime||0}s · ${q.timeLimit||30}초</span></div>` : '<div style="font-size:11px;color:var(--t3);margin-bottom:6px">URL 없음</div>'}
+                ${subQs.map((sq, si) => `
+                  <div style="margin-top:4px;font-size:12px">
+                    ${sq.prompt ? `<span style="color:var(--t3)">[${esc(sq.prompt)}]</span> ` : ''}
+                    <span style="color:var(--t1)">${(sq.answers||[]).map(a=>esc(a)).join(', ') || '(정답 없음)'}</span>
+                    ${sq.chosungHint ? `<span style="font-size:10px;color:var(--ylw);margin-left:4px">초성힌트 ${sq.hintRevealTime||0}s</span>` : ''}
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+          </div>`;
+        }).join('')}
+      </div>`;
+    el.dataset.loaded = "1";
+  } catch(e) { el.innerHTML = '<div style="color:var(--acc);font-size:12px">불러오기 실패</div>'; }
 }
 
 async function adminApprove(mapId, mapName) {
@@ -3068,7 +3252,7 @@ async function adminApprove(mapId, mapName) {
   const { ok, data } = await fetchJSON(`/api/admin/maps/${mapId}/approve`, {
     method: "POST", headers: { "Authorization": `Bearer ${authToken}` },
   });
-  if (ok) { showToast("승인되었습니다!"); loadAdminPanel(); }
+  if (ok) { showToast(t("approve_toast")); loadAdminPanel(); }
   else alert(data.error || "승인 실패");
 }
 
@@ -3080,7 +3264,7 @@ async function adminReject(mapId, mapName) {
     headers: { "Content-Type": "application/json", "Authorization": `Bearer ${authToken}` },
     body: JSON.stringify({ reason }),
   });
-  if (ok) { showToast("거절되었습니다."); loadAdminPanel(); }
+  if (ok) { showToast(t("reject_toast")); loadAdminPanel(); }
   else alert(data.error || "거절 실패");
 }
 
@@ -3090,7 +3274,7 @@ let editQuestions = [];
 
 async function openEditMap(idx) {
   const mapItem = (window._dashMaps || [])[idx];
-  if (!mapItem) return alert("맵 정보를 찾을 수 없습니다. 대시보드를 새로고침해주세요.");
+  if (!mapItem) return alert(t("map_not_found"));
   const mapId = mapItem.id || mapItem.mapId || String(mapItem._id || "");
   try {
     // 정답 포함 full 데이터 조회 (인증 토큰 포함)
@@ -3171,7 +3355,7 @@ function renderEditQCards() {
 }
 
 function deleteEQCard(i) {
-  if (editQuestions.length <= 1) return alert("최소 1개 필요합니다.");
+  if (editQuestions.length <= 1) return alert(t("min_one_q"));
   if (!confirm(`Q.${i+1}번 문제를 삭제하시겠습니까?`)) return;
   editQuestions.splice(i, 1);
   renderEditQCards();
@@ -3204,7 +3388,7 @@ function nextEQEditorQ() {
   if (currentEQEditorIdx < editQuestions.length - 1) openEQEditorModal(currentEQEditorIdx + 1);
 }
 function deleteEQEditor() {
-  if (editQuestions.length <= 1) return alert("최소 1개 필요합니다.");
+  if (editQuestions.length <= 1) return alert(t("min_one_q"));
   if (!confirm(`Q.${currentEQEditorIdx+1}번 문제를 삭제하시겠습니까?`)) return;
   editQuestions.splice(currentEQEditorIdx, 1);
   if (currentEQEditorIdx >= editQuestions.length) currentEQEditorIdx = editQuestions.length - 1;
@@ -3293,34 +3477,34 @@ function renderEQEditorContent() {
       <div style="font-size:11px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">${t('q_playback')}</div>
       ${hasYt ? `
       <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px">
-        <div style="font-size:11px;color:var(--t3)" id="yt-dur-${arrName}-${i}">${q.ytDuration ? '영상 길이: ' + fmtTime(q.ytDuration) : '영상 길이 감지 중...'}</div>
+        <div style="font-size:11px;color:var(--t3)" id="yt-dur-${arrName}-${i}">${q.ytDuration ? t('yt_dur') + fmtTime(q.ytDuration) : t('yt_dur_loading')}</div>
         <div style="display:flex;align-items:center;gap:6px;font-size:12px">
-          <span style="color:var(--t3);min-width:28px">시작</span>
+          <span style="color:var(--t3);min-width:28px">${t('yt_start')}</span>
           <input type="range" id="yt-sr-${arrName}-${i}" min="0" max="${q.ytDuration||600}" step="1" value="${startSec}" style="flex:1;accent-color:var(--acc)"
             oninput="setPrevStart('${arrName}',${i},'${ytId}',+this.value)">
           <span id="yt-st-${arrName}-${i}" style="font-family:'JetBrains Mono',monospace;color:var(--ylw);min-width:40px;font-size:12px">${fmtTime(startSec)}</span>
           <input type="number" id="yt-sn-${arrName}-${i}" min="0" max="${q.ytDuration||600}" class="inp" style="width:58px;padding:4px 6px;font-family:'JetBrains Mono',monospace;font-size:12px" value="${startSec}" oninput="setPrevStart('${arrName}',${i},'${ytId}',+this.value)">
         </div>
         <div style="display:flex;align-items:center;gap:6px;font-size:12px">
-          <span style="color:var(--t3);min-width:28px">끝</span>
+          <span style="color:var(--t3);min-width:28px">${t('yt_end_label')}</span>
           <input type="range" id="yt-er-${arrName}-${i}" min="0" max="${q.ytDuration||600}" step="1" value="${endSec||q.ytDuration||600}" style="flex:1;accent-color:var(--grn)"
             oninput="setPrevEnd('${arrName}',${i},+this.value)">
           <span id="yt-et-${arrName}-${i}" style="font-family:'JetBrains Mono',monospace;color:var(--grn);min-width:40px;font-size:12px">${endSec?fmtTime(endSec):(q.ytDuration?fmtTime(q.ytDuration):'∞')}</span>
           <input type="number" id="yt-en-${arrName}-${i}" min="0" max="${q.ytDuration||600}" class="inp" style="width:58px;padding:4px 6px;font-family:'JetBrains Mono',monospace;font-size:12px" value="${endSec||q.ytDuration||''}" oninput="setPrevEnd('${arrName}',${i},+this.value)">
         </div>
-        ${startSec < (endSec||9999) ? `<div style="font-size:11px;color:var(--t3)">구간: ${fmtTime(startSec)} → ${endSec?fmtTime(endSec):'끝'}${endSec?' ('+( endSec-startSec)+'초)':''}${willLoop?' · 반복재생':''}</div>` : ''}
-      </div>` : `<div style="font-size:12px;color:var(--t3);margin-bottom:12px">URL 입력 후 슬라이더가 표시됩니다</div>`}
+        ${startSec < (endSec||9999) ? `<div style="font-size:11px;color:var(--t3)">${t('yt_range')}${fmtTime(startSec)} → ${endSec?fmtTime(endSec):t('yt_end_time')}${endSec?' ('+(endSec-startSec)+t('yt_sec')+')':''}${willLoop?' · '+t('yt_loop_long'):''}</div>` : ''}
+      </div>` : `<div style="font-size:12px;color:var(--t3);margin-bottom:12px">${t('yt_url_hint2')}</div>`}
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap">
         <label style="display:flex;align-items:center;gap:5px;font-size:12px;font-weight:600;color:var(--t2)">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity:.6"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-          제한시간
+          ${t('yt_timelimit')}
           <input type="number" min="5" max="300" class="inp" style="width:62px;padding:4px 8px;font-family:'JetBrains Mono',monospace"
             value="${tl}" oninput="${arrName}[${i}].timeLimit=+this.value">
-          초
+          ${t('yt_sec')}
         </label>
-        ${willLoop ? `<span style="font-size:11px;color:var(--ylw)">반복재생 (${clipLen}초 클립)</span>` : ''}
+        ${willLoop ? `<span style="font-size:11px;color:var(--ylw)">${t('yt_loop_clip')} (${clipLen}${t('yt_sec')} clip)</span>` : ''}
       </div>
-      <div style="font-size:11px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">※ 첫 번째 정답만 결과 화면에 표시됩니다</div>
+      <div style="font-size:11px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">${t('yt_first_ans_note')}</div>
     </div>
   </div>
   <div class="qem-sq">
@@ -3365,7 +3549,7 @@ async function saveEditMap() {
       }),
     });
     if (ok) {
-      alert(_lang==='ko'?"맵이 수정되었습니다! 🎉":"Map updated successfully! 🎉");
+      alert(t("map_update_toast"));
       hideEditMapModal();
       socket.emit("getMaps");
       loadDashboard();
@@ -3425,7 +3609,7 @@ function openCreateWithMap(idxOrMapId, mapName) {
   let mapId = idxOrMapId;
   if (typeof idxOrMapId === "number") {
     const mapItem = (window._dashMaps || [])[idxOrMapId];
-    if (!mapItem) return alert("맵 정보를 찾을 수 없습니다. 대시보드를 새로고침해주세요.");
+    if (!mapItem) return alert(t("map_not_found"));
     mapId = mapItem.id || mapItem.mapId || String(mapItem._id || "");
     mapName = mapItem.name || "";
   }
@@ -3444,7 +3628,7 @@ function openCreateWithMap(idxOrMapId, mapName) {
 
 
 function removeCreatorQ(i) {
-  if (creatorQuestions.length <= 1) return alert("최소 1개의 문제가 필요합니다.");
+  if (creatorQuestions.length <= 1) return alert(t("min_one_q_game"));
   creatorQuestions.splice(i, 1);
   renderCreatorQuestions();
 }

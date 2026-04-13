@@ -540,7 +540,7 @@ app.post("/api/admin/maps/:id/reject", adminMiddleware, async (req, res) => {
 
 app.get("/api/ranking", async (req, res) => {
   try { res.json(await RankingModel.find().sort({ score: -1 }).limit(100).lean()); }
-  catch (e) { res.status(500).json({ error: e.message }); }
+  catch (e) { console.error(e); res.status(500).json({ error: "서버 오류가 발생했습니다" }); }
 });
 
 app.get("/api/rooms", (req, res) => {
@@ -559,7 +559,7 @@ app.get("/api/status", async (req, res) => {
 // 전역 에러 핸들러 — 어디서든 예외 발생 시 HTML 대신 JSON 반환
 app.use((err, req, res, next) => {
   console.error("❌ 서버 오류:", err.message);
-  res.status(500).json({ error: err.message || "서버 오류" });
+  res.status(500).json({ error: "서버 오류가 발생했습니다" });
 });
 
 app.get("*", (req, res) => res.sendFile(path.join(__dirname, "../public/index.html")));
@@ -762,7 +762,7 @@ io.on("connection", (socket) => {
       const allDone = subQs.every((_, i) => (room.answeredSubQs.get(i)?.size ?? 0) >= room.players.size);
       if (allDone || allPlayersDoneOrSkipped(room, subQs)) {
         clearInterval(room.timer);
-        io.to(roomId).emit("chatMessage", { type: "system", text: "✅ 모든 플레이어가 완료!" });
+        io.to(roomId).emit("chatMessage", { type: "system", text: "모든 플레이어가 완료!" });
         setTimeout(() => nextQuestion(room), 1500);
       }
     } else {
@@ -853,7 +853,7 @@ io.on("connection", (socket) => {
           const allDone = subQs.every((_, i) => (room.answeredSubQs.get(i)?.size ?? 0) >= room.players.size);
           if (allDone || allPlayersDoneOrSkipped(room, subQs)) {
             clearInterval(room.timer);
-            io.to(roomId).emit("chatMessage", { type: "system", text: "✅ 모든 플레이어가 완료!" });
+            io.to(roomId).emit("chatMessage", { type: "system", text: "모든 플레이어가 완료!" });
             setTimeout(() => nextQuestion(room), 1500);
           }
           return; // 정답이면 채팅으로 안 보냄
@@ -1013,6 +1013,7 @@ function broadcastRoomList() {
     id: r.id, name: r.name, hostName: r.hostName, mapId: r.mapId,
     mapName: r.map?.name || "알 수 없음", mapIcon: r.map?.icon || "❓",
     players: r.players.size, maxPlayers: r.maxPlayers, status: r.status,
+    hasPassword: !!r.password,
   })));
 }
 
