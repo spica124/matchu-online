@@ -17,6 +17,9 @@ const helmet    = require("helmet");
 const app    = express();
 const server = http.createServer(app);
 
+// ── 프록시 신뢰 (Render·Railway·Fly.io 등 리버스 프록시 뒤에서 실제 IP 사용) ──
+app.set("trust proxy", 1);
+
 // ── 환경 변수 검증 (서버 시작 시) ──
 const JWT_SECRET     = process.env.JWT_SECRET;
 const MONGODB_URI    = process.env.MONGODB_URI || "mongodb://localhost:27017/matchu-online";
@@ -62,6 +65,19 @@ function checkLoginRateLimit(ip) {
   entry.count++;
   return entry.count <= 10; // 10회 초과 시 false
 }
+
+// ── in-memory Map 주기적 정리 (메모리 누수 방지) ──
+setInterval(() => {
+  const now = Date.now();
+  for (const [ip, entry] of _loginAttempts) {
+    if (now > entry.resetAt) _loginAttempts.delete(ip);
+  }
+  for (const [uid, timestamps] of _roomCreateLog) {
+    const recent = timestamps.filter(t => now - t < 60_000);
+    if (recent.length === 0) _roomCreateLog.delete(uid);
+    else _roomCreateLog.set(uid, recent);
+  }
+}, 5 * 60_000); // 5분마다
 
 // ── 채팅 레이트 리밋 ──
 // user 객체에 _lastChat 필드 사용
@@ -262,7 +278,7 @@ app.post("/api/auth/register", async (req, res) => {
     // 15. HttpOnly 쿠키 설정
     setTokenCookie(res, token);
     res.json({ token, user: { id: user._id.toString(), username: user.username, avatar: user.avatar, favorites: user.favorites || [], _isAdmin: ADMIN_USERNAME && user.username === ADMIN_USERNAME } });
-  } catch (e) { res.status(500).json({ error: e.message }); }
+  } catch (e) { console.error(e); res.status(500).json({ error: "서버 오류가 발생했습니다" }); }
 });
 
 app.post("/api/auth/login", async (req, res) => {
@@ -281,7 +297,7 @@ app.post("/api/auth/login", async (req, res) => {
     // 15. HttpOnly 쿠키 설정
     setTokenCookie(res, token);
     res.json({ token, user: { id: user._id.toString(), username: user.username, avatar: user.avatar, favorites: user.favorites || [], _isAdmin: ADMIN_USERNAME && user.username === ADMIN_USERNAME } });
-  } catch (e) { res.status(500).json({ error: e.message }); }
+  } catch (e) { console.error(e); res.status(500).json({ error: "서버 오류가 발생했습니다" }); }
 });
 
 app.get("/api/auth/me", authMiddleware, async (req, res) => {
@@ -289,7 +305,7 @@ app.get("/api/auth/me", authMiddleware, async (req, res) => {
     const user = await UserModel.findById(req.user.id, "username avatar createdAt favorites");
     if (!user) return res.status(404).json({ error: "사용자를 찾을 수 없습니다" });
     res.json({ id: user._id.toString(), username: user.username, avatar: user.avatar, favorites: user.favorites || [], _isAdmin: ADMIN_USERNAME && user.username === ADMIN_USERNAME });
-  } catch (e) { res.status(500).json({ error: e.message }); }
+  } catch (e) { console.error(e); res.status(500).json({ error: "서버 오류가 발생했습니다" }); }
 });
 
 // 15. 로그아웃 — HttpOnly 쿠키 삭제
@@ -306,7 +322,7 @@ app.get("/api/maps", async (req, res) => {
   try {
     const list = await MapModel.find({ status: "approved" }, "mapId name author icon category tags plays rating favoritesCount questions").lean();
     res.json(list.map(m => ({ id: m.mapId, name: m.name, author: m.author, icon: m.icon, category: m.category, tags: m.tags, questionCount: m.questions.length, plays: m.plays, rating: m.rating, favoritesCount: m.favoritesCount || 0 })));
-  } catch (e) { res.status(500).json({ error: e.message }); }
+  } catch (e) { console.error(e); res.status(500).json({ error: "서버 오류가 발생했습니다" }); }
 });
 
 app.get("/api/maps/mine", authMiddleware, async (req, res) => {
@@ -333,7 +349,7 @@ app.get("/api/maps/mine", authMiddleware, async (req, res) => {
       submittedAt:  m.submittedAt,
       approvedAt:   m.approvedAt,
     })));
-  } catch (e) { res.status(500).json({ error: e.message }); }
+  } catch (e) { console.error(e); res.status(500).json({ error: "서버 오류가 발생했습니다" }); }
 });
 
 // 즐겨찾기 목록 조회
@@ -344,7 +360,7 @@ app.get("/api/favorites", authMiddleware, async (req, res) => {
     if (!favIds.length) return res.json([]);
     const list = await MapModel.find({ mapId: { $in: favIds } }, "mapId name author icon category tags plays rating favoritesCount questions").lean();
     res.json(list.map(m => ({ id: m.mapId, name: m.name, author: m.author, icon: m.icon, category: m.category, tags: m.tags, questionCount: m.questions.length, plays: m.plays, rating: m.rating, favoritesCount: m.favoritesCount || 0 })));
-  } catch (e) { res.status(500).json({ error: e.message }); }
+  } catch (e) { console.error(e); res.status(500).json({ error: "서버 오류가 발생했습니다" }); }
 });
 
 // 즐겨찾기 토글
@@ -360,7 +376,7 @@ app.post("/api/favorites/:mapId", authMiddleware, async (req, res) => {
     // 맵 즐겨찾기 카운트 업데이트
     await MapModel.updateOne({ mapId }, { $inc: { favoritesCount: favorited ? 1 : -1 } });
     res.json({ favorited, favorites: user.favorites });
-  } catch (e) { res.status(500).json({ error: e.message }); }
+  } catch (e) { console.error(e); res.status(500).json({ error: "서버 오류가 발생했습니다" }); }
 });
 
 app.get("/api/maps/full/:id", authMiddleware, async (req, res) => {
@@ -370,7 +386,7 @@ app.get("/api/maps/full/:id", authMiddleware, async (req, res) => {
     const isOwner = (m.authorId && m.authorId === req.user.id) || m.author === req.user.username;
     if (!isOwner) return res.status(403).json({ error: "이 맵의 수정 권한이 없습니다" });
     res.json({ ...m, id: m.mapId });
-  } catch (e) { res.status(500).json({ error: e.message }); }
+  } catch (e) { console.error(e); res.status(500).json({ error: "서버 오류가 발생했습니다" }); }
 });
 
 app.get("/api/maps/:id", async (req, res) => {
@@ -378,7 +394,7 @@ app.get("/api/maps/:id", async (req, res) => {
     const m = await MapModel.findOne({ mapId: req.params.id }).lean();
     if (!m) return res.status(404).json({ error: "맵을 찾을 수 없습니다" });
     res.json({ id: m.mapId, name: m.name, author: m.author, icon: m.icon, category: m.category, tags: m.tags, questions: m.questions.map(q => ({ id: q.id, type: q.type, hint: q.hint, timeLimit: q.timeLimit })) });
-  } catch (e) { res.status(500).json({ error: e.message }); }
+  } catch (e) { console.error(e); res.status(500).json({ error: "서버 오류가 발생했습니다" }); }
 });
 
 // 14. 맵 입력값 검증 헬퍼
@@ -386,7 +402,7 @@ function validateMapInput(name, questions) {
   if (!name || typeof name !== "string") return "맵 이름을 입력해주세요";
   if (name.trim().length < 1 || name.trim().length > 50) return "맵 이름은 1~50자이어야 합니다";
   if (!Array.isArray(questions) || questions.length === 0) return "최소 1개의 문제가 필요합니다";
-  if (questions.length > 100) return "문제는 최대 100개까지 가능합니다";
+  if (questions.length > 500) return "문제는 최대 500개까지 가능합니다";
   return null;
 }
 
@@ -398,7 +414,7 @@ app.post("/api/maps", authMiddleware, async (req, res) => {
     const mapId = "map-" + uuidv4().slice(0, 8);
     await MapModel.create({ mapId, name: name.trim(), author: req.user.username, authorId: req.user.id, icon: icon || "🎵", category: category || "anime-song", tags: Array.isArray(tags) ? tags.slice(0, 10) : [], questions: normalizeQuestions(questions) });
     res.json({ id: mapId, message: "맵이 생성되었습니다!" });
-  } catch (e) { res.status(500).json({ error: e.message }); }
+  } catch (e) { console.error(e); res.status(500).json({ error: "서버 오류가 발생했습니다" }); }
 });
 
 app.put("/api/maps/:id", authMiddleware, async (req, res) => {
@@ -419,7 +435,7 @@ app.put("/api/maps/:id", authMiddleware, async (req, res) => {
     if (questions && questions.length > 0) m.questions = normalizeQuestions(questions);
     await m.save();
     res.json({ message: "맵이 수정되었습니다!" });
-  } catch (e) { res.status(500).json({ error: e.message }); }
+  } catch (e) { console.error(e); res.status(500).json({ error: "서버 오류가 발생했습니다" }); }
 });
 
 app.delete("/api/maps/:id", authMiddleware, async (req, res) => {
@@ -430,7 +446,7 @@ app.delete("/api/maps/:id", authMiddleware, async (req, res) => {
     if (!isOwner2) return res.status(403).json({ error: "삭제 권한이 없습니다" });
     await MapModel.deleteOne({ mapId: req.params.id });
     res.json({ message: "맵이 삭제되었습니다!" });
-  } catch (e) { res.status(500).json({ error: e.message }); }
+  } catch (e) { console.error(e); res.status(500).json({ error: "서버 오류가 발생했습니다" }); }
 });
 
 // ── 배포 신청 (draft / rejected → pending) ──
@@ -453,7 +469,7 @@ app.post("/api/maps/:id/submit", authMiddleware, async (req, res) => {
     m.submittedAt = new Date();
     await m.save();
     res.json({ ok: true, status: "pending" });
-  } catch (e) { res.status(500).json({ error: e.message }); }
+  } catch (e) { console.error(e); res.status(500).json({ error: "서버 오류가 발생했습니다" }); }
 });
 
 // ── 배포 신청 취소 (pending → draft) ──
@@ -472,7 +488,7 @@ app.post("/api/maps/:id/cancel-submit", authMiddleware, async (req, res) => {
     m.status = "draft";
     await m.save();
     res.json({ ok: true, status: "draft" });
-  } catch (e) { res.status(500).json({ error: e.message }); }
+  } catch (e) { console.error(e); res.status(500).json({ error: "서버 오류가 발생했습니다" }); }
 });
 
 // ═══════════════════════════════════════════
@@ -484,7 +500,7 @@ app.get("/api/admin/maps", adminMiddleware, async (req, res) => {
   try {
     const list = await MapModel.find({ status: "pending" }, "mapId name author icon category tags plays questions submittedAt createdAt").lean();
     res.json(list.map(m => ({ id: m.mapId, name: m.name, author: m.author, icon: m.icon, category: m.category, tags: m.tags, questionCount: m.questions.length, submittedAt: m.submittedAt, createdAt: m.createdAt })));
-  } catch (e) { res.status(500).json({ error: e.message }); }
+  } catch (e) { console.error(e); res.status(500).json({ error: "서버 오류가 발생했습니다" }); }
 });
 
 // 맵 상세 조회 (관리자용 — 전체 문제 포함)
@@ -493,7 +509,7 @@ app.get("/api/admin/maps/:id", adminMiddleware, async (req, res) => {
     const m = await MapModel.findOne({ mapId: req.params.id }).lean();
     if (!m) return res.status(404).json({ error: "맵을 찾을 수 없습니다" });
     res.json({ ...m, id: m.mapId });
-  } catch (e) { res.status(500).json({ error: e.message }); }
+  } catch (e) { console.error(e); res.status(500).json({ error: "서버 오류가 발생했습니다" }); }
 });
 
 // 승인
@@ -506,7 +522,7 @@ app.post("/api/admin/maps/:id/approve", adminMiddleware, async (req, res) => {
     m.approvedAt = new Date();
     await m.save();
     res.json({ ok: true });
-  } catch (e) { res.status(500).json({ error: e.message }); }
+  } catch (e) { console.error(e); res.status(500).json({ error: "서버 오류가 발생했습니다" }); }
 });
 
 // 거절
@@ -519,7 +535,7 @@ app.post("/api/admin/maps/:id/reject", adminMiddleware, async (req, res) => {
     m.rejectReason = reason || "";
     await m.save();
     res.json({ ok: true });
-  } catch (e) { res.status(500).json({ error: e.message }); }
+  } catch (e) { console.error(e); res.status(500).json({ error: "서버 오류가 발생했습니다" }); }
 });
 
 app.get("/api/ranking", async (req, res) => {
@@ -649,7 +665,7 @@ io.on("connection", (socket) => {
       socket.join(roomId);
       socket.emit("roomJoined", getRoomState(room));
       broadcastRoomList();
-    } catch (e) { socket.emit("error", "방 생성 실패: " + e.message); }
+    } catch (e) { console.error(e); socket.emit("error", "방 생성에 실패했습니다"); }
   });
 
   socket.on("joinRoom", async ({ roomId, password }) => {
@@ -695,7 +711,7 @@ io.on("connection", (socket) => {
       io.to(roomId).emit("gameStarted", { totalQuestions: map.questions.length, players: getPlayersArray(room) });
       sendQuestion(room);
       broadcastRoomList();
-    } catch (e) { socket.emit("error", "게임 시작 실패: " + e.message); }
+    } catch (e) { console.error(e); socket.emit("error", "게임 시작에 실패했습니다"); }
   });
 
   // ── 정답 제출 ──

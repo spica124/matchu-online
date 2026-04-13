@@ -325,6 +325,33 @@ body{font-family:'Nanum Gothic Rounded',sans-serif;background:var(--bg);color:va
 /* Creator */
 .q-row{display:flex;gap:8px;align-items:center;padding:10px;background:var(--bg5);border:1px solid var(--brd);border-radius:var(--rs);margin-bottom:8px}
 .q-num{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--t3);min-width:28px}
+
+/* Question card grid */
+.q-cards{display:flex;flex-wrap:wrap;gap:12px;padding:4px 0 8px}
+.q-card{width:152px;height:186px;background:var(--bg3);border:1px solid var(--brd);border-radius:var(--r);cursor:pointer;position:relative;overflow:hidden;transition:border-color .15s,transform .12s;flex-shrink:0;display:flex;flex-direction:column}
+.q-card:hover{border-color:var(--brd2);transform:translateY(-2px)}
+.q-card.qc-active{border-color:var(--acc);box-shadow:0 0 0 2px rgba(232,64,94,.2)}
+.q-card-thumb{width:100%;flex:1;background:#111;display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative}
+.q-card-thumb img{width:100%;height:100%;object-fit:cover}
+.q-card-foot{padding:7px 10px 8px;display:flex;flex-direction:column;gap:2px;border-top:1px solid var(--brd)}
+.q-card-num{font-size:11px;font-weight:700;color:var(--t3);font-family:'JetBrains Mono',monospace}
+.q-card-sub{font-size:12px;font-weight:600;color:var(--t1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.q-card-del{position:absolute;bottom:46px;right:6px;width:26px;height:26px;border-radius:50%;background:rgba(0,0,0,.75);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#fff;z-index:2;opacity:0;transition:opacity .15s}
+.q-card:hover .q-card-del{opacity:1}
+.q-card-err{width:44px;height:44px;border-radius:50%;background:var(--acc);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:900;color:#fff;flex-shrink:0}
+.q-card-add{width:152px;height:186px;background:transparent;border:2px dashed var(--brd2);border-radius:var(--r);cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:var(--t3);transition:border-color .15s,color .15s;flex-shrink:0}
+.q-card-add:hover{border-color:var(--acc);color:var(--acc)}
+.q-card-add svg{opacity:.6}
+
+/* Question editor modal inner */
+.qem-cols{display:flex;gap:20px;flex-wrap:wrap}
+.qem-left{flex:0 0 260px;min-width:0}
+.qem-right{flex:1;min-width:220px}
+.qem-yt{background:#000;border-radius:var(--rs);overflow:hidden;aspect-ratio:16/9;width:100%;margin-bottom:8px;display:flex;align-items:center;justify-content:center}
+.qem-sq{background:var(--bg5);border:1px solid var(--brd);border-radius:var(--r);overflow:hidden;margin-top:14px}
+.qem-sq-hd{padding:8px 14px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--brd);background:var(--bg3)}
+.qem-sq-row{display:flex;flex-direction:column;gap:6px;padding:10px 14px;border-bottom:1px solid var(--brd)}
+.qem-sq-row:last-child{border-bottom:none}
 .q-sel{padding:6px 10px;background:var(--bg3);border:1px solid var(--brd);border-radius:var(--rs);color:var(--t1);font-family:'Nanum Gothic Rounded',sans-serif;font-size:13px;outline:none}
 
 /* Empty state */
@@ -423,38 +450,38 @@ body{font-family:'Nanum Gothic Rounded',sans-serif;background:var(--bg);color:va
         <div class="s-name" id="sideName">Player</div>
       </div>
       <div class="s-stats">
-        <div><div class="s-num"><span class="dot-on"></span> <span id="onlineNum">0</span></div><div class="s-lbl">온라인</div></div>
-        <div><div class="s-num" id="loginNum">0</div><div class="s-lbl">로그인 중</div></div>
+        <div><div class="s-num"><span class="dot-on"></span> <span id="onlineNum">0</span></div><div class="s-lbl" data-i18n="sidebar_online">온라인</div></div>
+        <div><div class="s-num" id="loginNum">0</div><div class="s-lbl" data-i18n="sidebar_loggedin">로그인 중</div></div>
       </div>
-      <div class="s-today">오늘 로그인: <span id="todayNum">0</span></div>
+      <div class="s-today"><span data-i18n="sidebar_today">오늘 로그인</span>: <span id="todayNum">0</span></div>
     </div>
     <div class="s-battle">
-      <div class="s-battle-t"><span class="dot-on"></span> 배틀룸 <span id="battleCount">0</span>개</div>
+      <div class="s-battle-t"><span class="dot-on"></span> <span data-i18n="sidebar_battle">배틀룸</span> <span id="battleCount">0</span><span style="display:inline" data-i18n="sidebar_battle_count_suffix">개</span></div>
       <div id="battleMini"></div>
     </div>
     <div class="s-nav">
-      <button class="nav-i active" data-nav="home" onclick="navigateTo('home')"><span class="nav-ic"><svg viewBox="0 0 24 24"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 01-1 1H5a1 1 0 01-1-1V9.5z"/><path d="M9 21V12h6v9"/></svg></span> 홈</button>
-      <button class="nav-i" data-nav="guide" onclick="navigateTo('guide')"><span class="nav-ic"><svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg></span> 가이드</button>
-      <div class="nav-sec">맵 찾기</div>
-      <button class="nav-i" data-nav="popular" onclick="navigateTo('popular')"><span class="nav-ic"><svg viewBox="0 0 24 24"><path d="M13 2C13 2 13 8 9 11c-1.5 1.2-3 1.5-3 4a6 6 0 0012 0c0-5-5-13-5-13z"/><path d="M9 17c0-2 1.5-3 3-4"/></svg></span> 인기</button>
-      <button class="nav-i" data-nav="favorites" onclick="navigateTo('favorites')"><span class="nav-ic"><svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg></span> 즐겨찾기</button>
-      <button class="nav-i" data-nav="browse" onclick="navigateTo('browse')"><span class="nav-ic"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></span> 전체 보기</button>
-      <button class="nav-i" data-nav="create-map" onclick="navigateTo('create-map')"><span class="nav-ic"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></span> 맵 제작</button>
-      <div class="nav-sec">커뮤니티</div>
-      <button class="nav-i" data-nav="ranking" onclick="navigateTo('ranking')"><span class="nav-ic"><svg viewBox="0 0 24 24"><path d="M8 21H4a1 1 0 01-1-1v-4a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1z"/><path d="M14 21h-4a1 1 0 01-1-1v-8a1 1 0 011-1h4a1 1 0 011 1v8a1 1 0 01-1 1z"/><path d="M20 21h-4a1 1 0 01-1-1V6a1 1 0 011-1h4a1 1 0 011 1v14a1 1 0 01-1 1z"/></svg></span> 글로벌 랭킹</button>
-      <div class="nav-sec">내 활동</div>
-      <button class="nav-i" data-nav="dashboard" onclick="navigateTo('dashboard')"><span class="nav-ic"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg></span> 내 맵 대시보드</button>
+      <button class="nav-i active" data-nav="home" onclick="navigateTo('home')"><span class="nav-ic"><svg viewBox="0 0 24 24"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 01-1 1H5a1 1 0 01-1-1V9.5z"/><path d="M9 21V12h6v9"/></svg></span> <span data-i18n="nav_home">홈</span></button>
+      <button class="nav-i" data-nav="guide" onclick="navigateTo('guide')"><span class="nav-ic"><svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg></span> <span data-i18n="nav_guide">가이드</span></button>
+      <div class="nav-sec" data-i18n="nav_sec_maps">맵 찾기</div>
+      <button class="nav-i" data-nav="popular" onclick="navigateTo('popular')"><span class="nav-ic"><svg viewBox="0 0 24 24"><path d="M13 2C13 2 13 8 9 11c-1.5 1.2-3 1.5-3 4a6 6 0 0012 0c0-5-5-13-5-13z"/><path d="M9 17c0-2 1.5-3 3-4"/></svg></span> <span data-i18n="nav_popular">인기</span></button>
+      <button class="nav-i" data-nav="favorites" onclick="navigateTo('favorites')"><span class="nav-ic"><svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg></span> <span data-i18n="nav_favorites">즐겨찾기</span></button>
+      <button class="nav-i" data-nav="browse" onclick="navigateTo('browse')"><span class="nav-ic"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></span> <span data-i18n="nav_browse">전체 보기</span></button>
+      <button class="nav-i" data-nav="create-map" onclick="navigateTo('create-map')"><span class="nav-ic"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></span> <span data-i18n="nav_create">맵 제작</span></button>
+      <div class="nav-sec" data-i18n="nav_sec_community">커뮤니티</div>
+      <button class="nav-i" data-nav="ranking" onclick="navigateTo('ranking')"><span class="nav-ic"><svg viewBox="0 0 24 24"><path d="M8 21H4a1 1 0 01-1-1v-4a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1z"/><path d="M14 21h-4a1 1 0 01-1-1v-8a1 1 0 011-1h4a1 1 0 011 1v8a1 1 0 01-1 1z"/><path d="M20 21h-4a1 1 0 01-1-1V6a1 1 0 011-1h4a1 1 0 011 1v14a1 1 0 01-1 1z"/></svg></span> <span data-i18n="nav_ranking">글로벌 랭킹</span></button>
+      <div class="nav-sec" data-i18n="nav_sec_myactivity">내 활동</div>
+      <button class="nav-i" data-nav="dashboard" onclick="navigateTo('dashboard')"><span class="nav-ic"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg></span> <span data-i18n="nav_dashboard">내 맵 대시보드</span></button>
     </div>
     <div style="padding:12px 16px;border-top:1px solid var(--brd);margin-top:auto">
 
       <div id="sideAuthLoggedOut" style="display:block">
-        <button class="btn btn-g btn-full btn-sm" onclick="closeSidebar();openAuthModal('login')">로그인 / 회원가입</button>
+        <button class="btn btn-g btn-full btn-sm" onclick="closeSidebar();openAuthModal('login')" data-i18n="auth_loginreg">로그인 / 회원가입</button>
       </div>
       <div id="sideAuthLoggedIn" style="display:none">
         <div id="sideAdminBtn" style="display:none;margin-bottom:6px">
-          <button class="btn btn-g btn-full btn-sm" onclick="navigateTo('admin');closeSidebar()" style="color:#f59e0b">관리자 패널</button>
+          <button class="btn btn-g btn-full btn-sm" onclick="navigateTo('admin');closeSidebar()" style="color:#f59e0b" data-i18n="auth_admin">관리자 패널</button>
         </div>
-        <button class="btn btn-g btn-full btn-sm" onclick="logout()" style="color:var(--acc)">로그아웃</button>
+        <button class="btn btn-g btn-full btn-sm" onclick="logout()" style="color:var(--acc)" data-i18n="auth_logout">로그아웃</button>
       </div>
     </div>
   </div>
@@ -465,47 +492,50 @@ body{font-family:'Nanum Gothic Rounded',sans-serif;background:var(--bg);color:va
       <button class="hamburger" onclick="toggleSidebar()" aria-label="메뉴">
         <span></span><span></span><span></span>
       </button>
+      <div class="top-r">
+        <button class="top-lang" id="langToggle" onclick="toggleLang()">🌐 <span id="langLabel">한국어</span></button>
+      </div>
     </div>
 
     <!-- ════ HOME ════ -->
     <div class="page" id="page-home">
       <div class="hero">
-        <h1>애니 · 노래 · 장면 퀴즈 — 마추기온라인</h1>
-        <p>점수를 랭킹에 등록하고 전국의 플레이어와 경쟁하세요</p>
+        <h1 data-i18n="home_hero_title">애니 · 노래 · 장면 퀴즈 — 마추기온라인</h1>
+        <p data-i18n="home_hero_sub">점수를 랭킹에 등록하고 전국의 플레이어와 경쟁하세요</p>
       </div>
       <div class="qactions">
-        <button class="qact" onclick="navigateTo('ranking')">글로벌 랭킹</button>
-        <button class="qact" onclick="showCreateModal()">방 만들기</button>
-        <button class="qact" onclick="navigateTo('create-map')">맵 제작</button>
+        <button class="qact" onclick="navigateTo('ranking')" data-i18n="nav_ranking">글로벌 랭킹</button>
+        <button class="qact" onclick="showCreateModal()" data-i18n="room_create">방 만들기</button>
+        <button class="qact" onclick="navigateTo('create-map')" data-i18n="nav_create">맵 제작</button>
       </div>
       <div class="cta">
         <div class="cta-l">
-          <div><div class="cta-tt">함께 만들어가요</div><div class="cta-ts">좋아하는 애니 퀴즈를 즐길 수 있는 곳, 여러분의 응원으로.</div></div>
+          <div><div class="cta-tt" data-i18n="home_cta_title">함께 만들어가요</div><div class="cta-ts" data-i18n="home_cta_sub">좋아하는 애니 퀴즈를 즐길 수 있는 곳, 여러분의 응원으로.</div></div>
         </div>
-        <button class="btn btn-a" onclick="navigateTo('create-map')">맵 제작하기</button>
+        <button class="btn btn-a" onclick="navigateTo('create-map')" data-i18n="home_create_map_btn">맵 제작하기</button>
       </div>
       <div class="sec-h" style="flex-wrap:wrap;gap:8px">
-        <span class="sec-t">열린 방</span>
-        <input id="roomSearch" class="inp" placeholder="방 제목 검색..." autocomplete="off"
+        <span class="sec-t" data-i18n="home_open_rooms">열린 방</span>
+        <input id="roomSearch" class="inp" data-i18n-placeholder="room_search_placeholder" placeholder="방 제목 검색..." autocomplete="off"
           style="flex:1;min-width:140px;max-width:240px;padding:5px 10px;font-size:13px"
           oninput="filterRoomList(this.value)">
       </div>
       <div class="r-list" id="roomList">
-        <div class="empty">아직 열린 방이 없습니다. 첫 번째 방을 만들어보세요!</div>
+        <div class="empty" data-i18n="home_no_rooms">아직 열린 방이 없습니다. 첫 번째 방을 만들어보세요!</div>
       </div>
     </div>
 
     <!-- ════ BROWSE MAPS ════ -->
     <div class="page hide" id="page-browse">
-      <div class="sec-h"><span class="sec-t">맵 탐색</span></div>
+      <div class="sec-h"><span class="sec-t" data-i18n="browse_title">맵 탐색</span></div>
       <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px;flex-wrap:wrap">
-        <input id="mapSearchInput" class="inp" placeholder="맵 이름 또는 제작자 검색..."
+        <input id="mapSearchInput" class="inp" data-i18n-placeholder="browse_search_placeholder" placeholder="맵 이름 또는 제작자 검색..."
           style="flex:1;min-width:180px;padding:8px 12px;font-size:13px"
-          oninput="applyMapFilter()">
-        <select id="mapSortSelect" class="inp" style="width:auto;padding:8px 12px;font-size:13px;cursor:pointer" onchange="applyMapFilter()">
-          <option value="default">기본순</option>
-          <option value="plays">재생 많은 순</option>
-          <option value="favorites">즐겨찾기 많은 순</option>
+          oninput="applyMapFilter(true)">
+        <select id="mapSortSelect" class="inp" style="width:auto;padding:8px 12px;font-size:13px;cursor:pointer" onchange="applyMapFilter(true)">
+          <option value="default" data-i18n="sort_default">기본순</option>
+          <option value="plays" data-i18n="sort_plays">재생 많은 순</option>
+          <option value="favorites" data-i18n="sort_favorites">즐겨찾기 많은 순</option>
         </select>
       </div>
       <div class="filters" id="mapFilters"></div>
@@ -514,10 +544,10 @@ body{font-family:'Nanum Gothic Rounded',sans-serif;background:var(--bg);color:va
 
     <!-- ════ CREATE MAP ════ -->
     <div class="page hide" id="page-create-map">
-      <div class="sec-h"><span class="sec-t">맵 제작</span></div>
+      <div class="sec-h"><span class="sec-t" data-i18n="nav_create">맵 제작</span></div>
       <div style="background:var(--bg3);border:1px solid var(--brd);border-radius:var(--rl);padding:20px;margin-bottom:12px">
-        <div class="inp-g"><label class="inp-l">맵 이름</label><input class="inp" id="cmName" placeholder="예: 나만의 애니 퀴즈"></div>
-        <div class="inp-g"><label class="inp-l">카테고리</label>
+        <div class="inp-g"><label class="inp-l" data-i18n="map_name">맵 이름</label><input class="inp" id="cmName" data-i18n-placeholder="map_name_placeholder" placeholder="예: 나만의 애니 퀴즈"></div>
+        <div class="inp-g"><label class="inp-l" data-i18n="map_category">카테고리</label>
           <select class="inp q-sel" id="cmCat" style="width:100%;cursor:pointer"
             onchange="applyCategorySubQs('creatorQuestions',this.value);renderCreatorQuestions()">
             <option value="anime-song">애니 노래</option><option value="scene">애니 장면</option>
@@ -527,13 +557,13 @@ body{font-family:'Nanum Gothic Rounded',sans-serif;background:var(--bg);color:va
       </div>
       <!-- 전체 초성힌트 설정 -->
       <div style="background:var(--bg3);border:1px solid var(--brd);border-radius:var(--rl);padding:14px 18px;margin-bottom:16px;display:flex;align-items:center;gap:16px;flex-wrap:wrap">
-        <span style="font-size:12px;font-weight:800;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;white-space:nowrap">전체 적용</span>
+        <span style="font-size:12px;font-weight:800;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;white-space:nowrap" data-i18n="global_apply">전체 적용</span>
         <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;font-weight:600">
           <input type="checkbox" id="cmGlobalChosung" style="width:14px;height:14px;accent-color:var(--acc)" onchange="applyGlobalChosung()">
-          초성 힌트
+          <span data-i18n="chosung_hint">초성 힌트</span>
         </label>
         <div style="display:flex;align-items:center;gap:6px" id="cmGlobalTimeRow">
-          <span style="font-size:12px;color:var(--t3)">공개 시간</span>
+          <span style="font-size:12px;color:var(--t3)" data-i18n="reveal_time">공개 시간</span>
           <select class="q-sel" id="cmGlobalRevealSel" style="font-size:12px;padding:3px 8px" onchange="applyGlobalChosung()">
             <option value="5">5초 후</option>
             <option value="10">10초 후</option>
@@ -544,55 +574,53 @@ body{font-family:'Nanum Gothic Rounded',sans-serif;background:var(--bg);color:va
         </div>
       </div>
       <div class="sec-h" style="margin-top:4px">
-        <span class="sec-t" style="font-size:14px">문제 목록 (<span id="cmQCount">1</span>)</span>
-        <button class="btn btn-g btn-sm" onclick="addCreatorQ()" style="margin-left:auto">+ 문제 추가</button>
+        <span class="sec-t" style="font-size:14px"><span data-i18n="question_list">문제 목록</span> (<span id="cmQCount">1</span>)</span>
       </div>
-      <div id="cmQuestions"></div>
-      <button class="btn btn-a btn-lg btn-full" style="margin-top:20px" onclick="saveNewMap()">맵 공개하기</button>
+      <div class="q-cards" id="cmQCards"></div>
+      <button class="btn btn-a btn-lg btn-full" style="margin-top:20px" onclick="saveNewMap()" data-i18n="map_publish">맵 공개하기</button>
     </div>
 
     <!-- ════ GUIDE ════ -->
     <div class="page hide" id="page-guide">
-      <div class="sec-h"><span class="sec-t">가이드</span></div>
+      <div class="sec-h"><span class="sec-t" data-i18n="nav_guide">가이드</span></div>
 
       <!-- 게임 플레이 -->
       <div style="background:var(--bg3);border:1px solid var(--brd);border-radius:var(--rl);padding:24px;margin-bottom:16px">
-        <div style="font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--t3);margin-bottom:16px">게임 플레이</div>
-
+        <div style="font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--t3);margin-bottom:16px" data-i18n="guide_gameplay">게임 플레이</div>
         <div style="display:flex;flex-direction:column;gap:14px">
           <div style="display:flex;gap:16px;align-items:flex-start">
             <div style="width:28px;height:28px;border-radius:50%;background:var(--acc-s);border:1px solid var(--acc);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:var(--acc);flex-shrink:0">1</div>
             <div>
-              <div style="font-weight:700;margin-bottom:3px">방 참가 또는 만들기</div>
-              <div style="font-size:13px;color:var(--t3);line-height:1.7">홈 화면의 방 목록에서 원하는 방을 클릭해 참가하거나, "방 만들기" 버튼으로 직접 방을 개설하세요. 비밀번호 방은 자물쇠 아이콘이 표시됩니다. 빈 슬롯을 클릭하면 초대 링크를 복사할 수 있습니다.</div>
+              <div style="font-weight:700;margin-bottom:3px" data-i18n="guide_gp1_t">방 참가 또는 만들기</div>
+              <div style="font-size:13px;color:var(--t3);line-height:1.7" data-i18n="guide_gp1_d">홈 화면의 방 목록에서 원하는 방을 클릭해 참가하거나, "방 만들기" 버튼으로 직접 방을 개설하세요. 비밀번호 방은 자물쇠 아이콘이 표시됩니다. 빈 슬롯을 클릭하면 초대 링크를 복사할 수 있습니다.</div>
             </div>
           </div>
           <div style="display:flex;gap:16px;align-items:flex-start">
             <div style="width:28px;height:28px;border-radius:50%;background:var(--acc-s);border:1px solid var(--acc);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:var(--acc);flex-shrink:0">2</div>
             <div>
-              <div style="font-weight:700;margin-bottom:3px">게임 시작</div>
-              <div style="font-size:13px;color:var(--t3);line-height:1.7">호스트만 게임을 시작할 수 있습니다. 시작하면 맵의 문제들이 무작위 순서로 출제됩니다.</div>
+              <div style="font-weight:700;margin-bottom:3px" data-i18n="guide_gp2_t">게임 시작</div>
+              <div style="font-size:13px;color:var(--t3);line-height:1.7" data-i18n="guide_gp2_d">호스트만 게임을 시작할 수 있습니다. 시작하면 맵의 문제들이 무작위 순서로 출제됩니다.</div>
             </div>
           </div>
           <div style="display:flex;gap:16px;align-items:flex-start">
             <div style="width:28px;height:28px;border-radius:50%;background:var(--acc-s);border:1px solid var(--acc);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:var(--acc);flex-shrink:0">3</div>
             <div>
-              <div style="font-weight:700;margin-bottom:3px">정답 입력</div>
-              <div style="font-size:13px;color:var(--t3);line-height:1.7">음악을 듣고 하단 입력창에 정답을 입력한 뒤 엔터를 누르세요. 소문제가 여러 개인 경우 각각 순서대로 맞춰야 합니다. 빠르게 맞출수록 더 높은 점수를 받습니다.</div>
+              <div style="font-weight:700;margin-bottom:3px" data-i18n="guide_gp3_t">정답 입력</div>
+              <div style="font-size:13px;color:var(--t3);line-height:1.7" data-i18n="guide_gp3_d">음악을 듣고 하단 입력창에 정답을 입력한 뒤 엔터를 누르세요. 소문제가 여러 개인 경우 각각 순서대로 맞춰야 합니다. 빠르게 맞출수록 더 높은 점수를 받습니다.</div>
             </div>
           </div>
           <div style="display:flex;gap:16px;align-items:flex-start">
             <div style="width:28px;height:28px;border-radius:50%;background:var(--acc-s);border:1px solid var(--acc);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:var(--acc);flex-shrink:0">4</div>
             <div>
-              <div style="font-weight:700;margin-bottom:3px">초성 힌트 · 스킵</div>
-              <div style="font-size:13px;color:var(--t3);line-height:1.7">맵 제작자가 설정한 경우 일정 시간 후 초성 힌트가 표시됩니다. 모르겠으면 <b style="color:var(--t2)">K</b> 키로 스킵 투표를 할 수 있습니다. 2명 이하는 전원 동의, 3명 이상은 과반수가 스킵하면 다음 문제로 넘어갑니다.</div>
+              <div style="font-weight:700;margin-bottom:3px" data-i18n="guide_gp4_t">초성 힌트 · 스킵</div>
+              <div style="font-size:13px;color:var(--t3);line-height:1.7" data-i18n="guide_gp4_d">맵 제작자가 설정한 경우 일정 시간 후 초성 힌트가 표시됩니다. 모르겠으면 <b style="color:var(--t2)">K</b> 키로 스킵 투표를 할 수 있습니다. 2명 이하는 전원 동의, 3명 이상은 과반수가 스킵하면 다음 문제로 넘어갑니다.</div>
             </div>
           </div>
           <div style="display:flex;gap:16px;align-items:flex-start">
             <div style="width:28px;height:28px;border-radius:50%;background:var(--acc-s);border:1px solid var(--acc);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:var(--acc);flex-shrink:0">5</div>
             <div>
-              <div style="font-weight:700;margin-bottom:3px">점수 계산</div>
-              <div style="font-size:13px;color:var(--t3);line-height:1.7">맞춘 순서(1등 보너스)와 남은 시간 비율에 따라 점수가 결정됩니다. 모든 문제가 끝나면 최종 순위가 표시됩니다.</div>
+              <div style="font-weight:700;margin-bottom:3px" data-i18n="guide_gp5_t">점수 계산</div>
+              <div style="font-size:13px;color:var(--t3);line-height:1.7" data-i18n="guide_gp5_d">맞춘 순서(1등 보너스)와 남은 시간 비율에 따라 점수가 결정됩니다. 모든 문제가 끝나면 최종 순위가 표시됩니다.</div>
             </div>
           </div>
         </div>
@@ -600,42 +628,41 @@ body{font-family:'Nanum Gothic Rounded',sans-serif;background:var(--bg);color:va
 
       <!-- 맵 제작 -->
       <div style="background:var(--bg3);border:1px solid var(--brd);border-radius:var(--rl);padding:24px">
-        <div style="font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--t3);margin-bottom:16px">맵 제작</div>
-
+        <div style="font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--t3);margin-bottom:16px" data-i18n="guide_mapcreate">맵 제작</div>
         <div style="display:flex;flex-direction:column;gap:14px">
           <div style="display:flex;gap:16px;align-items:flex-start">
             <div style="width:28px;height:28px;border-radius:50%;background:var(--grn-s);border:1px solid var(--grn);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:var(--grn);flex-shrink:0">1</div>
             <div>
-              <div style="font-weight:700;margin-bottom:3px">맵 기본 설정</div>
-              <div style="font-size:13px;color:var(--t3);line-height:1.7">사이드바에서 "맵 제작"을 클릭합니다. 맵 이름과 카테고리(애니 노래, K-POP, 보컬로이드 등)를 선택하면 소문제 항목이 자동으로 채워집니다.</div>
+              <div style="font-weight:700;margin-bottom:3px" data-i18n="guide_mc1_t">맵 기본 설정</div>
+              <div style="font-size:13px;color:var(--t3);line-height:1.7" data-i18n="guide_mc1_d">사이드바에서 "맵 제작"을 클릭합니다. 맵 이름과 카테고리(애니 노래, K-POP, 보컬로이드 등)를 선택하면 소문제 항목이 자동으로 채워집니다.</div>
             </div>
           </div>
           <div style="display:flex;gap:16px;align-items:flex-start">
             <div style="width:28px;height:28px;border-radius:50%;background:var(--grn-s);border:1px solid var(--grn);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:var(--grn);flex-shrink:0">2</div>
             <div>
-              <div style="font-weight:700;margin-bottom:3px">YouTube URL 입력</div>
-              <div style="font-size:13px;color:var(--t3);line-height:1.7">각 문제에 YouTube 링크를 붙여넣으면 미리보기 플레이어가 나타납니다. <b style="color:var(--t2)">시작 / 끝 슬라이더</b>로 재생 구간을 직접 잡아주세요. 구간이 제한 시간보다 짧으면 자동으로 반복 재생됩니다.</div>
+              <div style="font-weight:700;margin-bottom:3px" data-i18n="guide_mc2_t">YouTube URL 입력</div>
+              <div style="font-size:13px;color:var(--t3);line-height:1.7" data-i18n="guide_mc2_d">각 문제에 YouTube 링크를 붙여넣으면 미리보기 플레이어가 나타납니다. <b style="color:var(--t2)">시작 / 끝 슬라이더</b>로 재생 구간을 직접 잡아주세요. 구간이 제한 시간보다 짧으면 자동으로 반복 재생됩니다.</div>
             </div>
           </div>
           <div style="display:flex;gap:16px;align-items:flex-start">
             <div style="width:28px;height:28px;border-radius:50%;background:var(--grn-s);border:1px solid var(--grn);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:var(--grn);flex-shrink:0">3</div>
             <div>
-              <div style="font-weight:700;margin-bottom:3px">소문제 · 정답 입력</div>
-              <div style="font-size:13px;color:var(--t3);line-height:1.7">각 소문제(노래 제목, 가수 등)의 정답을 입력합니다. 정답이 여러 개인 경우 <b style="color:var(--t2)">쉼표(,)</b>로 구분해 입력하면 모두 정답으로 인정됩니다.</div>
+              <div style="font-weight:700;margin-bottom:3px" data-i18n="guide_mc3_t">소문제 · 정답 입력</div>
+              <div style="font-size:13px;color:var(--t3);line-height:1.7" data-i18n="guide_mc3_d">각 소문제(노래 제목, 가수 등)의 정답을 입력합니다. 정답이 여러 개인 경우 <b style="color:var(--t2)">쉼표(,)</b>로 구분해 입력하면 모두 정답으로 인정됩니다.</div>
             </div>
           </div>
           <div style="display:flex;gap:16px;align-items:flex-start">
             <div style="width:28px;height:28px;border-radius:50%;background:var(--grn-s);border:1px solid var(--grn);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:var(--grn);flex-shrink:0">4</div>
             <div>
-              <div style="font-weight:700;margin-bottom:3px">초성 힌트 설정 (선택)</div>
-              <div style="font-size:13px;color:var(--t3);line-height:1.7">소문제마다 "초성 힌트" 체크박스를 켜면 몇 초 후에 자동으로 초성이 공개될지 설정할 수 있습니다. 한국어 정답에만 적용됩니다.</div>
+              <div style="font-weight:700;margin-bottom:3px" data-i18n="guide_mc4_t">초성 힌트 설정 (선택)</div>
+              <div style="font-size:13px;color:var(--t3);line-height:1.7" data-i18n="guide_mc4_d">소문제마다 "초성 힌트" 체크박스를 켜면 몇 초 후에 자동으로 초성이 공개될지 설정할 수 있습니다. 한국어 정답에만 적용됩니다.</div>
             </div>
           </div>
           <div style="display:flex;gap:16px;align-items:flex-start">
             <div style="width:28px;height:28px;border-radius:50%;background:var(--grn-s);border:1px solid var(--grn);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:var(--grn);flex-shrink:0">5</div>
             <div>
-              <div style="font-weight:700;margin-bottom:3px">맵 공개하기</div>
-              <div style="font-size:13px;color:var(--t3);line-height:1.7">모든 문제를 작성한 뒤 하단의 "맵 공개하기" 버튼을 누르면 맵이 저장되고 바로 방을 만들어 플레이할 수 있습니다. 내 맵 대시보드에서 언제든지 수정하거나 삭제할 수 있습니다.</div>
+              <div style="font-weight:700;margin-bottom:3px" data-i18n="guide_mc5_t">맵 공개하기</div>
+              <div style="font-size:13px;color:var(--t3);line-height:1.7" data-i18n="guide_mc5_d">모든 문제를 작성한 뒤 하단의 "맵 공개하기" 버튼을 누르면 맵이 저장되고 바로 방을 만들어 플레이할 수 있습니다. 내 맵 대시보드에서 언제든지 수정하거나 삭제할 수 있습니다.</div>
             </div>
           </div>
         </div>
@@ -645,7 +672,7 @@ body{font-family:'Nanum Gothic Rounded',sans-serif;background:var(--bg);color:va
     <!-- ════ WAITING ROOM ════ -->
     <div class="page hide" id="page-waiting">
       <div class="w-head">
-        <div style="font-size:12px;color:var(--t3);margin-bottom:4px">대기실</div>
+        <div style="font-size:12px;color:var(--t3);margin-bottom:4px" data-i18n="wait_lobby">대기실</div>
         <div class="w-rn" id="waitRoomName">방 이름</div>
         <div class="w-rm" id="waitMapInfo">맵 이름 · 10문제</div>
       </div>
@@ -655,9 +682,9 @@ body{font-family:'Nanum Gothic Rounded',sans-serif;background:var(--bg);color:va
       <div class="w-chat-wrap">
         <div class="w-chat-log" id="waitChatLog"></div>
         <div class="w-chat-inp">
-          <input id="waitChatInput" placeholder="채팅 입력..." autocomplete="off"
+          <input id="waitChatInput" data-i18n-placeholder="chat_input_placeholder" placeholder="채팅 입력..." autocomplete="off"
             onkeydown="if(event.key==='Enter')sendWaitChat()">
-          <button onclick="sendWaitChat()">전송</button>
+          <button onclick="sendWaitChat()" data-i18n="chat_send">전송</button>
         </div>
       </div>
     </div>
@@ -685,7 +712,7 @@ body{font-family:'Nanum Gothic Rounded',sans-serif;background:var(--bg);color:va
             <!-- 게임 정보: 전체 너비 기준, 위 1/4 지점 -->
             <div class="gv-card" style="position:absolute;inset:0;justify-content:flex-start;padding-top:12%">
               <div id="gameFeedback"></div>
-              <div class="gv-instruction" id="gamePrompt">음악을 듣고 답을 입력하세요</div>
+              <div class="gv-instruction" id="gamePrompt" data-i18n="game_instruction">음악을 듣고 답을 입력하세요</div>
               <div class="gv-timer" id="gameTimer">30</div>
               <div class="gv-hint" id="gameHint" style="display:none"></div>
               <div class="gv-subq-list" id="subqList"></div>
@@ -705,7 +732,7 @@ body{font-family:'Nanum Gothic Rounded',sans-serif;background:var(--bg);color:va
                 <span style="font-size:10px;color:#222">K: 스킵 &nbsp;=: 채팅</span>
               </div>
               <!-- 채팅 입력창 -->
-              <input class="g-ans-inp" id="chatInput" placeholder="정답 / 채팅 입력..." autocomplete="off" style="width:100%;box-sizing:border-box;padding:10px 16px;font-size:15px">
+              <input class="g-ans-inp" id="chatInput" data-i18n-placeholder="game_chat_placeholder" placeholder="정답 / 채팅 입력..." autocomplete="off" style="width:100%;box-sizing:border-box;padding:10px 16px;font-size:15px">
             </div>
 
             <!-- 채팅 토글 버튼: 모바일 전용 -->
@@ -728,16 +755,16 @@ body{font-family:'Nanum Gothic Rounded',sans-serif;background:var(--bg);color:va
 
     <!-- ════ FAVORITES ════ -->
     <div class="page hide" id="page-favorites">
-      <div class="sec-h"><span class="sec-t">즐겨찾기</span></div>
-      <div id="favMapList"><div class="empty">로딩 중...</div></div>
+      <div class="sec-h"><span class="sec-t" data-i18n="nav_favorites">즐겨찾기</span></div>
+      <div id="favMapList"><div class="empty" data-i18n="loading">로딩 중...</div></div>
     </div>
 
     <!-- ════ DASHBOARD ════ -->
     <div class="page hide" id="page-dashboard">
-      <div class="sec-h"><span class="sec-t">내 맵 대시보드</span></div>
+      <div class="sec-h"><span class="sec-t" data-i18n="nav_dashboard">내 맵 대시보드</span></div>
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
-        <span style="font-size:13px;color:var(--t3)" id="dashSubtitle">내가 만든 퀴즈 맵을 관리하세요</span>
-        <button class="btn btn-a btn-sm" onclick="navigateTo('create-map')">+ 새 맵 만들기</button>
+        <span style="font-size:13px;color:var(--t3)" id="dashSubtitle" data-i18n="dash_subtitle">내가 만든 퀴즈 맵을 관리하세요</span>
+        <button class="btn btn-a btn-sm" onclick="navigateTo('create-map')" data-i18n="dash_new_map">+ 새 맵 만들기</button>
       </div>
       <div id="dashMapList"><div class="empty">로딩 중...</div></div>
     </div>
@@ -754,14 +781,14 @@ body{font-family:'Nanum Gothic Rounded',sans-serif;background:var(--bg);color:va
 
     <!-- ════ RANKING ════ -->
     <div class="page hide" id="page-ranking">
-      <div class="sec-h"><span class="sec-t">글로벌 랭킹</span></div>
+      <div class="sec-h"><span class="sec-t" data-i18n="nav_ranking">글로벌 랭킹</span></div>
       <div style="background:var(--bg3);border:1px solid var(--brd);border-radius:var(--rl);overflow:hidden">
         <div style="display:grid;grid-template-columns:48px 1fr 100px;gap:0;padding:10px 16px;border-bottom:1px solid var(--brd);font-size:11px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;font-family:'JetBrains Mono',monospace">
-          <span>#</span><span>플레이어</span><span style="text-align:right">총점수</span>
+          <span>#</span><span data-i18n="rank_player">플레이어</span><span style="text-align:right" data-i18n="rank_score">총점수</span>
         </div>
-        <div id="rankingList"><div class="empty">랭킹 데이터 로딩 중...</div></div>
+        <div id="rankingList"><div class="empty" data-i18n="rank_loading">랭킹 데이터 로딩 중...</div></div>
       </div>
-      <button class="btn btn-g btn-sm" style="margin-top:12px" onclick="loadRanking()">새로고침</button>
+      <button class="btn btn-g btn-sm" style="margin-top:12px" onclick="loadRanking()" data-i18n="refresh">새로고침</button>
     </div>
 
     <!-- ════ RESULTS ════ -->
@@ -769,20 +796,36 @@ body{font-family:'Nanum Gothic Rounded',sans-serif;background:var(--bg);color:va
       <div class="res-wrap">
         <div class="res-header">
           <span class="res-trophy-anim">🏆</span>
-          <div class="res-title">게임 종료!</div>
+          <div class="res-title" data-i18n="results_title">게임 종료!</div>
           <div class="res-mapname" id="resMapName"></div>
           <div id="resMyRank"></div>
         </div>
         <div class="podium" id="podiumArea"></div>
         <div class="res-scores">
-          <div class="res-scores-hd">최종 순위</div>
+          <div class="res-scores-hd" data-i18n="results_final_rank">최종 순위</div>
           <div id="finalScores"></div>
         </div>
         <div class="res-btns">
-          <button class="btn btn-a btn-lg" onclick="backToLobby()">로비로 돌아가기</button>
+          <button class="btn btn-a btn-lg" onclick="backToLobby()" data-i18n="results_back_lobby">로비로 돌아가기</button>
         </div>
       </div>
     </div>
+  </div>
+</div>
+
+<!-- ════ QUESTION EDITOR MODAL ════ -->
+<div class="modal-bg hide" id="qEditorModal" onclick="closeQEditorModal()">
+  <div class="modal" onclick="event.stopPropagation()" style="max-width:680px;max-height:92vh;overflow-y:auto;padding:20px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px">
+      <div style="font-size:16px;font-weight:800"><span data-i18n="q_edit_title">문제 편집</span> <span id="qEditorNum" style="color:var(--t3);font-weight:600"></span></div>
+      <div style="display:flex;align-items:center;gap:6px">
+        <button class="btn btn-g btn-sm" onclick="prevQEditorQ()" id="qEditorPrev" data-i18n="q_prev">◀ 이전</button>
+        <button class="btn btn-g btn-sm" onclick="nextQEditorQ()" id="qEditorNext" data-i18n="q_next">다음 ▶</button>
+        <button class="btn btn-sm" style="background:var(--acc-s);color:var(--acc);border:1px solid rgba(232,64,94,.3)" onclick="deleteQEditor()" data-i18n="q_delete">삭제</button>
+        <button class="btn btn-g btn-sm" onclick="closeQEditorModal()" data-i18n="close">닫기</button>
+      </div>
+    </div>
+    <div id="qEditorContent"></div>
   </div>
 </div>
 
@@ -791,13 +834,13 @@ body{font-family:'Nanum Gothic Rounded',sans-serif;background:var(--bg);color:va
   <div class="modal" onclick="event.stopPropagation()" style="max-width:400px">
     <div style="display:flex;gap:0;margin-bottom:20px;background:var(--bg5);border-radius:var(--rs);padding:3px">
       <button class="btn" id="authTabLogin" onclick="switchAuthTab('login')"
-        style="flex:1;border-radius:6px;font-size:14px;font-weight:700;background:var(--acc);color:#fff">로그인</button>
+        style="flex:1;border-radius:6px;font-size:14px;font-weight:700;background:var(--acc);color:#fff" data-i18n="auth_login">로그인</button>
       <button class="btn btn-g" id="authTabRegister" onclick="switchAuthTab('register')"
-        style="flex:1;border-radius:6px;font-size:14px;font-weight:700">회원가입</button>
+        style="flex:1;border-radius:6px;font-size:14px;font-weight:700" data-i18n="auth_register">회원가입</button>
     </div>
     <div id="authError" style="display:none;background:var(--acc-s);color:var(--acc);border:1px solid rgba(232,64,94,.3);border-radius:var(--rs);padding:8px 12px;font-size:13px;margin-bottom:12px"></div>
-    <div class="inp-g"><label class="inp-l" id="authUserLabel">아이디 (닉네임)</label><input class="inp" id="authUsername" placeholder="닉네임 입력 (고유)..." autocomplete="username" maxlength="20"></div>
-    <div class="inp-g"><label class="inp-l">비밀번호</label>
+    <div class="inp-g"><label class="inp-l" id="authUserLabel" data-i18n="auth_username_label">아이디 (닉네임)</label><input class="inp" id="authUsername" data-i18n-placeholder="auth_username_placeholder" placeholder="닉네임 입력 (고유)..." autocomplete="username" maxlength="20"></div>
+    <div class="inp-g"><label class="inp-l" data-i18n="auth_password_label">비밀번호</label>
       <div style="position:relative">
         <input class="inp" id="authPassword" type="password" placeholder="비밀번호 입력..." autocomplete="current-password"
           style="padding-right:40px" onkeydown="if(event.key==='Enter')doAuth()">
@@ -818,41 +861,41 @@ body{font-family:'Nanum Gothic Rounded',sans-serif;background:var(--bg);color:va
       <div id="avatarBtnGroup" style="display:flex;gap:8px;flex-wrap:wrap"></div>
       <input type="hidden" id="authAvatar" value="🦊">
     </div>
-    <button class="btn btn-a btn-full btn-lg" onclick="doAuth()" style="margin-top:4px" id="authSubmitBtn">로그인</button>
-    <button class="btn btn-g btn-full btn-sm" onclick="hideAuthModal()" style="margin-top:8px">취소</button>
+    <button class="btn btn-a btn-full btn-lg" onclick="doAuth()" style="margin-top:4px" id="authSubmitBtn" data-i18n="auth_login">로그인</button>
+    <button class="btn btn-g btn-full btn-sm" onclick="hideAuthModal()" style="margin-top:8px" data-i18n="cancel">취소</button>
   </div>
 </div>
 
 <!-- ════ CREATE ROOM MODAL ════ -->
 <div class="modal-bg hide" id="createModal" onclick="hideCreateModal()">
   <div class="modal" onclick="event.stopPropagation()">
-    <h2>새 배틀룸 만들기</h2>
-    <div class="inp-g"><label class="inp-l">방 이름</label><input class="inp" id="crName" placeholder="방 이름을 입력하세요"></div>
-    <div class="inp-g"><label class="inp-l">최대 인원</label><input class="inp" id="crMax" type="number" min="2" max="8" value="8"></div>
+    <h2 data-i18n="room_create_title">새 배틀룸 만들기</h2>
+    <div class="inp-g"><label class="inp-l" data-i18n="room_name">방 이름</label><input class="inp" id="crName" data-i18n-placeholder="room_name_placeholder" placeholder="방 이름을 입력하세요"></div>
+    <div class="inp-g"><label class="inp-l" data-i18n="room_max_players">최대 인원</label><input class="inp" id="crMax" type="number" min="2" max="8" value="8"></div>
     <div class="inp-g">
       <label class="inp-l" style="display:flex;align-items:center;gap:8px">
-        비밀번호
-        <span style="font-size:11px;color:var(--t3);font-weight:400">비워두면 공개방</span>
+        <span data-i18n="room_password">비밀번호</span>
+        <span style="font-size:11px;color:var(--t3);font-weight:400" data-i18n="room_password_hint">비워두면 공개방</span>
       </label>
-      <input class="inp" id="crPassword" type="password" placeholder="비밀번호 (선택)">
+      <input class="inp" id="crPassword" type="password" data-i18n-placeholder="room_password_placeholder" placeholder="비밀번호 (선택)">
     </div>
-    <div class="inp-g"><label class="inp-l">맵 선택</label><div class="m-grid" id="crMapGrid" style="max-height:220px;overflow-y:auto"></div></div>
+    <div class="inp-g"><label class="inp-l" data-i18n="room_select_map">맵 선택</label><div class="m-grid" id="crMapGrid" style="max-height:220px;overflow-y:auto"></div></div>
     <div style="display:flex;gap:8px;margin-top:20px">
-      <button class="btn btn-g" style="flex:1" onclick="hideCreateModal()">취소</button>
-      <button class="btn btn-a" style="flex:1" id="crSubmit" onclick="createRoom()">방 만들기</button>
+      <button class="btn btn-g" style="flex:1" onclick="hideCreateModal()" data-i18n="cancel">취소</button>
+      <button class="btn btn-a" style="flex:1" id="crSubmit" onclick="createRoom()" data-i18n="room_create">방 만들기</button>
     </div>
   </div>
 </div>
 
 <!-- ════ EDIT MAP MODAL ════ -->
 <div class="modal-bg hide" id="editMapModal" onclick="hideEditMapModal()">
-  <div class="modal" style="max-width:820px;max-height:90vh;overflow-y:auto" onclick="event.stopPropagation()">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
-      <h2 style="margin:0">맵 수정</h2>
-      <button class="btn btn-g btn-sm" onclick="hideEditMapModal()">✕ 닫기</button>
+  <div class="modal" style="max-width:700px;max-height:92vh;overflow-y:auto" onclick="event.stopPropagation()">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+      <h2 style="margin:0" data-i18n="map_edit_title">맵 수정</h2>
+      <button class="btn btn-g btn-sm" onclick="hideEditMapModal()" data-i18n="close">✕ 닫기</button>
     </div>
-    <div class="inp-g"><label class="inp-l">맵 이름</label><input class="inp" id="emName" placeholder="맵 이름"></div>
-    <div class="inp-g"><label class="inp-l">카테고리</label>
+    <div class="inp-g"><label class="inp-l" data-i18n="map_name">맵 이름</label><input class="inp" id="emName" data-i18n-placeholder="map_name" placeholder="맵 이름"></div>
+    <div class="inp-g"><label class="inp-l" data-i18n="map_category">카테고리</label>
       <select class="inp q-sel" id="emCat" style="width:100%;cursor:pointer"
         onchange="applyCategorySubQs('editQuestions',this.value);renderEditQuestions()">
         <option value="anime-song">애니 노래</option>
@@ -864,15 +907,30 @@ body{font-family:'Nanum Gothic Rounded',sans-serif;background:var(--bg);color:va
         <option value="vocaloid">보컬로이드</option>
       </select>
     </div>
-    <div class="sec-h" style="margin-top:16px">
-      <span class="sec-t" style="font-size:13px">문제 목록 (<span id="emQCount">0</span>)</span>
-      <button class="btn btn-g btn-sm" onclick="addEditQ()" style="margin-left:auto">+ 문제 추가</button>
+    <div class="sec-h" style="margin-top:12px">
+      <span class="sec-t" style="font-size:13px"><span data-i18n="question_list">문제 목록</span> (<span id="emQCount">0</span>)</span>
     </div>
-    <div id="emQuestions" style="max-height:60vh;overflow-y:auto;padding-right:4px"></div>
+    <div class="q-cards" id="emQCards" style="max-height:340px;overflow-y:auto"></div>
     <div style="display:flex;gap:8px;margin-top:20px">
-      <button class="btn btn-g" style="flex:1" onclick="hideEditMapModal()">취소</button>
-      <button class="btn btn-a" style="flex:1" onclick="saveEditMap()">저장</button>
+      <button class="btn btn-g" style="flex:1" onclick="hideEditMapModal()" data-i18n="cancel">취소</button>
+      <button class="btn btn-a" style="flex:1" onclick="saveEditMap()" data-i18n="save">저장</button>
     </div>
+  </div>
+</div>
+
+<!-- ════ EDIT Q EDITOR MODAL ════ -->
+<div class="modal-bg hide" id="eqEditorModal" onclick="closeEQEditorModal()">
+  <div class="modal" onclick="event.stopPropagation()" style="max-width:680px;max-height:92vh;overflow-y:auto;padding:20px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px">
+      <div style="font-size:16px;font-weight:800"><span data-i18n="q_edit_title">문제 편집</span> <span id="eqEditorNum" style="color:var(--t3);font-weight:600"></span></div>
+      <div style="display:flex;align-items:center;gap:6px">
+        <button class="btn btn-g btn-sm" onclick="prevEQEditorQ()" id="eqEditorPrev" data-i18n="q_prev">◀ 이전</button>
+        <button class="btn btn-g btn-sm" onclick="nextEQEditorQ()" id="eqEditorNext" data-i18n="q_next">다음 ▶</button>
+        <button class="btn btn-sm" style="background:var(--acc-s);color:var(--acc);border:1px solid rgba(232,64,94,.3)" onclick="deleteEQEditor()" data-i18n="q_delete">삭제</button>
+        <button class="btn btn-g btn-sm" onclick="closeEQEditorModal()" data-i18n="close">닫기</button>
+      </div>
+    </div>
+    <div id="eqEditorContent"></div>
   </div>
 </div>
 
@@ -880,15 +938,298 @@ body{font-family:'Nanum Gothic Rounded',sans-serif;background:var(--bg);color:va
 <div class="modal-bg" id="nameModal" style="cursor:default">
   <div class="modal" style="text-align:center;max-width:400px" onclick="event.stopPropagation()">
     <h2 style="margin-bottom:6px">마추기온라인</h2>
-    <p style="color:var(--t2);margin-bottom:20px;font-size:14px">계속하려면 로그인 또는 회원가입이 필요합니다</p>
+    <p style="color:var(--t2);margin-bottom:20px;font-size:14px" data-i18n="auth_required">계속하려면 로그인 또는 회원가입이 필요합니다</p>
     <div style="display:flex;gap:8px;flex-direction:column">
-      <button class="btn btn-a btn-lg btn-full" onclick="openAuthModal('login')">로그인</button>
-      <button class="btn btn-g btn-lg btn-full" onclick="openAuthModal('register')">회원가입</button>
+      <button class="btn btn-a btn-lg btn-full" onclick="openAuthModal('login')" data-i18n="auth_login">로그인</button>
+      <button class="btn btn-g btn-lg btn-full" onclick="openAuthModal('register')" data-i18n="auth_register">회원가입</button>
     </div>
   </div>
 </div>
 
 <script>
+// ═══════════════════════════════════════════
+// i18n — 다국어 지원
+// ═══════════════════════════════════════════
+const I18N = {
+  ko: {
+    // 네비게이션
+    nav_home: "홈", nav_guide: "가이드", nav_popular: "인기", nav_favorites: "즐겨찾기",
+    nav_browse: "전체 보기", nav_create: "맵 제작", nav_ranking: "글로벌 랭킹",
+    nav_dashboard: "내 맵 대시보드", nav_sec_maps: "맵 찾기",
+    nav_sec_community: "커뮤니티", nav_sec_myactivity: "내 활동",
+    // 사이드바
+    sidebar_online: "온라인", sidebar_loggedin: "로그인 중", sidebar_today: "오늘 로그인",
+    sidebar_battle: "배틀룸", sidebar_battle_count_suffix: "개",
+    // 인증
+    auth_loginreg: "로그인 / 회원가입", auth_logout: "로그아웃", auth_admin: "관리자 패널",
+    auth_required: "계속하려면 로그인 또는 회원가입이 필요합니다",
+    auth_login: "로그인", auth_register: "회원가입",
+    auth_username_label: "아이디 (닉네임)", auth_password_label: "비밀번호",
+    auth_username_placeholder: "닉네임 입력 (고유)...",
+    // 홈
+    home_hero_title: "애니 · 노래 · 장면 퀴즈 — 마추기온라인",
+    home_hero_sub: "점수를 랭킹에 등록하고 전국의 플레이어와 경쟁하세요",
+    home_cta_title: "함께 만들어가요",
+    home_cta_sub: "좋아하는 애니 퀴즈를 즐길 수 있는 곳, 여러분의 응원으로.",
+    home_create_map_btn: "맵 제작하기",
+    home_open_rooms: "열린 방",
+    home_no_rooms: "아직 열린 방이 없습니다. 첫 번째 방을 만들어보세요!",
+    room_search_placeholder: "방 제목 검색...",
+    // 방 목록
+    room_create: "방 만들기", room_create_title: "새 배틀룸 만들기",
+    room_name: "방 이름", room_name_placeholder: "방 이름을 입력하세요",
+    room_max_players: "최대 인원", room_password: "비밀번호",
+    room_password_hint: "비워두면 공개방", room_password_placeholder: "비밀번호 (선택)",
+    room_select_map: "맵 선택",
+    room_waiting: "대기중", room_playing: "플레이중", room_private: "비밀방",
+    room_players: "명", room_questions: "문제",
+    room_enter: "입장하기", room_join_password: "비밀번호를 입력하세요:",
+    room_full: "인원 초과",
+    // 맵
+    browse_title: "맵 탐색",
+    browse_search_placeholder: "맵 이름 또는 제작자 검색...",
+    sort_default: "기본순", sort_plays: "재생 많은 순", sort_favorites: "즐겨찾기 많은 순",
+    map_name: "맵 이름", map_name_placeholder: "예: 나만의 애니 퀴즈",
+    map_category: "카테고리", map_publish: "맵 공개하기",
+    map_edit_title: "맵 수정",
+    map_plays: "플레이", map_qs: "문제", map_fav: "즐겨찾기",
+    map_create_room: "방 만들기", map_edit: "수정", map_delete: "삭제",
+    map_deploy: "배포", map_no_url: "URL 없음",
+    // 맵 제작
+    global_apply: "전체 적용", chosung_hint: "초성 힌트", reveal_time: "공개 시간",
+    question_list: "문제 목록",
+    q_edit_title: "문제 편집", q_prev: "◀ 이전", q_next: "다음 ▶",
+    q_delete: "삭제", q_add: "문제 추가", q_sub_label: "소문제",
+    q_ans_placeholder: "정답 (쉼표로 복수)",
+    q_prompt_placeholder: "질문 (예: 노래 제목은?)",
+    q_show_ans: "정답 공개",
+    q_url_placeholder: "https://youtu.be/...",
+    q_playback: "재생 설정", q_start: "시작", q_end: "끝",
+    q_timelimit: "제한 시간",
+    // 대기실
+    wait_lobby: "대기실",
+    chat_input_placeholder: "채팅 입력...",
+    chat_send: "전송",
+    wait_start: "게임 시작", wait_leave: "나가기",
+    wait_host_hint: "맵을 선택하고 게임을 시작하세요",
+    wait_guest_hint: "호스트가 게임을 시작할 때까지 기다리세요",
+    // 게임
+    game_instruction: "음악을 듣고 답을 입력하세요",
+    game_chat_placeholder: "정답 / 채팅 입력...",
+    game_correct: "정답!", game_wrong: "오답",
+    game_answered: "정답 입력됨", game_skip_hint: "K: 스킵",
+    game_reveal: "정답 공개",
+    // 결과
+    results_title: "게임 종료!", results_final_rank: "최종 순위",
+    results_back_lobby: "로비로 돌아가기",
+    results_my_rank: "내 등수",
+    results_pts: "점",
+    // 대시보드
+    dash_subtitle: "내가 만든 퀴즈 맵을 관리하세요",
+    dash_new_map: "+ 새 맵 만들기",
+    dash_draft: "초안", dash_pending: "심사중", dash_approved: "배포완료", dash_rejected: "반려",
+    // 랭킹
+    rank_player: "플레이어", rank_score: "총점수", rank_loading: "랭킹 데이터 로딩 중...",
+    // 공통
+    loading: "로딩 중...", refresh: "새로고침", cancel: "취소", save: "저장", close: "✕ 닫기",
+    confirm_delete: "정말 삭제하시겠습니까?",
+    // 카테고리
+    cat_anime_song: "애니 노래", cat_scene: "애니 장면", cat_character: "캐릭터 대사",
+    cat_kpop: "K-POP", cat_jpop: "J-POP", cat_ost: "OST", cat_vocaloid: "보컬로이드",
+    // Guide
+    guide_gameplay: "게임 플레이", guide_mapcreate: "맵 제작",
+    guide_gp1_t: "방 참가 또는 만들기",
+    guide_gp1_d: "홈 화면의 방 목록에서 원하는 방을 클릭해 참가하거나, \"방 만들기\" 버튼으로 직접 방을 개설하세요. 비밀번호 방은 자물쇠 아이콘이 표시됩니다. 빈 슬롯을 클릭하면 초대 링크를 복사할 수 있습니다.",
+    guide_gp2_t: "게임 시작",
+    guide_gp2_d: "호스트만 게임을 시작할 수 있습니다. 시작하면 맵의 문제들이 무작위 순서로 출제됩니다.",
+    guide_gp3_t: "정답 입력",
+    guide_gp3_d: "음악을 듣고 하단 입력창에 정답을 입력한 뒤 엔터를 누르세요. 소문제가 여러 개인 경우 각각 순서대로 맞춰야 합니다. 빠르게 맞출수록 더 높은 점수를 받습니다.",
+    guide_gp4_t: "초성 힌트 · 스킵",
+    guide_gp4_d: "맵 제작자가 설정한 경우 일정 시간 후 초성 힌트가 표시됩니다. 모르겠으면 K 키로 스킵 투표를 할 수 있습니다. 2명 이하는 전원 동의, 3명 이상은 과반수가 스킵하면 다음 문제로 넘어갑니다.",
+    guide_gp5_t: "점수 계산",
+    guide_gp5_d: "맞춘 순서(1등 보너스)와 남은 시간 비율에 따라 점수가 결정됩니다. 모든 문제가 끝나면 최종 순위가 표시됩니다.",
+    guide_mc1_t: "맵 기본 설정",
+    guide_mc1_d: "사이드바에서 \"맵 제작\"을 클릭합니다. 맵 이름과 카테고리(애니 노래, K-POP, 보컬로이드 등)를 선택하면 소문제 항목이 자동으로 채워집니다.",
+    guide_mc2_t: "YouTube URL 입력",
+    guide_mc2_d: "각 문제에 YouTube 링크를 붙여넣으면 미리보기 플레이어가 나타납니다. 시작 / 끝 슬라이더로 재생 구간을 직접 잡아주세요. 구간이 제한 시간보다 짧으면 자동으로 반복 재생됩니다.",
+    guide_mc3_t: "소문제 · 정답 입력",
+    guide_mc3_d: "각 소문제(노래 제목, 가수 등)의 정답을 입력합니다. 정답이 여러 개인 경우 쉼표(,)로 구분해 입력하면 모두 정답으로 인정됩니다.",
+    guide_mc4_t: "초성 힌트 설정 (선택)",
+    guide_mc4_d: "소문제마다 \"초성 힌트\" 체크박스를 켜면 몇 초 후에 자동으로 초성이 공개될지 설정할 수 있습니다. 한국어 정답에만 적용됩니다.",
+    guide_mc5_t: "맵 공개하기",
+    guide_mc5_d: "모든 문제를 작성한 뒤 하단의 \"맵 공개하기\" 버튼을 누르면 맵이 저장되고 바로 방을 만들어 플레이할 수 있습니다. 내 맵 대시보드에서 언제든지 수정하거나 삭제할 수 있습니다.",
+  },
+  en: {
+    // Navigation
+    nav_home: "Home", nav_guide: "Guide", nav_popular: "Popular", nav_favorites: "Favorites",
+    nav_browse: "Browse", nav_create: "Create Map", nav_ranking: "Global Ranking",
+    nav_dashboard: "My Maps", nav_sec_maps: "Maps",
+    nav_sec_community: "Community", nav_sec_myactivity: "My Activity",
+    // Sidebar
+    sidebar_online: "Online", sidebar_loggedin: "Logged in", sidebar_today: "Today's logins",
+    sidebar_battle: "Battle Rooms", sidebar_battle_count_suffix: "",
+    // Auth
+    auth_loginreg: "Log in / Sign up", auth_logout: "Log out", auth_admin: "Admin Panel",
+    auth_required: "Please log in or sign up to continue",
+    auth_login: "Log in", auth_register: "Sign up",
+    auth_username_label: "Username (nickname)", auth_password_label: "Password",
+    auth_username_placeholder: "Enter unique nickname...",
+    // Home
+    home_hero_title: "Anime · Music · Scene Quiz — Matchu Online",
+    home_hero_sub: "Compete with players worldwide on the global leaderboard",
+    home_cta_title: "Build Together",
+    home_cta_sub: "A place for anime quiz lovers — powered by your support.",
+    home_create_map_btn: "Create a Map",
+    home_open_rooms: "Open Rooms",
+    home_no_rooms: "No open rooms yet. Be the first to create one!",
+    room_search_placeholder: "Search room title...",
+    // Room
+    room_create: "Create Room", room_create_title: "Create New Battle Room",
+    room_name: "Room Name", room_name_placeholder: "Enter room name",
+    room_max_players: "Max Players", room_password: "Password",
+    room_password_hint: "Leave empty for public", room_password_placeholder: "Password (optional)",
+    room_select_map: "Select Map",
+    room_waiting: "Waiting", room_playing: "Playing", room_private: "Private",
+    room_players: "players", room_questions: "questions",
+    room_enter: "Join", room_join_password: "Enter room password:",
+    room_full: "Full",
+    // Maps
+    browse_title: "Browse Maps",
+    browse_search_placeholder: "Search map name or creator...",
+    sort_default: "Default", sort_plays: "Most Played", sort_favorites: "Most Favorited",
+    map_name: "Map Name", map_name_placeholder: "e.g. My Anime Quiz",
+    map_category: "Category", map_publish: "Publish Map",
+    map_edit_title: "Edit Map",
+    map_plays: "plays", map_qs: "Qs", map_fav: "fav",
+    map_create_room: "Create Room", map_edit: "Edit", map_delete: "Delete",
+    map_deploy: "Deploy", map_no_url: "No URL",
+    // Map Creator
+    global_apply: "Apply All", chosung_hint: "Chosung Hint", reveal_time: "Reveal Time",
+    question_list: "Questions",
+    q_edit_title: "Edit Question", q_prev: "◀ Prev", q_next: "Next ▶",
+    q_delete: "Delete", q_add: "Add Question", q_sub_label: "Sub-Q",
+    q_ans_placeholder: "Answers (comma-separated)",
+    q_prompt_placeholder: "Question (e.g. Song title?)",
+    q_show_ans: "Show Answer",
+    q_url_placeholder: "https://youtu.be/...",
+    q_playback: "Playback Settings", q_start: "Start", q_end: "End",
+    q_timelimit: "Time Limit",
+    // Waiting Room
+    wait_lobby: "Lobby",
+    chat_input_placeholder: "Type to chat...",
+    chat_send: "Send",
+    wait_start: "Start Game", wait_leave: "Leave",
+    wait_host_hint: "Select a map and start the game",
+    wait_guest_hint: "Waiting for the host to start...",
+    // Game
+    game_instruction: "Listen and type your answer",
+    game_chat_placeholder: "Answer / Chat...",
+    game_correct: "Correct!", game_wrong: "Wrong",
+    game_answered: "Answered", game_skip_hint: "K: Skip",
+    game_reveal: "Show Answer",
+    // Results
+    results_title: "Game Over!", results_final_rank: "Final Rankings",
+    results_back_lobby: "Back to Lobby",
+    results_my_rank: "My Rank",
+    results_pts: "pts",
+    // Dashboard
+    dash_subtitle: "Manage your quiz maps",
+    dash_new_map: "+ New Map",
+    dash_draft: "Draft", dash_pending: "Pending", dash_approved: "Live", dash_rejected: "Rejected",
+    // Ranking
+    rank_player: "Player", rank_score: "Total Score", rank_loading: "Loading ranking data...",
+    // Common
+    loading: "Loading...", refresh: "Refresh", cancel: "Cancel", save: "Save", close: "✕ Close",
+    confirm_delete: "Are you sure you want to delete this?",
+    // Categories
+    cat_anime_song: "Anime Song", cat_scene: "Anime Scene", cat_character: "Character Quote",
+    cat_kpop: "K-POP", cat_jpop: "J-POP", cat_ost: "OST", cat_vocaloid: "Vocaloid",
+    // Guide
+    guide_gameplay: "Gameplay", guide_mapcreate: "Map Creation",
+    guide_gp1_t: "Join or Create a Room",
+    guide_gp1_d: "Click any room in the home screen list to join, or use the \"Create Room\" button to open your own. Rooms with a lock icon require a password. Click an empty slot to copy an invite link.",
+    guide_gp2_t: "Start the Game",
+    guide_gp2_d: "Only the host can start the game. Once started, questions from the map are presented in random order.",
+    guide_gp3_t: "Enter Your Answer",
+    guide_gp3_d: "Listen to the music, type your answer in the input box at the bottom, and press Enter. If a question has multiple sub-questions, answer them in order. The faster you answer, the higher your score.",
+    guide_gp4_t: "Consonant Hint · Skip",
+    guide_gp4_d: "If the map creator enabled it, a consonant hint will appear after a set time. Press K to vote to skip. With 2 or fewer players, unanimous agreement is required; with 3+ players, a majority vote skips to the next question.",
+    guide_gp5_t: "Scoring",
+    guide_gp5_d: "Points are awarded based on answer order (1st-place bonus) and the proportion of time remaining. Final rankings are shown after all questions.",
+    guide_mc1_t: "Map Basic Settings",
+    guide_mc1_d: "Click \"Map Creation\" in the sidebar. Enter a map name and select a category (Anime Song, K-POP, Vocaloid, etc.) — the sub-question fields will be filled in automatically.",
+    guide_mc2_t: "Enter a YouTube URL",
+    guide_mc2_d: "Paste a YouTube link for each question and a preview player will appear. Use the Start / End sliders to set the exact playback range. If the range is shorter than the time limit, the clip will loop automatically.",
+    guide_mc3_t: "Sub-questions & Answers",
+    guide_mc3_d: "Enter the correct answer for each sub-question (song title, artist, etc.). To allow multiple acceptable answers, separate them with commas (,).",
+    guide_mc4_t: "Consonant Hint (Optional)",
+    guide_mc4_d: "Enable the \"Consonant Hint\" checkbox per sub-question to reveal the Korean consonant hint after a set number of seconds. This applies to Korean-language answers only.",
+    guide_mc5_t: "Publish Your Map",
+    guide_mc5_d: "After writing all questions, click the \"Publish Map\" button at the bottom. Your map is saved instantly and you can create a room to play it right away. You can edit or delete it any time from My Map Dashboard.",
+  }
+};
+
+let _lang = "ko";
+
+function t(key) {
+  return (I18N[_lang] && I18N[_lang][key]) || (I18N.ko[key]) || key;
+}
+
+function applyLang() {
+  // 텍스트 노드 업데이트
+  document.querySelectorAll("[data-i18n]").forEach(el => {
+    const key = el.getAttribute("data-i18n");
+    const val = t(key);
+    if (el.tagName === "INPUT" || el.tagName === "TEXTAREA") {
+      el.value = val;
+    } else {
+      el.textContent = val;
+    }
+  });
+  // placeholder 업데이트
+  document.querySelectorAll("[data-i18n-placeholder]").forEach(el => {
+    el.placeholder = t(el.getAttribute("data-i18n-placeholder"));
+  });
+  // select option 업데이트
+  document.querySelectorAll("option[data-i18n]").forEach(el => {
+    el.textContent = t(el.getAttribute("data-i18n"));
+  });
+  // html lang 속성
+  document.documentElement.lang = _lang;
+  // 언어 버튼 레이블
+  const lbl = document.getElementById("langLabel");
+  if (lbl) lbl.textContent = _lang === "ko" ? "한국어" : "English";
+  // title
+  document.title = _lang === "ko"
+    ? "마추기온라인.io — 애니·노래·장면 퀴즈 배틀"
+    : "Matchu Online — Anime Quiz Battle";
+}
+
+function toggleLang() {
+  _lang = _lang === "ko" ? "en" : "ko";
+  localStorage.setItem("lang", _lang);
+  applyLang();
+}
+
+async function detectLang() {
+  // 1. localStorage 우선
+  const saved = localStorage.getItem("lang");
+  if (saved === "ko" || saved === "en") { _lang = saved; applyLang(); return; }
+  // 2. 브라우저 언어가 한국어면 한국어
+  if (navigator.language && navigator.language.toLowerCase().startsWith("ko")) {
+    _lang = "ko"; applyLang(); return;
+  }
+  // 3. IP 기반 감지 — 한국 IP가 아니면 영어
+  try {
+    const res = await fetch("https://ipapi.co/country/", { signal: AbortSignal.timeout(3000) });
+    const country = (await res.text()).trim();
+    _lang = country === "KR" ? "ko" : "en";
+  } catch {
+    _lang = "en"; // 감지 실패 시 영어 (비한국권 접속 가능성)
+  }
+  applyLang();
+}
+
 // 서비스 워커 캐시 전체 삭제 (API 응답 캐싱 방지)
 if ("serviceWorker" in navigator) {
   caches.keys().then(keys => keys.forEach(k => caches.delete(k)));
@@ -1001,6 +1342,9 @@ const COLORS = ["#FF6B6B","#4ECDC4","#45B7D1","#96CEB4","#FFEAA7","#DDA0DD","#98
 // ═══════════════════════════════════════════
 
 window.addEventListener("DOMContentLoaded", () => {
+  // 언어 감지 및 적용
+  detectLang();
+
   // 볼륨 슬라이더 초기값
   const sl2 = document.getElementById("volSlider2");
   if (sl2) { sl2.value = _volLevel; }
@@ -1226,7 +1570,7 @@ socket.on("correctAnswer", ({ playerName, playerAvatar, points, order, subQIndex
     gameState._lastTyped = ""; // 사용 후 초기화
   }
   if (playerName === myUser.name) {
-    showFeedback("ok", `[${gameState.subQPrompts?.[qi] || `문제${qi+1}`}] 정답! +${points}점`);
+    showFeedback("ok", `[${gameState.subQPrompts?.[qi] || `Q${qi+1}`}] ${t('game_correct')} +${points}${t('results_pts')}`);
   }
   renderSubQList();
   document.getElementById("chatInput")?.focus();
@@ -1295,7 +1639,7 @@ socket.on("hintReveal", ({ subQIndex, hint }) => {
 
 socket.on("error", (msg, ctx) => {
   if (msg === "비밀번호가 틀렸습니다" && ctx?.roomId) {
-    const pw = prompt("비밀번호가 틀렸습니다. 다시 입력하세요:");
+    const pw = prompt(_lang==='ko'?"비밀번호가 틀렸습니다. 다시 입력하세요:":"Incorrect password. Please try again:");
     if (pw !== null) socket.emit("joinRoom", { roomId: ctx.roomId, password: pw });
     return;
   }
@@ -1398,8 +1742,8 @@ function createRoom() {
   const name = document.getElementById("crName").value.trim();
   const max = parseInt(document.getElementById("crMax").value) || 8;
   const password = document.getElementById("crPassword").value;
-  if (!name) return alert("방 이름을 입력해주세요!");
-  if (!selectedMapId) return alert("맵을 선택해주세요!");
+  if (!name) return alert(_lang==='ko'?"방 이름을 입력해주세요!":"Please enter a room name!");
+  if (!selectedMapId) return alert(_lang==='ko'?"맵을 선택해주세요!":"Please select a map!");
   socket.emit("createRoom", { name, mapId: selectedMapId, maxPlayers: max, password });
   hideCreateModal();
 }
@@ -1428,8 +1772,8 @@ function showToast(msg) {
 
 function joinRoom(roomId, hasPassword) {
   if (hasPassword) {
-    const pw = prompt("비밀번호를 입력하세요:");
-    if (pw === null) return; // 취소
+    const pw = prompt(t('room_join_password'));
+    if (pw === null) return;
     socket.emit("joinRoom", { roomId, password: pw });
   } else {
     socket.emit("joinRoom", { roomId });
@@ -1464,37 +1808,67 @@ function sendChatOrAnswer() {
 // Render Functions
 // ═══════════════════════════════════════════
 
+// ── 공용 페이지네이터 ──
+function makePager(page, total, perPage, goFn) {
+  const tp = Math.ceil(total / perPage);
+  if (tp <= 1) return '';
+  const s = page * perPage + 1;
+  const e = Math.min((page + 1) * perPage, total);
+  let btns = '';
+  for (let i = 0; i < tp; i++) {
+    if (tp > 7 && i !== 0 && i !== tp - 1 && Math.abs(i - page) > 1) {
+      if (i === page - 2 || i === page + 2) btns += `<span style="color:var(--t3);padding:0 2px">…</span>`;
+      continue;
+    }
+    btns += `<button class="btn btn-sm ${i===page?'btn-a':'btn-g'}" onclick="${goFn}(${i})" style="min-width:32px;padding:4px 8px;font-family:'JetBrains Mono',monospace">${i+1}</button>`;
+  }
+  return `<div style="display:flex;align-items:center;justify-content:center;gap:5px;padding:14px 0 2px;flex-wrap:wrap">
+    <button class="btn btn-g btn-sm" onclick="${goFn}(${page-1})" ${page===0?'disabled':''} style="padding:4px 10px">◀</button>
+    ${btns}
+    <button class="btn btn-g btn-sm" onclick="${goFn}(${page+1})" ${page===tp-1?'disabled':''} style="padding:4px 10px">▶</button>
+    <span style="font-size:11px;color:var(--t3);margin-left:4px">${s}–${e} / ${total}</span>
+  </div>`;
+}
+
+// ── 홈 방 목록 ──
 let _allRooms = [];
+let _roomPage = 0;
+const ROOM_PER_PAGE = 12;
 
 function renderRoomList(rooms) {
   _allRooms = rooms;
+  _roomPage = 0;
   const q = (document.getElementById("roomSearch")?.value || "").trim();
   filterRoomList(q);
 }
+
+function goRoomPage(p) { _roomPage = p; filterRoomList(document.getElementById("roomSearch")?.value || ""); }
 
 function filterRoomList(query) {
   const el = document.getElementById("roomList");
   const q = query.trim().toLowerCase();
   const rooms = q ? _allRooms.filter(r => r.name.toLowerCase().includes(q)) : _allRooms;
   if (!rooms.length) {
-    el.innerHTML = q
-      ? `<div class="empty">"${esc(query)}"에 해당하는 방이 없습니다.</div>`
-      : '<div class="empty">아직 열린 방이 없습니다. 첫 번째 방을 만들어보세요!</div>';
+    el.innerHTML = (q
+      ? `<div class="empty">"${esc(query)}" ${_lang === 'ko' ? '에 해당하는 방이 없습니다.' : '— no matching rooms found.'}</div>`
+      : `<div class="empty">${t('home_no_rooms')}</div>`) + makePager(0,0,ROOM_PER_PAGE,'goRoomPage');
     return;
   }
-  el.innerHTML = rooms.map(r => `
+  if (_roomPage >= Math.ceil(rooms.length / ROOM_PER_PAGE)) _roomPage = 0;
+  const page = rooms.slice(_roomPage * ROOM_PER_PAGE, (_roomPage + 1) * ROOM_PER_PAGE);
+  el.innerHTML = page.map(r => `
     <div class="r-row" onclick="${r.status === 'waiting' ? `joinRoom('${r.id}',${!!r.hasPassword})` : ''}">
       <div class="r-info">
         <div class="r-nm">${esc(r.name)}${r.hasPassword ? ' <span style="font-size:12px;color:var(--t3)" title="비밀번호 방">🔒</span>' : ''}</div>
-        <div class="r-meta"><span>${esc(r.mapName)}</span><span>호스트: ${esc(r.hostName)}</span></div>
+        <div class="r-meta"><span>${esc(r.mapName)}</span><span>${_lang === 'ko' ? '호스트' : 'Host'}: ${esc(r.hostName)}</span></div>
       </div>
-      <span class="r-st ${r.status === 'waiting' ? 'wait' : 'play'}">${r.status === 'waiting' ? '대기중' : '게임중'}</span>
+      <span class="r-st ${r.status === 'waiting' ? 'wait' : 'play'}">${r.status === 'waiting' ? t('room_waiting') : t('room_playing')}</span>
       <div class="r-dots">
         ${Array.from({length:r.maxPlayers}).map((_,i) => `<span class="r-dot ${i < r.players ? 'f' : 'e'}"></span>`).join("")}
         <span class="r-cnt">${r.players}/${r.maxPlayers}</span>
       </div>
     </div>
-  `).join("");
+  `).join("") + makePager(_roomPage, rooms.length, ROOM_PER_PAGE, 'goRoomPage');
 }
 
 function renderBattleMini(rooms) {
@@ -1509,10 +1883,14 @@ function renderBattleMini(rooms) {
 }
 
 let _mapCatFilter = "all";
+let _mapPage = 0;
+const MAP_PER_PAGE = 20;
 
 function renderMapGrid(maps, filter) {
   if (filter !== undefined) _mapCatFilter = filter;
-  const cats = [{id:"all",label:"전체"},{id:"anime-song",label:"애니"},{id:"scene",label:"장면"},{id:"character",label:"캐릭터"},{id:"kpop",label:"K-POP"},{id:"jpop",label:"J-POP"},{id:"ost",label:"OST"},{id:"vocaloid",label:"보컬로이드"}];
+  const cats = _lang === 'ko'
+    ? [{id:"all",label:"전체"},{id:"anime-song",label:"애니"},{id:"scene",label:"장면"},{id:"character",label:"캐릭터"},{id:"kpop",label:"K-POP"},{id:"jpop",label:"J-POP"},{id:"ost",label:"OST"},{id:"vocaloid",label:"보컬로이드"}]
+    : [{id:"all",label:"All"},{id:"anime-song",label:"Anime"},{id:"scene",label:"Scene"},{id:"character",label:"Character"},{id:"kpop",label:"K-POP"},{id:"jpop",label:"J-POP"},{id:"ost",label:"OST"},{id:"vocaloid",label:"Vocaloid"}];
   document.getElementById("mapFilters").innerHTML = cats.map(c =>
     `<button class="fchip ${_mapCatFilter===c.id ? 'act':''}" onclick="filterMaps('${c.id}')">${c.label}</button>`
   ).join("");
@@ -1521,10 +1899,14 @@ function renderMapGrid(maps, filter) {
 
 function filterMaps(cat) {
   _mapCatFilter = cat;
+  _mapPage = 0;
   renderMapGrid(allMaps);
 }
 
-function applyMapFilter() {
+function goMapPage(p) { _mapPage = p; applyMapFilter(); }
+
+function applyMapFilter(resetPage) {
+  if (resetPage) _mapPage = 0;
   const query = (document.getElementById("mapSearchInput")?.value || "").trim().toLowerCase();
   const sort  = document.getElementById("mapSortSelect")?.value || "default";
 
@@ -1539,10 +1921,14 @@ function applyMapFilter() {
   if (sort === "plays")     list = [...list].sort((a, b) => b.plays - a.plays);
   if (sort === "favorites") list = [...list].sort((a, b) => (b.favoritesCount||0) - (a.favoritesCount||0));
 
+  if (_mapPage >= Math.ceil((list.length||1) / MAP_PER_PAGE)) _mapPage = 0;
+  const page = list.slice(_mapPage * MAP_PER_PAGE, (_mapPage + 1) * MAP_PER_PAGE);
+
   const grid = document.getElementById("mapGrid");
-  if (grid) grid.innerHTML = list.length
-    ? list.map(m => renderMapCard(m)).join("")
-    : '<div class="empty" style="grid-column:1/-1">검색 결과가 없습니다.</div>';
+  if (grid) grid.innerHTML = (list.length
+    ? page.map(m => renderMapCard(m)).join("")
+    : '<div class="empty" style="grid-column:1/-1">검색 결과가 없습니다.</div>')
+    + `<div style="grid-column:1/-1">${makePager(_mapPage, list.length, MAP_PER_PAGE, 'goMapPage')}</div>`;
 }
 
 function renderCreateModalMaps(maps) {
@@ -1580,11 +1966,14 @@ function showWaiting(room) {
   const isHost = room.hostId === socket.id;
   const acts = document.getElementById("waitActions");
   acts.innerHTML = `
-    <button class="btn btn-g" onclick="leaveRoom()">나가기</button>
-    ${isHost ? `<button class="btn btn-a btn-lg" onclick="startGame()">게임 시작!</button>` : ''}
+    <button class="btn btn-g" onclick="leaveRoom()">${t('wait_leave')}</button>
+    ${isHost ? `<button class="btn btn-a btn-lg" onclick="startGame()">${t('wait_start')}</button>` : ''}
   `;
 
-  document.getElementById("waitHint").textContent = isHost && room.players.length === 1 ? "혼자 시작합니다 — 친구를 초대하면 더 재밌어요!" : "";
+  const hintMsg = isHost && room.players.length === 1
+    ? (_lang === 'ko' ? "혼자 시작합니다 — 친구를 초대하면 더 재밌어요!" : "Starting solo — invite friends for more fun!")
+    : "";
+  document.getElementById("waitHint").textContent = hintMsg;
 }
 
 function renderSubQList() {
@@ -1720,7 +2109,9 @@ function showResults(scores) {
 
   // 내 등수 배너
   const myRank = sorted.findIndex(s => s.name === myUser.name);
-  const rankLabel = myRank >= 0 ? `내 등수: ${myRank + 1}등` : null;
+  const rankLabel = myRank >= 0
+    ? (_lang === 'ko' ? `${t('results_my_rank')}: ${myRank + 1}등` : `${t('results_my_rank')}: #${myRank + 1}`)
+    : null;
   document.getElementById("resMyRank").innerHTML = rankLabel
     ? `<div class="res-my-rank">${rankLabel}</div>` : "";
 
@@ -1733,8 +2124,8 @@ function showResults(scores) {
     <div class="res-row${isMe ? " res-me" : ""}">
       <span class="res-rank ${rankCls}">${rankIcon}</span>
       <div class="res-av" style="background:${COLORS[i%COLORS.length]}22">${s.avatar}</div>
-      <span class="res-name">${esc(s.name)}${isMe ? ' <span style="font-size:11px;color:var(--acc);font-weight:400">(나)</span>' : ''}</span>
-      <span class="res-pts">${s.score.toLocaleString()}점</span>
+      <span class="res-name">${esc(s.name)}${isMe ? ` <span style="font-size:11px;color:var(--acc);font-weight:400">(${_lang==='ko'?'나':'me'})</span>` : ''}</span>
+      <span class="res-pts">${s.score.toLocaleString()}${t('results_pts')}</span>
     </div>`;
   }).join("");
 }
@@ -1938,18 +2329,21 @@ function setPrevEnd(arrName, i, val) {
   if (et) et.textContent = fmtT(val);
 }
 
-function initPreviewPlayers(arr, arrName) {
+// offsetIdx: 배열 내 실제 인덱스 (단일 문제 모달용; 없으면 배열 순서 그대로)
+function initPreviewPlayers(arr, arrName, offsetIdx) {
   // 기존 플레이어 제거
   Object.keys(window._prevPlayers).filter(k => k.startsWith(arrName + '-')).forEach(k => {
     try { window._prevPlayers[k].destroy(); } catch(e) {}
     delete window._prevPlayers[k];
   });
   if (typeof YT === 'undefined' || !YT.Player) return;
-  arr.forEach((q, i) => {
+  arr.forEach((q, localIdx) => {
+    const i = offsetIdx !== undefined ? offsetIdx : localIdx;
     const ytId = getYouTubeId(q.mediaUrl || '');
     if (!ytId) return;
     const divId = `yt-prev-${arrName}-${i}`;
     if (!document.getElementById(divId)) return;
+    const realArr = getQArr(arrName) || arr; // 실제 배열 참조
     const player = new YT.Player(divId, {
       videoId: ytId,
       playerVars: { rel: 0, modestbranding: 1, controls: 1, start: q.startTime || 0 },
@@ -1957,7 +2351,7 @@ function initPreviewPlayers(arr, arrName) {
         onReady: (e) => {
           const dur = Math.floor(e.target.getDuration());
           if (dur > 0) {
-            arr[i].ytDuration = dur;
+            realArr[i].ytDuration = dur;
             // 슬라이더 max 업데이트
             ['yt-sr-','yt-er-','yt-sn-','yt-en-'].forEach(prefix => {
               const el = document.getElementById(prefix + arrName + '-' + i);
@@ -1966,8 +2360,8 @@ function initPreviewPlayers(arr, arrName) {
             const durEl = document.getElementById(`yt-dur-${arrName}-${i}`);
             if (durEl) durEl.textContent = '영상 길이: ' + fmtT(dur);
             // endTime이 0이면 영상 끝으로 설정
-            if (!arr[i].endTime) {
-              arr[i].endTime = dur;
+            if (!realArr[i].endTime) {
+              realArr[i].endTime = dur;
               const er = document.getElementById(`yt-er-${arrName}-${i}`);
               const en = document.getElementById(`yt-en-${arrName}-${i}`);
               const et = document.getElementById(`yt-et-${arrName}-${i}`);
@@ -2006,24 +2400,235 @@ function togglePrevVol(arrName, i) {
   setPrevVol(arrName, i, next);
 }
 
-function renderCreatorQuestions() { renderQList(creatorQuestions,'creatorQuestions','cmQuestions','cmQCount'); }
+// ── 카드 그리드 렌더러 ──
+let _cmQPage = 0;
+const CM_PER_PAGE = 30;
+
+function renderCreatorQuestions() { renderCreatorQCards(); }
+function goCmQPage(p) { _cmQPage = p; renderCreatorQCards(); }
+
+function renderCreatorQCards() {
+  const el = document.getElementById("cmQCards");
+  if (!el) return;
+  document.getElementById("cmQCount").textContent = creatorQuestions.length;
+  if (_cmQPage >= Math.ceil((creatorQuestions.length||1) / CM_PER_PAGE)) _cmQPage = 0;
+  const pageStart = _cmQPage * CM_PER_PAGE;
+  const pageItems = creatorQuestions.slice(pageStart, pageStart + CM_PER_PAGE);
+  el.innerHTML = pageItems.map((q, localIdx) => {
+    const i = pageStart + localIdx;
+    const ytId = getYouTubeId(q.mediaUrl || "");
+    const hasYt = !!ytId;
+    const subs = q.subQuestions || [];
+    const firstAns = subs[0] ? ((subs[0].answers||"").split(",")[0].trim() || subs[0].prompt || "") : "";
+    const thumb = hasYt ? `<img src="https://img.youtube.com/vi/${ytId}/mqdefault.jpg" onerror="this.style.display='none'" loading="lazy">` : "";
+    return `
+    <div class="q-card" onclick="openQEditorModal(${i})" id="qcard-${i}">
+      <div class="q-card-thumb">
+        ${thumb}
+        ${!hasYt ? `<div class="q-card-err">!</div>` : ''}
+      </div>
+      <div class="q-card-foot">
+        <div class="q-card-num">Q.${i+1} · ${subs.length} ${t('q_sub_label')}</div>
+        <div class="q-card-sub">${esc(firstAns) || (_lang==='ko'?'정답 미입력':'No answer')}</div>
+      </div>
+      <button class="q-card-del" onclick="event.stopPropagation();deleteQCard(${i})" title="삭제">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+      </button>
+    </div>`;
+  }).join("") + `
+  <div class="q-card-add" onclick="addCreatorQ()">
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+    <span style="font-size:13px;font-weight:600">${t('q_add')}</span>
+  </div>
+  <div style="width:100%;flex-basis:100%">${makePager(_cmQPage, creatorQuestions.length, CM_PER_PAGE, 'goCmQPage')}</div>`;
+}
+
+function deleteQCard(i) {
+  if (creatorQuestions.length <= 1) return alert("최소 1개 필요합니다.");
+  if (!confirm(`Q.${i+1}번 문제를 삭제하시겠습니까?`)) return;
+  creatorQuestions.splice(i, 1);
+  renderCreatorQCards();
+  if (currentQEditorIdx >= creatorQuestions.length) currentQEditorIdx = creatorQuestions.length - 1;
+}
+
+// ── 문제 편집 모달 ──
+let currentQEditorIdx = 0;
+
+function openQEditorModal(idx) {
+  currentQEditorIdx = idx;
+  document.getElementById("qEditorModal").classList.remove("hide");
+  renderQEditorContent();
+  // 카드 active 표시
+  document.querySelectorAll(".q-card").forEach((c, i) => {
+    c.classList.toggle("qc-active", i === idx);
+  });
+}
+
+function closeQEditorModal() {
+  document.getElementById("qEditorModal").classList.add("hide");
+  document.querySelectorAll(".q-card").forEach(c => c.classList.remove("qc-active"));
+  renderCreatorQCards(); // 카드 썸네일/정보 갱신
+  setTimeout(() => initPreviewPlayers(creatorQuestions, 'creatorQuestions'), 0);
+}
+
+function prevQEditorQ() {
+  if (currentQEditorIdx > 0) openQEditorModal(currentQEditorIdx - 1);
+}
+function nextQEditorQ() {
+  if (currentQEditorIdx < creatorQuestions.length - 1) openQEditorModal(currentQEditorIdx + 1);
+}
+function deleteQEditor() {
+  if (creatorQuestions.length <= 1) return alert("최소 1개 필요합니다.");
+  if (!confirm(`Q.${currentQEditorIdx+1}번 문제를 삭제하시겠습니까?`)) return;
+  creatorQuestions.splice(currentQEditorIdx, 1);
+  if (currentQEditorIdx >= creatorQuestions.length) currentQEditorIdx = creatorQuestions.length - 1;
+  renderQEditorContent();
+  renderCreatorQCards();
+}
+
+function renderQEditorContent() {
+  const i = currentQEditorIdx;
+  const total = creatorQuestions.length;
+  document.getElementById("qEditorNum").textContent = `Q.${i+1} / ${total}`;
+  document.getElementById("qEditorPrev").disabled = i === 0;
+  document.getElementById("qEditorNext").disabled = i === total - 1;
+
+  const q = creatorQuestions[i];
+  const arrName = 'creatorQuestions';
+  const fmtTime = s => { const m = Math.floor(s/60); return `${m}:${String(s%60).padStart(2,'0')}`; };
+  const ytId = getYouTubeId(q.mediaUrl || "");
+  const hasYt = !!ytId;
+  const startSec = q.startTime || 0;
+  const endSec = q.endTime || 0;
+  const subs = q.subQuestions || [];
+  const tl = q.timeLimit || 30;
+  const clipLen = (hasYt && endSec > startSec) ? (endSec - startSec) : 0;
+  const willLoop = clipLen > 0 && clipLen < tl;
+
+  const subQHtml = subs.map((sq, si) => {
+    const firstAns = (sq.answers || "").split(",")[0].trim();
+    return `
+    <div class="qem-sq-row" style="background:${si%2===0?'var(--bg3)':'var(--bg4)'}">
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <span style="font-size:11px;font-weight:700;color:var(--t3);min-width:52px">${t('q_sub_label')} ${si+1}</span>
+        <input class="inp" placeholder="${t('q_prompt_placeholder')}" style="flex:2;min-width:120px" value="${esc(sq.prompt)}"
+          oninput="${arrName}[${i}].subQuestions[${si}].prompt=this.value">
+        <input class="inp" placeholder="${t('q_ans_placeholder')}" style="flex:3;min-width:140px" value="${esc(sq.answers)}"
+          oninput="${arrName}[${i}].subQuestions[${si}].answers=this.value"
+          onblur="renderQEditorContent()">
+        ${subs.length > 1 ? `<button class="btn btn-g btn-sm" onclick="${arrName}[${i}].subQuestions.splice(${si},1);renderQEditorContent()" style="color:var(--acc);padding:4px 8px;display:flex;align-items:center;flex-shrink:0"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>` : '<div style="width:32px"></div>'}
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;padding-left:60px;flex-wrap:wrap">
+        <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;font-weight:600">
+          <input type="checkbox" ${sq.showAnswer!==false?'checked':''} style="width:14px;height:14px;accent-color:var(--grn)"
+            onchange="${arrName}[${i}].subQuestions[${si}].showAnswer=this.checked">
+          ${t('q_show_ans')}
+        </label>
+        <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;font-weight:600">
+          <input type="checkbox" ${sq.chosungHint?'checked':''} style="width:14px;height:14px;accent-color:var(--acc)"
+            onchange="${arrName}[${i}].subQuestions[${si}].chosungHint=this.checked;renderQEditorContent()">
+          ${t('chosung_hint')}
+        </label>
+        ${sq.chosungHint ? `
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+          <span style="font-size:11px;color:var(--t3)">공개:</span>
+          <select class="q-sel" style="font-size:12px;padding:3px 6px"
+            onchange="${arrName}[${i}].subQuestions[${si}].hintRevealTime=+this.value;renderQEditorContent()">
+            <option value="5"  ${(sq.hintRevealTime||0)==5 ?'selected':''}>5초 후</option>
+            <option value="10" ${(sq.hintRevealTime||0)==10?'selected':''}>10초 후</option>
+            <option value="15" ${(sq.hintRevealTime||0)==15?'selected':''}>15초 후</option>
+            <option value="0"  ${!sq.hintRevealTime?'selected':''}>커스텀</option>
+          </select>
+          ${!sq.hintRevealTime||![5,10,15].includes(sq.hintRevealTime) ? `
+          <input type="number" min="1" max="60" class="inp" style="width:56px;padding:3px 6px;font-size:12px" placeholder="초"
+            value="${sq.hintRevealTime||''}" oninput="${arrName}[${i}].subQuestions[${si}].hintRevealTime=+this.value">` : ''}
+          ${firstAns ? `<span style="font-size:11px;color:var(--ylw);font-family:'JetBrains Mono',monospace">${esc(firstAns)} → ${getChosungClient(firstAns)}</span>` : ''}
+        </div>` : ''}
+      </div>
+    </div>`;
+  }).join("");
+
+  document.getElementById("qEditorContent").innerHTML = `
+  <div class="qem-cols">
+    <div class="qem-left">
+      <div class="qem-yt">
+        ${hasYt ? `<div id="yt-prev-${arrName}-${i}" style="width:100%;height:100%"></div>` : `<div style="color:var(--t3);font-size:13px;text-align:center;padding:20px">URL을 입력하면<br>미리보기가 표시됩니다</div>`}
+      </div>
+      ${hasYt ? `<div style="display:flex;align-items:center;gap:6px;padding:5px 6px;background:#111;border-radius:0 0 var(--rs) var(--rs);margin-top:-4px;margin-bottom:8px">
+        <span style="cursor:pointer;color:#aaa;display:flex;align-items:center" onclick="togglePrevVol('${arrName}',${i})" id="pv-icon-${arrName}-${i}">${getPrevVolSvg(q.volume)}</span>
+        <input type="range" min="0" max="100" value="${q.volume!==undefined?q.volume:100}" step="1" style="flex:1;accent-color:#fff;height:3px;cursor:pointer" id="pv-vol-${arrName}-${i}" oninput="setPrevVol('${arrName}',${i},+this.value)">
+        <span style="font-size:10px;color:#aaa;font-family:'JetBrains Mono',monospace;min-width:30px" id="pv-pct-${arrName}-${i}">${q.volume!==undefined?q.volume:100}%</span>
+      </div>` : ''}
+      <div style="font-size:11px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px">YouTube URL</div>
+      <input class="inp" placeholder="https://youtu.be/..." value="${esc(q.mediaUrl||'')}" style="width:100%"
+        onblur="${arrName}[${i}].mediaUrl=this.value;renderQEditorContent();setTimeout(()=>initPreviewPlayers(creatorQuestions,'creatorQuestions'),0)">
+    </div>
+    <div class="qem-right">
+      <div style="font-size:11px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">${t('q_playback')}</div>
+      ${hasYt ? `
+      <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px">
+        <div style="font-size:11px;color:var(--t3)" id="yt-dur-${arrName}-${i}">${q.ytDuration ? '영상 길이: ' + fmtTime(q.ytDuration) : '영상 길이 감지 중...'}</div>
+        <div style="display:flex;align-items:center;gap:6px;font-size:12px">
+          <span style="color:var(--t3);min-width:28px">시작</span>
+          <input type="range" id="yt-sr-${arrName}-${i}" min="0" max="${q.ytDuration||600}" step="1" value="${startSec}" style="flex:1;accent-color:var(--acc)"
+            oninput="setPrevStart('${arrName}',${i},'${ytId}',+this.value)">
+          <span id="yt-st-${arrName}-${i}" style="font-family:'JetBrains Mono',monospace;color:var(--ylw);min-width:40px;font-size:12px">${fmtTime(startSec)}</span>
+          <input type="number" id="yt-sn-${arrName}-${i}" min="0" max="${q.ytDuration||600}" class="inp" style="width:58px;padding:4px 6px;font-family:'JetBrains Mono',monospace;font-size:12px" value="${startSec}" oninput="setPrevStart('${arrName}',${i},'${ytId}',+this.value)">
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;font-size:12px">
+          <span style="color:var(--t3);min-width:28px">끝</span>
+          <input type="range" id="yt-er-${arrName}-${i}" min="0" max="${q.ytDuration||600}" step="1" value="${endSec||q.ytDuration||600}" style="flex:1;accent-color:var(--grn)"
+            oninput="setPrevEnd('${arrName}',${i},+this.value)">
+          <span id="yt-et-${arrName}-${i}" style="font-family:'JetBrains Mono',monospace;color:var(--grn);min-width:40px;font-size:12px">${endSec?fmtTime(endSec):(q.ytDuration?fmtTime(q.ytDuration):'∞')}</span>
+          <input type="number" id="yt-en-${arrName}-${i}" min="0" max="${q.ytDuration||600}" class="inp" style="width:58px;padding:4px 6px;font-family:'JetBrains Mono',monospace;font-size:12px" value="${endSec||q.ytDuration||''}" oninput="setPrevEnd('${arrName}',${i},+this.value)">
+        </div>
+        ${startSec < (endSec||9999) ? `<div style="font-size:11px;color:var(--t3)">구간: ${fmtTime(startSec)} → ${endSec?fmtTime(endSec):'끝'}${endSec?' ('+( endSec-startSec)+'초)':''}${willLoop?' · 반복재생':''}</div>` : ''}
+      </div>` : `<div style="font-size:12px;color:var(--t3);margin-bottom:12px">URL 입력 후 슬라이더가 표시됩니다</div>`}
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap">
+        <label style="display:flex;align-items:center;gap:5px;font-size:12px;font-weight:600;color:var(--t2)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity:.6"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          제한시간
+          <input type="number" min="5" max="300" class="inp" style="width:62px;padding:4px 8px;font-family:'JetBrains Mono',monospace"
+            value="${tl}" oninput="${arrName}[${i}].timeLimit=+this.value">
+          초
+        </label>
+        ${willLoop ? `<span style="font-size:11px;color:var(--ylw)">반복재생 (${clipLen}초 클립)</span>` : ''}
+      </div>
+      <div style="font-size:11px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">※ 첫 번째 정답만 결과 화면에 표시됩니다</div>
+    </div>
+  </div>
+  <div class="qem-sq">
+    <div class="qem-sq-hd">
+      <span style="font-size:11px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.5px">${t('q_sub_label')} (${subs.length})</span>
+      <button class="btn btn-g btn-sm" onclick="${arrName}[${i}].subQuestions.push(defaultSubQ(''));renderQEditorContent()" style="font-size:12px;padding:3px 10px">+ ${t('q_sub_label')}</button>
+    </div>
+    ${subQHtml}
+  </div>`;
+
+  // 미리보기 플레이어 초기화
+  if (hasYt) setTimeout(() => initPreviewPlayers([q], arrName, i), 0);
+}
+
 function addCreatorQ() {
+  if (creatorQuestions.length >= 500) return alert(_lang==='ko'?"한 맵에 최대 500개까지 문제를 추가할 수 있습니다.":"A map can have at most 500 questions.");
   const cat = document.getElementById("cmCat")?.value || "";
   const prompts = CATEGORY_SUBQS[cat];
   const q = defaultQ("audio");
   if (prompts) q.subQuestions = prompts.map(p => defaultSubQ(p));
   creatorQuestions.push(q);
-  renderCreatorQuestions();
+  _cmQPage = Math.floor((creatorQuestions.length - 1) / CM_PER_PAGE);
+  renderCreatorQCards();
+  openQEditorModal(creatorQuestions.length - 1);
 }
-function addSubQ(qi) { creatorQuestions[qi].subQuestions.push(defaultSubQ(creatorQuestions[qi].type)); renderCreatorQuestions(); }
+function addSubQ(qi) { creatorQuestions[qi].subQuestions.push(defaultSubQ('')); renderCreatorQuestions(); }
 function removeSubQ(qi, si) { creatorQuestions[qi].subQuestions.splice(si, 1); renderCreatorQuestions(); }
 
 async function saveNewMap() {
   if (!authToken) return openAuthModal('login', '맵을 만들려면 로그인이 필요합니다');
   const name = document.getElementById("cmName").value.trim();
   const cat = document.getElementById("cmCat").value;
-  if (!name) return alert("맵 이름을 입력해주세요!");
-  if (creatorQuestions.some(q => (q.subQuestions||[]).some(sq => !sq.answers.trim()))) return alert("모든 소문제에 정답을 입력해주세요!");
+  if (!name) return alert(_lang==='ko'?"맵 이름을 입력해주세요!":"Please enter a map name!");
+  if (creatorQuestions.some(q => (q.subQuestions||[]).some(sq => !sq.answers.trim()))) return alert(_lang==='ko'?"모든 소문제에 정답을 입력해주세요!":"Please enter answers for all sub-questions!");
 
   try {
     const { ok, data } = await fetchJSON("/api/maps", {
@@ -2046,9 +2651,10 @@ async function saveNewMap() {
       }),
     });
     if (ok) {
-      alert("맵이 생성되었습니다! 🎉");
+      alert(_lang==='ko'?"맵이 생성되었습니다! 🎉":"Map created successfully! 🎉");
       creatorQuestions = [defaultQ("audio")];
       document.getElementById("cmName").value = "";
+      document.getElementById("qEditorModal").classList.add("hide");
       renderCreatorQuestions();
       socket.emit("getMaps");
       navigateTo("home");
@@ -2090,9 +2696,9 @@ function switchAuthTab(tab) {
   document.getElementById("authAvatarRow").style.display            = isLogin ? "none" : "block";
   document.getElementById("authPasswordConfirmRow").style.display   = isLogin ? "none" : "block";
   document.getElementById("authPasswordConfirm").value              = "";
-  document.getElementById("authSubmitBtn").textContent       = isLogin ? "로그인" : "회원가입";
-  document.getElementById("authUserLabel").textContent       = isLogin ? "아이디 (닉네임)" : "닉네임 (고유, 변경 불가)";
-  document.getElementById("authUsername").placeholder        = isLogin ? "닉네임 입력..." : "사용할 닉네임 입력...";
+  document.getElementById("authSubmitBtn").textContent       = isLogin ? t('auth_login') : t('auth_register');
+  document.getElementById("authUserLabel").textContent       = isLogin ? t('auth_username_label') : (_lang==='ko'?'닉네임 (고유, 변경 불가)':'Username (unique, permanent)');
+  document.getElementById("authUsername").placeholder        = isLogin ? (_lang==='ko'?'닉네임 입력...':'Enter nickname...') : (_lang==='ko'?'사용할 닉네임 입력...':'Choose a unique nickname...');
   document.getElementById("authError").style.display = "none";
   // 아바타 버튼 동적 생성 (회원가입 탭)
   if (!isLogin) {
@@ -2227,14 +2833,16 @@ function esc(s) { return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").re
 async function loadFavorites() {
   const el = document.getElementById("favMapList");
   if (!authToken) {
-    el.innerHTML = '<div class="empty">즐겨찾기를 사용하려면 <a href="#" onclick="openAuthModal(\'login\')" style="color:var(--acc)">로그인</a>이 필요합니다.</div>';
+    el.innerHTML = _lang === 'ko'
+      ? '<div class="empty">즐겨찾기를 사용하려면 <a href="#" onclick="openAuthModal(\'login\')" style="color:var(--acc)">로그인</a>이 필요합니다.</div>'
+      : '<div class="empty">Please <a href="#" onclick="openAuthModal(\'login\')" style="color:var(--acc)">log in</a> to use favorites.</div>';
     return;
   }
   el.innerHTML = '<div class="empty">로딩 중...</div>';
   try {
     const { ok, data } = await fetchJSON("/api/favorites", { headers: { "Authorization": `Bearer ${authToken}` } });
     if (!ok) { el.innerHTML = `<div class="empty">${data.error||'불러오기 실패'}</div>`; return; }
-    if (!data.length) { el.innerHTML = '<div class="empty">즐겨찾기한 맵이 없습니다. 맵 탐색에서 하트를 눌러 추가해보세요.</div>'; return; }
+    if (!data.length) { el.innerHTML = `<div class="empty">${_lang==='ko'?'즐겨찾기한 맵이 없습니다. 맵 탐색에서 하트를 눌러 추가해보세요.':'No favorited maps yet. Browse maps and click the heart icon to add.'}</div>`; return; }
     el.innerHTML = `<div class="m-grid">${data.map(m => renderMapCard(m)).join("")}</div>`;
   } catch(e) { el.innerHTML = '<div class="empty">불러오기 실패.</div>'; }
 }
@@ -2281,20 +2889,24 @@ function renderMapCard(m) {
         <div class="m-nm" style="margin-bottom:0">${esc(m.name)}</div>
         <button class="fav-btn" data-id="${m.id}" onclick="toggleFavorite('${m.id}',event)"
           style="background:none;border:none;cursor:pointer;padding:2px;color:${faved ? 'var(--acc)' : 'var(--t3)'};flex-shrink:0;display:flex;align-items:center"
-          title="${faved ? '즐겨찾기 해제' : '즐겨찾기 추가'}">${getFavSvg(faved)}</button>
+          title="${faved ? (_lang==='ko'?'즐겨찾기 해제':'Remove from favorites') : (_lang==='ko'?'즐겨찾기 추가':'Add to favorites')}">${getFavSvg(faved)}</button>
       </div>
       <div class="m-au">by ${esc(m.author||'')}</div>
       <div class="m-st">
-        <span>${m.questionCount}문제</span>
+        <span>${m.questionCount}${t('map_qs')}</span>
         <span style="display:inline-flex;align-items:center;gap:3px">${svgPlay2} ${m.plays}</span>
         <span style="display:inline-flex;align-items:center;gap:3px">${svgHeart} <span data-fav-cnt="${m.id}">${m.favoritesCount||0}</span></span>
       </div>
-      <div class="m-tags">${(m.tags||[]).map(t => `<span class="m-tag">${esc(t)}</span>`).join("")}</div>
-      <button class="btn btn-a btn-sm btn-full" style="margin-top:10px" onclick="event.stopPropagation();openCreateWithMap('${m.id}','${esc(m.name)}')">이 맵으로 방 만들기</button>
+      <div class="m-tags">${(m.tags||[]).map(tg => `<span class="m-tag">${esc(tg)}</span>`).join("")}</div>
+      <button class="btn btn-a btn-sm btn-full" style="margin-top:10px" onclick="event.stopPropagation();openCreateWithMap('${m.id}','${esc(m.name)}')">${_lang==='ko'?'이 맵으로 방 만들기':t('map_create_room')}</button>
     </div>`;
 }
 
-async function loadDashboard() {
+let _dashPage = 0;
+const DASH_PER_PAGE = 8;
+
+async function loadDashboard(keepPage) {
+  if (!keepPage) _dashPage = 0;
   const el = document.getElementById("dashMapList");
   if (!authToken) {
     el.innerHTML = '<div class="empty">대시보드를 사용하려면 <a href="#" onclick="openAuthModal(\'login\')" style="color:var(--acc)">로그인</a>이 필요합니다.</div>';
@@ -2306,34 +2918,41 @@ async function loadDashboard() {
       headers: { "Authorization": `Bearer ${authToken}`, "Cache-Control": "no-cache" },
     });
     if (!ok) { el.innerHTML = `<div class="empty">${data.error||'불러오기 실패'}</div>`; return; }
-    document.getElementById("dashSubtitle").textContent = `총 ${data.length}개의 맵을 만들었습니다`;
+    document.getElementById("dashSubtitle").textContent = _lang === 'ko'
+      ? `총 ${data.length}개의 맵을 만들었습니다`
+      : `You have created ${data.length} map${data.length !== 1 ? 's' : ''}`;
     if (!data.length) {
-      el.innerHTML = '<div class="empty">아직 만든 맵이 없습니다. 맵 제작 메뉴에서 첫 맵을 만들어보세요!</div>';
+      el.innerHTML = `<div class="empty">${_lang==='ko'?'아직 만든 맵이 없습니다. 맵 제작 메뉴에서 첫 맵을 만들어보세요!':'No maps yet. Create your first map!'}</div>`;
       return;
     }
     const svgPlay = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>`;
     const svgDoc  = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>`;
 
     const STATUS_BADGE = {
-      draft:    { label: "비공개", color: "var(--t3)",  bg: "var(--bg5)" },
-      pending:  { label: "검토 중", color: "#f59e0b",   bg: "rgba(245,158,11,.12)" },
-      approved: { label: "배포됨",  color: "var(--grn)", bg: "rgba(34,197,94,.12)" },
-      rejected: { label: "거절됨", color: "var(--acc)", bg: "var(--acc-s)" },
+      draft:    { label: t('dash_draft'),    color: "var(--t3)",  bg: "var(--bg5)" },
+      pending:  { label: t('dash_pending'),  color: "#f59e0b",   bg: "rgba(245,158,11,.12)" },
+      approved: { label: t('dash_approved'), color: "var(--grn)", bg: "rgba(34,197,94,.12)" },
+      rejected: { label: t('dash_rejected'), color: "var(--acc)", bg: "var(--acc-s)" },
     };
 
     window._dashMaps = data;
-    el.innerHTML = data.map((mapItem, idx) => {
+    if (_dashPage >= Math.ceil(data.length / DASH_PER_PAGE)) _dashPage = 0;
+    const pageStart = _dashPage * DASH_PER_PAGE;
+    const pageItems = data.slice(pageStart, pageStart + DASH_PER_PAGE);
+
+    el.innerHTML = pageItems.map((mapItem, localIdx) => {
+      const idx = pageStart + localIdx; // 실제 _dashMaps 인덱스
       const mname = esc(mapItem.name || "");
       const st    = mapItem.status || "draft";
       const bc    = STATUS_BADGE[st] || STATUS_BADGE.draft;
       const badge = `<span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:99px;background:${bc.bg};color:${bc.color}">${bc.label}</span>`;
       const rejectNote = (st === "rejected" && mapItem.rejectReason)
-        ? `<div style="font-size:11px;color:var(--acc);margin-top:4px">거절 사유: ${esc(mapItem.rejectReason)}</div>` : "";
+        ? `<div style="font-size:11px;color:var(--acc);margin-top:4px">${_lang==='ko'?'거절 사유':'Reason'}: ${esc(mapItem.rejectReason)}</div>` : "";
       let actionBtn = "";
       if (st === "pending") {
-        actionBtn = `<button class="btn btn-g btn-sm" onclick="cancelSubmitMap(${idx})">신청 취소</button>`;
+        actionBtn = `<button class="btn btn-g btn-sm" onclick="cancelSubmitMap(${idx})">${_lang==='ko'?'신청 취소':'Cancel'}</button>`;
       } else if (st !== "approved") {
-        const lbl = st === "rejected" ? "재신청" : "배포하기";
+        const lbl = st === "rejected" ? (_lang==='ko'?'재신청':'Resubmit') : t('map_deploy');
         actionBtn = `<button class="btn btn-g btn-sm" style="color:var(--grn);border-color:rgba(34,197,94,.3)" onclick="submitMap(${idx})">${lbl}</button>`;
       }
       return `
@@ -2343,31 +2962,33 @@ async function loadDashboard() {
             ${mname} ${badge}
           </div>
           <div style="font-size:12px;color:var(--t3);display:flex;gap:12px;align-items:center;flex-wrap:wrap">
-            <span style="display:flex;align-items:center;gap:4px">${svgDoc} ${mapItem.questionCount}문제</span>
-            <span style="display:flex;align-items:center;gap:4px">${svgPlay} ${mapItem.plays}회</span>
-            <span>${new Date(mapItem.createdAt).toLocaleDateString('ko-KR')}</span>
+            <span style="display:flex;align-items:center;gap:4px">${svgDoc} ${mapItem.questionCount}${t('map_qs')}</span>
+            <span style="display:flex;align-items:center;gap:4px">${svgPlay} ${mapItem.plays}</span>
+            <span>${new Date(mapItem.createdAt).toLocaleDateString(_lang==='ko'?'ko-KR':'en-US')}</span>
           </div>
           ${rejectNote}
         </div>
         <div style="display:flex;gap:8px;flex-shrink:0;flex-wrap:wrap;justify-content:flex-end">
           ${actionBtn}
-          <button class="btn btn-g btn-sm" onclick="openCreateWithMap(${idx})">방 만들기</button>
-          <button class="btn btn-g btn-sm" onclick="openEditMap(${idx})">수정</button>
-          <button class="btn btn-sm" style="background:var(--acc-s);color:var(--acc);border:1px solid rgba(232,64,94,.3)" onclick="deleteMap(${idx})">삭제</button>
+          <button class="btn btn-g btn-sm" onclick="openCreateWithMap(${idx})">${t('map_create_room')}</button>
+          <button class="btn btn-g btn-sm" onclick="openEditMap(${idx})">${t('map_edit')}</button>
+          <button class="btn btn-sm" style="background:var(--acc-s);color:var(--acc);border:1px solid rgba(232,64,94,.3)" onclick="deleteMap(${idx})">${t('map_delete')}</button>
         </div>
       </div>`;
-    }).join("");
+    }).join("") + makePager(_dashPage, data.length, DASH_PER_PAGE, 'goDashPage');
   } catch(e) {
     el.innerHTML = '<div class="empty">불러오기 실패. 다시 시도해주세요.</div>';
   }
 }
+
+function goDashPage(p) { _dashPage = p; loadDashboard(true); }
 
 async function deleteMap(idx) {
   const mapItem = (window._dashMaps || [])[idx];
   if (!mapItem) return alert("맵 정보를 찾을 수 없습니다. 대시보드를 새로고침해주세요.");
   const mapId = mapItem.id || mapItem.mapId || String(mapItem._id || "");
   const mapName = mapItem.name || "";
-  if (!confirm(`"${mapName}" 맵을 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.`)) return;
+  if (!confirm(_lang==='ko'?`"${mapName}" 맵을 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.`:`Delete map "${mapName}"?\nThis action cannot be undone.`)) return;
   try {
     const { ok, data } = await fetchJSON(`/api/maps/${mapId}`, {
       method: "DELETE",
@@ -2383,7 +3004,7 @@ async function submitMap(idx) {
   if (!mapItem) return alert("맵 정보를 찾을 수 없습니다. 대시보드를 새로고침해주세요.");
   const mapId = mapItem.id || mapItem.mapId || String(mapItem._id || "");
   if (!mapId) return alert("맵 ID가 올바르지 않습니다. 대시보드를 새로고침해주세요.");
-  if (!confirm("이 맵을 배포 신청하시겠습니까?\n관리자가 검토 후 승인하면 맵 찾기에 공개됩니다.")) return;
+  if (!confirm(_lang==='ko'?"이 맵을 배포 신청하시겠습니까?\n관리자가 검토 후 승인하면 맵 찾기에 공개됩니다.":"Submit this map for review?\nOnce approved by admin, it will appear in Browse Maps.")) return;
   try {
     const { ok, data } = await fetchJSON(`/api/maps/${mapId}/submit`, {
       method: "POST", headers: { "Authorization": `Bearer ${authToken}` },
@@ -2511,19 +3132,220 @@ async function openEditMap(idx) {
 
 function hideEditMapModal() {
   document.getElementById("editMapModal").classList.add("hide");
+  document.getElementById("eqEditorModal").classList.add("hide");
   editMapId = null;
   editQuestions = [];
 }
 
-function renderEditQuestions() { renderQList(editQuestions,'editQuestions','emQuestions','emQCount'); }
-function addEditQ() { editQuestions.push(defaultQ("audio")); renderEditQuestions(); }
+function renderEditQuestions() { renderEditQCards(); }
+
+function renderEditQCards() {
+  const el = document.getElementById("emQCards");
+  if (!el) return;
+  document.getElementById("emQCount").textContent = editQuestions.length;
+  el.innerHTML = editQuestions.map((q, i) => {
+    const ytId = getYouTubeId(q.mediaUrl || "");
+    const hasYt = !!ytId;
+    const subs = q.subQuestions || [];
+    const firstAns = subs[0] ? ((subs[0].answers||"").split(",")[0].trim() || subs[0].prompt || "") : "";
+    const thumb = hasYt ? `<img src="https://img.youtube.com/vi/${ytId}/mqdefault.jpg" onerror="this.style.display='none'" loading="lazy">` : "";
+    return `
+    <div class="q-card" onclick="openEQEditorModal(${i})" id="eqcard-${i}">
+      <div class="q-card-thumb">
+        ${thumb}
+        ${!hasYt ? `<div class="q-card-err">!</div>` : ''}
+      </div>
+      <div class="q-card-foot">
+        <div class="q-card-num">Q.${i+1} · ${subs.length} ${t('q_sub_label')}</div>
+        <div class="q-card-sub">${esc(firstAns) || (_lang==='ko'?'정답 미입력':'No answer')}</div>
+      </div>
+      <button class="q-card-del" onclick="event.stopPropagation();deleteEQCard(${i})" title="삭제">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+      </button>
+    </div>`;
+  }).join("") + `
+  <div class="q-card-add" onclick="addEditQ()">
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+    <span style="font-size:13px;font-weight:600">${t('q_add')}</span>
+  </div>`;
+}
+
+function deleteEQCard(i) {
+  if (editQuestions.length <= 1) return alert("최소 1개 필요합니다.");
+  if (!confirm(`Q.${i+1}번 문제를 삭제하시겠습니까?`)) return;
+  editQuestions.splice(i, 1);
+  renderEditQCards();
+  if (currentEQEditorIdx >= editQuestions.length) currentEQEditorIdx = editQuestions.length - 1;
+}
+
+// ── 수정 문제 편집 모달 ──
+let currentEQEditorIdx = 0;
+
+function openEQEditorModal(idx) {
+  currentEQEditorIdx = idx;
+  document.getElementById("eqEditorModal").classList.remove("hide");
+  renderEQEditorContent();
+  document.querySelectorAll("#emQCards .q-card").forEach((c, i) => {
+    c.classList.toggle("qc-active", i === idx);
+  });
+}
+
+function closeEQEditorModal() {
+  document.getElementById("eqEditorModal").classList.add("hide");
+  document.querySelectorAll("#emQCards .q-card").forEach(c => c.classList.remove("qc-active"));
+  renderEditQCards();
+  setTimeout(() => initPreviewPlayers(editQuestions, 'editQuestions'), 0);
+}
+
+function prevEQEditorQ() {
+  if (currentEQEditorIdx > 0) openEQEditorModal(currentEQEditorIdx - 1);
+}
+function nextEQEditorQ() {
+  if (currentEQEditorIdx < editQuestions.length - 1) openEQEditorModal(currentEQEditorIdx + 1);
+}
+function deleteEQEditor() {
+  if (editQuestions.length <= 1) return alert("최소 1개 필요합니다.");
+  if (!confirm(`Q.${currentEQEditorIdx+1}번 문제를 삭제하시겠습니까?`)) return;
+  editQuestions.splice(currentEQEditorIdx, 1);
+  if (currentEQEditorIdx >= editQuestions.length) currentEQEditorIdx = editQuestions.length - 1;
+  renderEQEditorContent();
+  renderEditQCards();
+}
+
+function renderEQEditorContent() {
+  const i = currentEQEditorIdx;
+  const total = editQuestions.length;
+  document.getElementById("eqEditorNum").textContent = `Q.${i+1} / ${total}`;
+  document.getElementById("eqEditorPrev").disabled = i === 0;
+  document.getElementById("eqEditorNext").disabled = i === total - 1;
+
+  const q = editQuestions[i];
+  const arrName = 'editQuestions';
+  const fmtTime = s => { const m = Math.floor(s/60); return `${m}:${String(s%60).padStart(2,'0')}`; };
+  const ytId = getYouTubeId(q.mediaUrl || "");
+  const hasYt = !!ytId;
+  const startSec = q.startTime || 0;
+  const endSec = q.endTime || 0;
+  const subs = q.subQuestions || [];
+  const tl = q.timeLimit || 30;
+  const clipLen = (hasYt && endSec > startSec) ? (endSec - startSec) : 0;
+  const willLoop = clipLen > 0 && clipLen < tl;
+
+  const subQHtml = subs.map((sq, si) => {
+    const firstAns = (sq.answers || "").split(",")[0].trim();
+    return `
+    <div class="qem-sq-row" style="background:${si%2===0?'var(--bg3)':'var(--bg4)'}">
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <span style="font-size:11px;font-weight:700;color:var(--t3);min-width:52px">${t('q_sub_label')} ${si+1}</span>
+        <input class="inp" placeholder="${t('q_prompt_placeholder')}" style="flex:2;min-width:120px" value="${esc(sq.prompt)}"
+          oninput="${arrName}[${i}].subQuestions[${si}].prompt=this.value">
+        <input class="inp" placeholder="${t('q_ans_placeholder')}" style="flex:3;min-width:140px" value="${esc(sq.answers)}"
+          oninput="${arrName}[${i}].subQuestions[${si}].answers=this.value"
+          onblur="renderEQEditorContent()">
+        ${subs.length > 1 ? `<button class="btn btn-g btn-sm" onclick="${arrName}[${i}].subQuestions.splice(${si},1);renderEQEditorContent()" style="color:var(--acc);padding:4px 8px;display:flex;align-items:center;flex-shrink:0"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>` : '<div style="width:32px"></div>'}
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;padding-left:60px;flex-wrap:wrap">
+        <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;font-weight:600">
+          <input type="checkbox" ${sq.showAnswer!==false?'checked':''} style="width:14px;height:14px;accent-color:var(--grn)"
+            onchange="${arrName}[${i}].subQuestions[${si}].showAnswer=this.checked">
+          ${t('q_show_ans')}
+        </label>
+        <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;font-weight:600">
+          <input type="checkbox" ${sq.chosungHint?'checked':''} style="width:14px;height:14px;accent-color:var(--acc)"
+            onchange="${arrName}[${i}].subQuestions[${si}].chosungHint=this.checked;renderEQEditorContent()">
+          ${t('chosung_hint')}
+        </label>
+        ${sq.chosungHint ? `
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+          <span style="font-size:11px;color:var(--t3)">${t('reveal_time')}:</span>
+          <select class="q-sel" style="font-size:12px;padding:3px 6px"
+            onchange="${arrName}[${i}].subQuestions[${si}].hintRevealTime=+this.value;renderEQEditorContent()">
+            <option value="5"  ${(sq.hintRevealTime||0)==5 ?'selected':''}>${_lang==='ko'?'5초 후':'After 5s'}</option>
+            <option value="10" ${(sq.hintRevealTime||0)==10?'selected':''}>${_lang==='ko'?'10초 후':'After 10s'}</option>
+            <option value="15" ${(sq.hintRevealTime||0)==15?'selected':''}>${_lang==='ko'?'15초 후':'After 15s'}</option>
+            <option value="0"  ${!sq.hintRevealTime?'selected':''}>${_lang==='ko'?'커스텀':'Custom'}</option>
+          </select>
+          ${!sq.hintRevealTime||![5,10,15].includes(sq.hintRevealTime) ? `
+          <input type="number" min="1" max="60" class="inp" style="width:56px;padding:3px 6px;font-size:12px" placeholder="${_lang==='ko'?'초':'sec'}"
+            value="${sq.hintRevealTime||''}" oninput="${arrName}[${i}].subQuestions[${si}].hintRevealTime=+this.value">` : ''}
+          ${firstAns ? `<span style="font-size:11px;color:var(--ylw);font-family:'JetBrains Mono',monospace">${esc(firstAns)} → ${getChosungClient(firstAns)}</span>` : ''}
+        </div>` : ''}
+      </div>
+    </div>`;
+  }).join("");
+
+  document.getElementById("eqEditorContent").innerHTML = `
+  <div class="qem-cols">
+    <div class="qem-left">
+      <div class="qem-yt">
+        ${hasYt ? `<div id="yt-prev-${arrName}-${i}" style="width:100%;height:100%"></div>` : `<div style="color:var(--t3);font-size:13px;text-align:center;padding:20px">URL을 입력하면<br>미리보기가 표시됩니다</div>`}
+      </div>
+      ${hasYt ? `<div style="display:flex;align-items:center;gap:6px;padding:5px 6px;background:#111;border-radius:0 0 var(--rs) var(--rs);margin-top:-4px;margin-bottom:8px">
+        <span style="cursor:pointer;color:#aaa;display:flex;align-items:center" onclick="togglePrevVol('${arrName}',${i})" id="pv-icon-${arrName}-${i}">${getPrevVolSvg(q.volume)}</span>
+        <input type="range" min="0" max="100" value="${q.volume!==undefined?q.volume:100}" step="1" style="flex:1;accent-color:#fff;height:3px;cursor:pointer" id="pv-vol-${arrName}-${i}" oninput="setPrevVol('${arrName}',${i},+this.value)">
+        <span style="font-size:10px;color:#aaa;font-family:'JetBrains Mono',monospace;min-width:30px" id="pv-pct-${arrName}-${i}">${q.volume!==undefined?q.volume:100}%</span>
+      </div>` : ''}
+      <div style="font-size:11px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px">YouTube URL</div>
+      <input class="inp" placeholder="https://youtu.be/..." value="${esc(q.mediaUrl||'')}" style="width:100%"
+        onblur="${arrName}[${i}].mediaUrl=this.value;renderEQEditorContent();setTimeout(()=>initPreviewPlayers(editQuestions,'editQuestions'),0)">
+    </div>
+    <div class="qem-right">
+      <div style="font-size:11px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">${t('q_playback')}</div>
+      ${hasYt ? `
+      <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px">
+        <div style="font-size:11px;color:var(--t3)" id="yt-dur-${arrName}-${i}">${q.ytDuration ? '영상 길이: ' + fmtTime(q.ytDuration) : '영상 길이 감지 중...'}</div>
+        <div style="display:flex;align-items:center;gap:6px;font-size:12px">
+          <span style="color:var(--t3);min-width:28px">시작</span>
+          <input type="range" id="yt-sr-${arrName}-${i}" min="0" max="${q.ytDuration||600}" step="1" value="${startSec}" style="flex:1;accent-color:var(--acc)"
+            oninput="setPrevStart('${arrName}',${i},'${ytId}',+this.value)">
+          <span id="yt-st-${arrName}-${i}" style="font-family:'JetBrains Mono',monospace;color:var(--ylw);min-width:40px;font-size:12px">${fmtTime(startSec)}</span>
+          <input type="number" id="yt-sn-${arrName}-${i}" min="0" max="${q.ytDuration||600}" class="inp" style="width:58px;padding:4px 6px;font-family:'JetBrains Mono',monospace;font-size:12px" value="${startSec}" oninput="setPrevStart('${arrName}',${i},'${ytId}',+this.value)">
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;font-size:12px">
+          <span style="color:var(--t3);min-width:28px">끝</span>
+          <input type="range" id="yt-er-${arrName}-${i}" min="0" max="${q.ytDuration||600}" step="1" value="${endSec||q.ytDuration||600}" style="flex:1;accent-color:var(--grn)"
+            oninput="setPrevEnd('${arrName}',${i},+this.value)">
+          <span id="yt-et-${arrName}-${i}" style="font-family:'JetBrains Mono',monospace;color:var(--grn);min-width:40px;font-size:12px">${endSec?fmtTime(endSec):(q.ytDuration?fmtTime(q.ytDuration):'∞')}</span>
+          <input type="number" id="yt-en-${arrName}-${i}" min="0" max="${q.ytDuration||600}" class="inp" style="width:58px;padding:4px 6px;font-family:'JetBrains Mono',monospace;font-size:12px" value="${endSec||q.ytDuration||''}" oninput="setPrevEnd('${arrName}',${i},+this.value)">
+        </div>
+        ${startSec < (endSec||9999) ? `<div style="font-size:11px;color:var(--t3)">구간: ${fmtTime(startSec)} → ${endSec?fmtTime(endSec):'끝'}${endSec?' ('+( endSec-startSec)+'초)':''}${willLoop?' · 반복재생':''}</div>` : ''}
+      </div>` : `<div style="font-size:12px;color:var(--t3);margin-bottom:12px">URL 입력 후 슬라이더가 표시됩니다</div>`}
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap">
+        <label style="display:flex;align-items:center;gap:5px;font-size:12px;font-weight:600;color:var(--t2)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity:.6"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          제한시간
+          <input type="number" min="5" max="300" class="inp" style="width:62px;padding:4px 8px;font-family:'JetBrains Mono',monospace"
+            value="${tl}" oninput="${arrName}[${i}].timeLimit=+this.value">
+          초
+        </label>
+        ${willLoop ? `<span style="font-size:11px;color:var(--ylw)">반복재생 (${clipLen}초 클립)</span>` : ''}
+      </div>
+      <div style="font-size:11px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">※ 첫 번째 정답만 결과 화면에 표시됩니다</div>
+    </div>
+  </div>
+  <div class="qem-sq">
+    <div class="qem-sq-hd">
+      <span style="font-size:11px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.5px">${t('q_sub_label')} (${subs.length})</span>
+      <button class="btn btn-g btn-sm" onclick="${arrName}[${i}].subQuestions.push(defaultSubQ(''));renderEQEditorContent()" style="font-size:12px;padding:3px 10px">+ ${t('q_sub_label')}</button>
+    </div>
+    ${subQHtml}
+  </div>`;
+
+  if (hasYt) setTimeout(() => initPreviewPlayers([q], arrName, i), 0);
+}
+
+function addEditQ() {
+  editQuestions.push(defaultQ("audio"));
+  renderEditQCards();
+  openEQEditorModal(editQuestions.length - 1);
+}
 
 async function saveEditMap() {
   if (!editMapId) return;
   const name = document.getElementById("emName").value.trim();
   const cat = document.getElementById("emCat").value;
-  if (!name) return alert("맵 이름을 입력해주세요.");
-  if (editQuestions.some(q => (q.subQuestions||[]).some(sq => !(sq.answers||"").trim()))) return alert("모든 소문제에 정답을 입력해주세요.");
+  if (!name) return alert(_lang==='ko'?"맵 이름을 입력해주세요.":"Please enter a map name.");
+  if (editQuestions.some(q => (q.subQuestions||[]).some(sq => !(sq.answers||"").trim()))) return alert(_lang==='ko'?"모든 소문제에 정답을 입력해주세요.":"Please enter answers for all sub-questions.");
 
   try {
     const { ok, data } = await fetchJSON(`/api/maps/${editMapId}`, {
@@ -2543,7 +3365,7 @@ async function saveEditMap() {
       }),
     });
     if (ok) {
-      alert("맵이 수정되었습니다! 🎉");
+      alert(_lang==='ko'?"맵이 수정되었습니다! 🎉":"Map updated successfully! 🎉");
       hideEditMapModal();
       socket.emit("getMaps");
       loadDashboard();
@@ -2640,11 +3462,16 @@ function startSolo() {
 // Global Ranking
 // ═══════════════════════════════════════════
 
-async function loadRanking() {
+let _rankPage = 0;
+let _rankMerged = [];
+const RANK_PER_PAGE = 30;
+
+async function loadRanking(keepPage) {
+  if (!keepPage) _rankPage = 0;
+  const el = document.getElementById("rankingList");
   try {
     const res = await fetch("/api/ranking");
     const data = await res.json();
-    const el = document.getElementById("rankingList");
     if (!data.length) {
       el.innerHTML = '<div class="empty">아직 랭킹 데이터가 없습니다. 게임을 완료하면 등록됩니다!</div>';
       return;
@@ -2652,24 +3479,33 @@ async function loadRanking() {
     // 닉네임별 점수 합산 (중복 제거)
     const map = new Map();
     data.forEach(r => {
-      if (map.has(r.name)) {
-        map.get(r.name).score += r.score;
-      } else {
-        map.set(r.name, { name: r.name, avatar: r.avatar, score: r.score });
-      }
+      if (map.has(r.name)) map.get(r.name).score += r.score;
+      else map.set(r.name, { name: r.name, avatar: r.avatar, score: r.score });
     });
-    const merged = [...map.values()].sort((a, b) => b.score - a.score);
-    const medals = ["🥇","🥈","🥉"];
-    el.innerHTML = merged.map((r, i) => `
-      <div style="display:grid;grid-template-columns:48px 1fr 100px;align-items:center;padding:10px 16px;border-bottom:1px solid var(--brd);transition:background .15s" onmouseover="this.style.background='var(--bg4)'" onmouseout="this.style.background=''">
-        <span style="font-size:${i<3?'20px':'14px'};font-family:'JetBrains Mono',monospace;font-weight:700;color:${i===0?'#ffd700':i===1?'#c0c0c0':i===2?'#cd7f32':'var(--t2)'}">${i < 3 ? medals[i] : '#'+(i+1)}</span>
-        <span style="display:flex;align-items:center;gap:8px"><span style="font-size:18px">${esc(r.avatar)}</span><span style="font-weight:700;font-size:14px">${esc(r.name)}</span></span>
-        <span style="font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--ylw);text-align:right">${r.score.toLocaleString()}</span>
-      </div>
-    `).join("");
+    _rankMerged = [...map.values()].sort((a, b) => b.score - a.score);
+    renderRankingPage();
   } catch(e) {
-    document.getElementById("rankingList").innerHTML = '<div class="empty">랭킹을 불러오지 못했습니다.</div>';
+    el.innerHTML = '<div class="empty">랭킹을 불러오지 못했습니다.</div>';
   }
+}
+
+function goRankPage(p) { _rankPage = p; renderRankingPage(); }
+
+function renderRankingPage() {
+  const el = document.getElementById("rankingList");
+  const medals = ["🥇","🥈","🥉"];
+  if (_rankPage >= Math.ceil((_rankMerged.length||1) / RANK_PER_PAGE)) _rankPage = 0;
+  const pageStart = _rankPage * RANK_PER_PAGE;
+  const page = _rankMerged.slice(pageStart, pageStart + RANK_PER_PAGE);
+  el.innerHTML = page.map((r, localIdx) => {
+    const i = pageStart + localIdx; // 전체 순위
+    return `
+    <div style="display:grid;grid-template-columns:48px 1fr 100px;align-items:center;padding:10px 16px;border-bottom:1px solid var(--brd);transition:background .15s" onmouseover="this.style.background='var(--bg4)'" onmouseout="this.style.background=''">
+      <span style="font-size:${i<3?'20px':'14px'};font-family:'JetBrains Mono',monospace;font-weight:700;color:${i===0?'#ffd700':i===1?'#c0c0c0':i===2?'#cd7f32':'var(--t2)'}">${i < 3 ? medals[i] : '#'+(i+1)}</span>
+      <span style="display:flex;align-items:center;gap:8px"><span style="font-size:18px">${esc(r.avatar)}</span><span style="font-weight:700;font-size:14px">${esc(r.name)}</span></span>
+      <span style="font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--ylw);text-align:right">${r.score.toLocaleString()}</span>
+    </div>`;
+  }).join("") + makePager(_rankPage, _rankMerged.length, RANK_PER_PAGE, 'goRankPage');
 }
 
 // ═══════════════════════════════════════════
