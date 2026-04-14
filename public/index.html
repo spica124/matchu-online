@@ -485,7 +485,7 @@ body{font-family:'Nanum Gothic Rounded',sans-serif;background:var(--bg);color:va
       <button class="nav-i" data-nav="create-map" onclick="navigateTo('create-map')"><span class="nav-ic"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></span> <span data-i18n="nav_create">맵 제작</span></button>
       <div class="nav-sec" data-i18n="nav_sec_community">커뮤니티</div>
       <a class="nav-i" href="https://discord.gg/cJANW7uvKU" target="_blank" rel="noopener" style="text-decoration:none;color:var(--t1)"><span class="nav-ic"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M20.317 4.37a19.791 19.791 0 00-4.885-1.515.074.074 0 00-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 00-5.487 0 12.64 12.64 0 00-.617-1.25.077.077 0 00-.079-.037A19.736 19.736 0 003.677 4.37a.07.07 0 00-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 00.031.057 19.9 19.9 0 005.993 3.03.078.078 0 00.084-.028 14.09 14.09 0 001.226-1.994.076.076 0 00-.041-.106 13.107 13.107 0 01-1.872-.892.077.077 0 01-.008-.128 10.2 10.2 0 00.372-.292.074.074 0 01.077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 01.078.01c.12.098.246.198.373.292a.077.077 0 01-.006.127 12.299 12.299 0 01-1.873.892.077.077 0 00-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 00.084.028 19.839 19.839 0 006.002-3.03.077.077 0 00.032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 00-.031-.03z"/></svg></span> <span>공식 디스코드</span></a>
-      <button class="nav-i" onclick="openBugReport();closeSidebar()" style="color:#ef4444"><span class="nav-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a4 4 0 014 4v1h1a2 2 0 012 2v1h-2v1a6 6 0 01-12 0v-1H3V9a2 2 0 012-2h1V6a4 4 0 014-4z"/><path d="M9 10h.01M15 10h.01M3 9l-2-2M21 9l2-2M3 15H1M21 15h2"/></svg></span> <span>버그 제보</span></button>
+      <button class="nav-i" onclick="openBugReport();closeSidebar()" style="color:#ef4444"><span class="nav-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a4 4 0 014 4v1h1a2 2 0 012 2v1h-2v1a6 6 0 01-12 0v-1H3V9a2 2 0 012-2h1V6a4 4 0 014-4z"/><path d="M9 10h.01M15 10h.01M3 9l-2-2M21 9l2-2M3 15H1M21 15h2"/></svg></span> <span data-i18n="nav_bug_report">버그 제보</span></button>
       <button class="nav-i" data-nav="ranking" onclick="navigateTo('ranking')"><span class="nav-ic"><svg viewBox="0 0 24 24"><path d="M8 21H4a1 1 0 01-1-1v-4a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1z"/><path d="M14 21h-4a1 1 0 01-1-1v-8a1 1 0 011-1h4a1 1 0 011 1v8a1 1 0 01-1 1z"/><path d="M20 21h-4a1 1 0 01-1-1V6a1 1 0 011-1h4a1 1 0 011 1v14a1 1 0 01-1 1z"/></svg></span> <span data-i18n="nav_ranking">랭킹</span></button>
       <div class="nav-sec" data-i18n="nav_sec_myactivity">내 활동</div>
       <button class="nav-i" data-nav="dashboard" onclick="navigateTo('dashboard')"><span class="nav-ic"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg></span> <span data-i18n="nav_dashboard">내 맵 대시보드</span></button>
@@ -857,20 +857,33 @@ body{font-family:'Nanum Gothic Rounded',sans-serif;background:var(--bg);color:va
 </div>
 
 <!-- ════ BUG REPORT MODAL ════ -->
+<!-- ════ QUEUE OVERLAY ════ -->
+<div id="queueOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:9999;flex-direction:column;align-items:center;justify-content:center;gap:20px">
+  <div style="font-size:48px">⏳</div>
+  <div style="font-size:22px;font-weight:700;color:#fff" data-i18n="queue_full">서버가 꽉 찼습니다</div>
+  <div style="font-size:15px;color:#999" data-i18n="queue_wait">잠시 후 자동으로 입장됩니다</div>
+  <div style="background:#1e1e1e;border:1px solid #333;border-radius:12px;padding:20px 40px;text-align:center">
+    <div style="font-size:13px;color:#666;margin-bottom:6px" data-i18n="queue_pos_label">대기 순번</div>
+    <div style="font-size:48px;font-weight:900;color:#e8405e"><span id="queuePos">-</span></div>
+    <div style="font-size:13px;color:#555">/ <span id="queueTotal">-</span> <span data-i18n="queue_waiting_suffix">명 대기 중</span></div>
+  </div>
+  <div style="font-size:13px;color:#555" data-i18n="queue_dont_close">창을 닫지 마세요</div>
+</div>
+
 <div class="modal-bg hide" id="bugModal" onclick="closeBugReport()">
   <div class="modal" onclick="event.stopPropagation()" style="max-width:440px">
-    <div class="modal-hd"><span>🐛 버그 제보</span><button class="modal-cls" onclick="closeBugReport()">✕</button></div>
+    <div class="modal-hd"><span data-i18n="bug_report_title">🐛 버그 제보</span><button class="modal-cls" onclick="closeBugReport()">✕</button></div>
     <div style="padding:16px;display:flex;flex-direction:column;gap:12px">
       <div>
-        <div style="font-size:.8rem;color:var(--t2);margin-bottom:4px">제목</div>
-        <input id="bugTitle" class="inp" placeholder="버그를 간단히 설명해주세요" style="width:100%;box-sizing:border-box">
+        <div style="font-size:.8rem;color:var(--t2);margin-bottom:4px" data-i18n="bug_title_label">제목</div>
+        <input id="bugTitle" class="inp" data-i18n-placeholder="bug_title_placeholder" placeholder="버그를 간단히 설명해주세요" style="width:100%;box-sizing:border-box">
       </div>
       <div>
-        <div style="font-size:.8rem;color:var(--t2);margin-bottom:4px">상세 내용</div>
-        <textarea id="bugDesc" class="inp" placeholder="어떤 상황에서 발생했는지, 재현 방법 등을 적어주세요" rows="5" style="width:100%;box-sizing:border-box;resize:vertical"></textarea>
+        <div style="font-size:.8rem;color:var(--t2);margin-bottom:4px" data-i18n="bug_desc_label">상세 내용</div>
+        <textarea id="bugDesc" class="inp" data-i18n-placeholder="bug_desc_placeholder" placeholder="어떤 상황에서 발생했는지, 재현 방법 등을 적어주세요" rows="5" style="width:100%;box-sizing:border-box;resize:vertical"></textarea>
       </div>
       <div id="bugError" style="color:#ef4444;font-size:.8rem;display:none"></div>
-      <button class="btn btn-acc" onclick="submitBugReport()">제출하기</button>
+      <button class="btn btn-acc" onclick="submitBugReport()" data-i18n="bug_submit">제출하기</button>
     </div>
   </div>
 </div>
@@ -1118,6 +1131,15 @@ const I18N = {
     approve_toast: "승인되었습니다!", reject_toast: "거절되었습니다.",
     reason_label: "거절 사유", no_tags: "없음",
     chosung_custom: "커스텀",
+    // Queue overlay
+    queue_full: "서버가 꽉 찼습니다", queue_wait: "잠시 후 자동으로 입장됩니다",
+    queue_pos_label: "대기 순번", queue_waiting_suffix: "명 대기 중",
+    queue_dont_close: "창을 닫지 마세요",
+    // Bug report
+    bug_report_title: "🐛 버그 제보", bug_title_label: "제목", bug_desc_label: "내용",
+    bug_title_placeholder: "버그 제목을 입력하세요", bug_desc_placeholder: "버그 내용을 자세히 설명해주세요",
+    bug_submit: "제출하기", bug_toast: "버그 제보가 접수되었습니다. 감사합니다!",
+    nav_bug_report: "버그 제보",
     // Category sub-question defaults
     cat_sq_song: "노래 제목", cat_sq_anime: "애니 제목", cat_sq_artist: "가수",
     cat_sq_char: "캐릭터 이름", cat_sq_anime2: "애니 이름",
@@ -1270,6 +1292,15 @@ const I18N = {
     approve_toast: "Approved!", reject_toast: "Rejected.",
     reason_label: "Reason", no_tags: "None",
     chosung_custom: "Custom",
+    // Queue overlay
+    queue_full: "Server is full", queue_wait: "You'll be admitted automatically shortly",
+    queue_pos_label: "Queue Position", queue_waiting_suffix: "waiting",
+    queue_dont_close: "Don't close this window",
+    // Bug report
+    bug_report_title: "🐛 Bug Report", bug_title_label: "Title", bug_desc_label: "Description",
+    bug_title_placeholder: "Enter bug title", bug_desc_placeholder: "Please describe the bug in detail",
+    bug_submit: "Submit", bug_toast: "Your bug report has been submitted. Thank you!",
+    nav_bug_report: "Bug Report",
     // Category sub-question defaults
     cat_sq_song: "Song Title", cat_sq_anime: "Anime Title", cat_sq_artist: "Artist",
     cat_sq_char: "Character Name", cat_sq_anime2: "Anime Name",
@@ -1400,6 +1431,17 @@ socket.on("connect", () => {
   if (localStorage.getItem("authToken")) {
     socket.emit("register");
   }
+});
+
+socket.on("queuePosition", ({ position, total }) => {
+  document.getElementById("queueOverlay").style.display = "flex";
+  document.getElementById("queuePos").textContent = position;
+  document.getElementById("queueTotal").textContent = total;
+});
+
+socket.on("queueAdmitted", () => {
+  document.getElementById("queueOverlay").style.display = "none";
+  if (localStorage.getItem("authToken")) socket.emit("register");
 });
 
 // 인증 오류 처리
@@ -3070,7 +3112,7 @@ async function submitBugReport() {
   errEl.style.display = 'none';
   try {
     const res = await fetch('/api/bug-report', { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json', ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}) }, body: JSON.stringify({ title, description }) });
-    if (res.ok) { closeBugReport(); showToast('버그 제보가 접수되었습니다. 감사합니다!'); }
+    if (res.ok) { closeBugReport(); showToast(t('bug_toast')); }
     else { const d = await res.json(); errEl.textContent = d.error || '제출 실패'; errEl.style.display = 'block'; }
   } catch { errEl.textContent = '서버 오류가 발생했습니다'; errEl.style.display = 'block'; }
 }

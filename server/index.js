@@ -164,6 +164,16 @@ const RankingModel = mongoose.model("Ranking", rankingSchema);
 const users = new Map();  // socketId → { id, name, avatar, score }
 const rooms = new Map();  // roomId   → Room
 let onlineCount = 0;
+const MAX_CONNECTIONS = 80;
+const waitingQueue = []; // { socketId, socket }
+
+function admitNextFromQueue() {
+  if (waitingQueue.length === 0) return;
+  const next = waitingQueue.shift();
+  next.socket.emit("queueAdmitted");
+  // 남은 대기자들에게 순번 업데이트
+  waitingQueue.forEach((w, i) => w.socket.emit("queuePosition", { position: i + 1, total: waitingQueue.length }));
+}
 
 // ═══════════════════════════════════════════
 // Helpers
@@ -759,6 +769,20 @@ io.use((socket, next) => {
 });
 
 io.on("connection", (socket) => {
+  // 대기열 처리
+  if (onlineCount >= MAX_CONNECTIONS) {
+    waitingQueue.push({ socketId: socket.id, socket });
+    socket.emit("queuePosition", { position: waitingQueue.length, total: waitingQueue.length });
+    socket.on("disconnect", () => {
+      const idx = waitingQueue.findIndex(w => w.socketId === socket.id);
+      if (idx !== -1) {
+        waitingQueue.splice(idx, 1);
+        waitingQueue.forEach((w, i) => w.socket.emit("queuePosition", { position: i + 1, total: waitingQueue.length }));
+      }
+    });
+    return;
+  }
+
   onlineCount++;
   io.emit("onlineCount", onlineCount);
   console.log(`[+] ${socket.id} (온라인: ${onlineCount})`);
@@ -1068,6 +1092,7 @@ io.on("connection", (socket) => {
   socket.on("disconnect", () => {
     onlineCount = Math.max(0, onlineCount - 1);
     io.emit("onlineCount", onlineCount);
+    admitNextFromQueue();
     leaveAllRooms(socket);
     users.delete(socket.id);
     console.log(`[-] ${socket.id} (온라인: ${onlineCount})`);
