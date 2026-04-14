@@ -1288,4 +1288,14 @@ server.listen(PORT, () => {
 ║   🎯 마추기온라인.io 서버 시작!           ║
 ║   http://localhost:${PORT}                  ║
 ╚═══════════════════════════════════════════╝`);
+
+  // Render 슬립 방지 — 14분마다 자기 자신에게 핑
+  const SELF_URL = process.env.RENDER_EXTERNAL_URL || `http://localhost:${PORT}`;
+  setInterval(() => {
+    http.get(SELF_URL, (res) => {
+      console.log(`[keep-alive] ping ${res.statusCode}`);
+    }).on("error", (e) => {
+      console.warn("[keep-alive] ping failed:", e.message);
+    });
+  }, 14 * 60 * 1000);
 });
