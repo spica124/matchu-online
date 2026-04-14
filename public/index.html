@@ -1744,18 +1744,25 @@ socket.on("gameStarted", ({ totalQuestions, players }) => {
   overlay.style.display = "flex";
   let cnt = 3;
   countEl.textContent = cnt;
+  window._gameStarting = true;
+  window._pendingQuestion = null;
   const iv = setInterval(() => {
     cnt--;
     if (cnt <= 0) {
       clearInterval(iv);
       overlay.style.display = "none";
+      window._gameStarting = false;
+      if (window._pendingQuestion) {
+        handleQuestion(window._pendingQuestion);
+        window._pendingQuestion = null;
+      }
     } else {
       countEl.textContent = cnt;
     }
   }, 1000);
 });
 
-socket.on("question", ({ index, total, type, hint, timeLimit, mediaUrl, startTime, endTime, volume, songIndex, totalSongs, subQuestions }) => {
+function handleQuestion({ index, total, type, hint, timeLimit, mediaUrl, startTime, endTime, volume, songIndex, totalSongs, subQuestions }) {
   gameState.currentQ = index;
   gameState.totalQ = total;
   gameState.answered = false;
@@ -1819,6 +1826,14 @@ socket.on("question", ({ index, total, type, hint, timeLimit, mediaUrl, startTim
     playYouTube(ytId, startTime || 0, endTime || 0, timeLimit || gameState.timeLimit || 30, mapVol);
   }
   if (_spectating) { setSpectateUI(true); navigateTo("game"); }
+}
+
+socket.on("question", (data) => {
+  if (window._gameStarting) {
+    window._pendingQuestion = data;
+  } else {
+    handleQuestion(data);
+  }
 });
 
 socket.on("timeUpdate", t => {
