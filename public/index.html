@@ -858,7 +858,7 @@ body{font-family:'Nanum Gothic Rounded',sans-serif;background:var(--bg);color:va
 
 <!-- ════ BUG REPORT MODAL ════ -->
 <!-- ════ GAME START COUNTDOWN OVERLAY ════ -->
-<div id="gameStartOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:9998;flex-direction:column;align-items:center;justify-content:center;gap:28px">
+<div id="gameStartOverlay" style="display:none;position:fixed;inset:0;background:#000;z-index:9998;flex-direction:column;align-items:center;justify-content:center;gap:28px">
   <div style="font-size:15px;font-weight:600;color:#e8405e;letter-spacing:.08em;text-transform:uppercase" data-i18n="gso_starting">게임 시작</div>
   <div id="gsoCount" style="font-size:120px;font-weight:900;color:#fff;line-height:1;text-shadow:0 0 60px rgba(232,64,94,.6)">3</div>
   <div style="font-size:15px;color:#ccc" data-i18n="gso_msg">공식 디스코드에서 같이 즐겨요!</div>
@@ -1837,6 +1837,7 @@ socket.on("question", (data) => {
 });
 
 socket.on("timeUpdate", t => {
+  if (window._gameStarting) return;
   gameState.timeLeft = t;
   const el = document.getElementById("gameTimer");
   el.textContent = t;

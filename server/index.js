@@ -930,7 +930,7 @@ io.on("connection", (socket) => {
       room.players.forEach(p => { p.score = 0; p.answeredSubQs = new Set(); });
       await MapModel.updateOne({ mapId: room.mapId }, { $inc: { plays: 1 } });
       io.to(roomId).emit("gameStarted", { totalQuestions: map.questions.length, players: getPlayersArray(room) });
-      sendQuestion(room);
+      setTimeout(() => sendQuestion(room), 3000);
       broadcastRoomList();
     } catch (e) { console.error(e); socket.emit("error", "게임 시작에 실패했습니다"); }
   });
