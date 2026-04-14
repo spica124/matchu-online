@@ -45,6 +45,16 @@ const io = new Server(server, {
 
 // ── 11. express.json() payload 크기 제한 1MB ──
 app.use(express.static(path.join(__dirname, "../public")));
+
+// sitemap / robots 명시적 라우트
+app.get("/sitemap.xml", (req, res) => {
+  res.setHeader("Content-Type", "application/xml");
+  res.sendFile(path.join(__dirname, "../public/sitemap.xml"));
+});
+app.get("/robots.txt", (req, res) => {
+  res.setHeader("Content-Type", "text/plain");
+  res.sendFile(path.join(__dirname, "../public/robots.txt"));
+});
 app.use(express.json({ limit: "1mb" }));
 // ── 15. 쿠키 파서 (HttpOnly JWT 쿠키용) ──
 app.use(cookieParser());
